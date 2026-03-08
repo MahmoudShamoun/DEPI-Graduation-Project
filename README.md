@@ -68,7 +68,7 @@ fair value from panic-driven pricing?
 2. `Mahenour Mosad Abdo Eissa`
 3. `Aya Seyad Elshorbagy`
 4. `Marwan Ehab Mohamed`
-5. `Malak Muhamed Muhamed 3`
+5. `Malak Muhamed Muhamed`
 6. `Marwan Yasser Abdelaziz`
 
 ---
