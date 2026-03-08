@@ -18,16 +18,16 @@
 
 ## Project Name
 
-**Gold Egypt** — Gold as a Financial Instrument in Egypt
+**Gold Egypt** - Gold as a Financial Instrument in Egypt
 *Fair Value Decomposition · Crisis Analysis · Retail Investor Decision Framework*
 
 ---
 
 ## Project Idea
 
-> **Is gold's rise in Egypt real wealth — or just a reflection of the Egyptian pound's collapse?**
+> **Is gold's rise in Egypt real wealth - or just a reflection of the Egyptian pound's collapse?**
 
-**Gold Egypt** is a full-stack financial data science project that uncovers the truth behind gold price movements in Egypt since January 2020 — through COVID-19, the Russia–Ukraine war, currency floatation events, and beyond.
+**Gold Egypt** is a full-stack financial data science project that uncovers the truth behind gold price movements in Egypt since January 2020 - through COVID-19, the Russia–Ukraine war, currency floatation events, and beyond.
 
 The project decomposes the local gold price into three measurable components:
 
@@ -42,7 +42,7 @@ It delivers an interactive, premium dark-mode dashboard with live **BUY / HOLD /
 **Central Research Question:**
 ```
 Can we decompose Egyptian gold price movements into global value,
-currency impact, and local premium components — and build a
+currency impact, and local premium components - and build a
 data-driven model that supports retail investors in distinguishing
 fair value from panic-driven pricing?
 ```
@@ -69,42 +69,42 @@ fair value from panic-driven pricing?
 ## Project Plan
 
 1. **Research & Analysis**
-   - Audience personas — Retail investors, students, financial analysts
-   - Literature review — Gold as hedge vs. safe haven (Baur & Lucey, 2010)
-   - Data collection — Yahoo Finance API (`GC=F`, `EGP=X`, `CL=F`, `^TNX`, `^GSPC`)
+   - Audience personas - Retail investors, students, financial analysts
+   - Literature review - Gold as hedge vs. safe haven (Baur & Lucey, 2010)
+   - Data collection - Yahoo Finance API (`GC=F`, `EGP=X`, `CL=F`, `^TNX`, `^GSPC`)
 
 2. **Visual Identity**
-   - Logo design — Dark-gold luxury fintech aesthetic
-   - Color system — `#FFD700` Gold · `#1A1A2E` Dark · `#06D6A0` Emerald
-   - Typography — Cairo · Bebas Neue (Display) · DM Mono (Data)
+   - Logo design - Dark-gold luxury fintech aesthetic
+   - Color system - `#FFD700` Gold · `#1A1A2E` Dark · `#06D6A0` Emerald
+   - Typography - Cairo · Bebas Neue (Display) · DM Mono (Data)
 
 3. **Main Designs**
-   - Poster — A2 print-ready project summary
-   - Dashboard UI — 6-page Streamlit app with premium CSS
-   - Chart system — Plotly dark-mode (price, correlation, decomposition)
+   - Poster - A2 print-ready project summary
+   - Dashboard UI - 6-page Streamlit app with premium CSS
+   - Chart system - Plotly dark-mode (price, correlation, decomposition)
 
 4. **Complementary Products**
-   - Academic report — Fair Value Decomposition methodology paper
-   - Clean dataset — Publication-ready financial CSV (Jan 2020 – Present)
-   - Econometric report — Regression results & crisis window analysis
+   - Academic report - Fair Value Decomposition methodology paper
+   - Clean dataset - Publication-ready financial CSV (Jan 2020 – Present)
+   - Econometric report - Regression results & crisis window analysis
 
 5. **Review & Finalization**
-   - Model accuracy evaluation — MAE / RMSE benchmarking
-   - Dashboard testing — Mobile-first responsive validation
+   - Model accuracy evaluation - MAE / RMSE benchmarking
+   - Dashboard testing - Mobile-first responsive validation
    - Peer review & mentor feedback integration
 
 6. **Final Presentation**
-   - Live dashboard demo — Streamlit deployment
-   - DEPI cohort presentation — Slides + poster
-   - GitHub repository — Open-source release with full documentation
+   - Live dashboard demo - Streamlit deployment
+   - DEPI cohort presentation - Slides + poster
+   - GitHub repository - Open-source release with full documentation
 
 ---
 
 ## Roles & Responsibilities
 
-- **[Member 1]** — Data Engineering & Econometric Analysis
-- **[Member 2]** — Dashboard Development & UI/UX (Streamlit + Plotly)
-- **[Member 3]** — Forecasting Models (Prophet) & Academic Report Writing
+- **[Member 1]** - Data Engineering & Econometric Analysis
+- **[Member 2]** - Dashboard Development & UI/UX (Streamlit + Plotly)
+- **[Member 3]** - Forecasting Models (Prophet) & Academic Report Writing
 
 ---
 
@@ -112,12 +112,12 @@ fair value from panic-driven pricing?
 
 Metrics for project success:
 
-- **Forecast Accuracy** — MAE < 500 EGP · RMSE < 800 EGP on held-out test set
-- **Model Coverage** — R² > 0.85 for multiple regression on gold price drivers
-- **Dashboard Performance** — All 6 pages load under 3 seconds · fully functional
-- **Data Completeness** — < 2% missing values across all time series (Jan 2020–Present)
-- **Signal Quality** — BUY / SELL signals backtested against historical returns
-- **User Adoption** — Tested with at least 5 target-audience users (retail investors)
+- **Forecast Accuracy** - MAE < 500 EGP · RMSE < 800 EGP on held-out test set
+- **Model Coverage** - R² > 0.85 for multiple regression on gold price drivers
+- **Dashboard Performance** - All 6 pages load under 3 seconds · fully functional
+- **Data Completeness** - < 2% missing values across all time series (Jan 2020–Present)
+- **Signal Quality** - BUY / SELL signals backtested against historical returns
+- **User Adoption** - Tested with at least 5 target-audience users (retail investors)
 
 ---
 
@@ -236,8 +236,8 @@ statsmodels>=0.14
 | Yahoo Finance | `CL=F` | Crude Oil (WTI) | Macro indicator |
 | Yahoo Finance | `^TNX` | US 10Y Treasury Yield | Safe-haven comparison |
 | Yahoo Finance | `^GSPC` | S&P 500 Index | Risk-on / risk-off proxy |
-| CBE / IMF | — | Inflation & Interest Rates | Econometric modeling |
-| Market Data | — | 18K / 21K / 24K Local Prices | Local price tracking |
+| CBE / IMF | - | Inflation & Interest Rates | Econometric modeling |
+| Market Data | - | 18K / 21K / 24K Local Prices | Local price tracking |
 
 > All data is **daily frequency** · January 2020 → Present
 
@@ -329,12 +329,12 @@ Phase 6 ── Decision Support Framework
 
 ## 📚 References
 
-- Baur, D. G., & Lucey, B. M. (2010). *Is Gold a Hedge or a Safe Haven? An Analysis of Stocks, Bonds and Gold.* — Journal of Financial Economics.
-- World Gold Council — Annual and Quarterly Gold Demand Trends Reports.
-- Yahoo Finance — Historical Market Data (`GC=F`, `EGP=X`, `S&P500`, `Oil`, `Treasuries`).
-- International Monetary Fund (IMF) — Egypt Economic Outlook Reports, 2020–2024.
-- Central Bank of Egypt (CBE) — Monetary Policy Statements and Exchange Rate History.
-- Prophet Documentation — [Facebook/Meta Open Source Forecasting Library](https://facebook.github.io/prophet/)
+- Baur, D. G., & Lucey, B. M. (2010). *Is Gold a Hedge or a Safe Haven? An Analysis of Stocks, Bonds and Gold.* - Journal of Financial Economics.
+- World Gold Council - Annual and Quarterly Gold Demand Trends Reports.
+- Yahoo Finance - Historical Market Data (`GC=F`, `EGP=X`, `S&P500`, `Oil`, `Treasuries`).
+- International Monetary Fund (IMF) - Egypt Economic Outlook Reports, 2020–2024.
+- Central Bank of Egypt (CBE) - Monetary Policy Statements and Exchange Rate History.
+- Prophet Documentation - [Facebook/Meta Open Source Forecasting Library](https://facebook.github.io/prophet/)
 
 ---
 
