@@ -1,10 +1,8 @@
 <div align="center">
 
-![Gold Egypt · Investment Decision Framework](cover.png)
-
-<br/>
-
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=20&pause=1000&color=FFD700&center=true&vCenter=true&width=600&lines=%F0%9F%A5%87+GOLD+EGYPT+%C2%B7+Financial+Intelligence" alt="Typing SVG" />
+
+
 
 <br/>
 
