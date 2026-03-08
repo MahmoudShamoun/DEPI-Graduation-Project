@@ -1,6 +1,10 @@
 <div align="center">
 
+<<<<<<< HEAD
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=20&pause=1000&color=FFD700&center=true&vCenter=true&width=600&lines=%F0%9F%A5%87+GOLD+EGYPT+%C2%B7+Financial+Intelligence" alt="Typing SVG" />
+=======
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=800&size=20&pause=1000&color=FFD700&center=true&vCenter=true&width=450&lines=%F0%9F%A5%87+GOLD+EGYPT+%C2%B7+Financial+Intelligence;Fair+Value+%C2%B7+Crisis+Analysis+%C2%B7+Forecasting;DEPI+Final+Project+2026" alt="Typing SVG" />
+>>>>>>> 7eebda8953cccf16253dc7ab195473144e461259
 
 <br/>
 
