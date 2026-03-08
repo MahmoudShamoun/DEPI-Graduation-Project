@@ -349,3 +349,17 @@ Phase 6 ── Decision Support Framework
 <img src="https://img.shields.io/badge/%F0%9F%A5%87%20Gold%20Egypt-DEPI%202026-FFD700?style=for-the-badge" />
 
 </div>
+
+---
+
+## ⚖️ License
+
+Copyright (c) 2026 Mahmoud Shamoun
+
+All rights reserved.
+
+This project is shared for **portfolio and demonstration purposes only**.
+
+No one is allowed to copy, modify, distribute, reuse, or sell any part of this code or project without explicit written permission from the author.
+
+Unauthorized use of this code is strictly prohibited.
