@@ -62,9 +62,12 @@ fair value from panic-driven pricing?
 
 ## Team Members
 
-1. `[Team Member Name 1]`
-2. `[Team Member Name 2]`
-3. `[Team Member Name 3]`
+1. `Mahmoud Abdelrahman Mahmoud Shamoun`
+2. `Mahenour Mosad Abdo Eissa`
+3. `Aya Seyad Elshorbagy`
+4. `Marwan Ehab Mohamed`
+5. `Malak Muhamed Muhamed 3`
+6. `Marwan Yasser Abdelaziz`
 
 ---
 
