@@ -130,7 +130,7 @@ Metrics for project success:
 
 ## Instructor
 
-`[Instructor Name]`
+`Dina Ezzat`
 
 ---
 
