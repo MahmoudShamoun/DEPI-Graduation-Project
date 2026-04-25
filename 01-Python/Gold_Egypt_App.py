@@ -1,16 +1,3 @@
-"""
-╔══════════════════════════════════════════════════════════╗
-║   الذهب كأداة مالية في مصر – 2020 حتى الآن             ║
-║   Gold as a Financial Instrument in Egypt               ║
-║   Streamlit App – All in One (Scraper + Dashboard)      ║
-╚══════════════════════════════════════════════════════════╝
-
-التثبيت:
-    pip install streamlit pandas numpy plotly yfinance requests streamlit-autorefresh prophet
-
-التشغيل:
-    streamlit run app_2.py
-"""
 
 import streamlit as st
 import pandas as pd
@@ -26,9 +13,6 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-# ══════════════════════════════════════════════════════════════════
-#  CONFIG
-# ══════════════════════════════════════════════════════════════════
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(DATA_DIR, "new_gold_data.csv")
 
@@ -37,7 +21,6 @@ _HEADERS = {
     "Accept-Language": "ar,en;q=0.9",
 }
 
-# ── Auto-refresh كل 5 دقائق أثناء ساعات السوق ──────────────────
 try:
     from streamlit_autorefresh import st_autorefresh
     if 13 <= datetime.utcnow().hour <= 21:
@@ -52,9 +35,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ══════════════════════════════════════════════════════════════════
-#  PREMIUM CSS - Luxury Arabic Fintech · Mobile-First
-# ══════════════════════════════════════════════════════════════════
 st.markdown(r"""
 <style>
 /* ── Fonts ── */
@@ -567,37 +547,26 @@ div[data-testid="stAppViewContainer"] > section > div:first-child { padding-top:
 </style>
 """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════
-#  CONSTANTS
-# ══════════════════════════════════════════════════════════════════
 OUNCE_TO_GRAM = 31.1035
 KARAT_FACTORS = {'24K': 1.000, '21K': 0.875, '18K': 0.750}
 KARAT_COLORS  = {'24K': '#FFF9C4', '21K': '#FFD700', '18K': '#CD7F32'}
 
 CRISIS_EVENTS = {
-    # ── أحداث 2020-2022 ─────────────────────────────────────────
     "2020-03-15": ("🦠 COVID-19",           "#FF6B6B", "rgba(255,107,107,0.06)"),
     "2022-02-24": ("🇺🇦 روسيا-أوكرانيا",  "#FF9F43", "rgba(255,159,67,0.06)"),
     "2022-03-21": ("📉 تعويم 1",            "#EF476F", "rgba(239,71,111,0.07)"),
     "2022-10-27": ("📉 تعويم 2",            "#EF476F", "rgba(239,71,111,0.07)"),
-    # ── أحداث 2023 ──────────────────────────────────────────────
     "2023-10-07": ("⚔️ حرب غزة",           "#FF6B6B", "rgba(255,107,107,0.07)"),
-    # ── أحداث 2024 ──────────────────────────────────────────────
     "2024-03-06": ("🔓 تعويم الجنيه",      "#06D6A0", "rgba(6,214,160,0.07)"),
     "2024-04-01": ("📈 ذهب 2265$",          "#FFD700", "rgba(255,215,0,0.05)"),
     "2024-09-18": ("✂️ Fed خفض الفائدة",   "#4CC9F0", "rgba(76,201,240,0.06)"),
-    # ── أحداث 2025 ──────────────────────────────────────────────
     "2025-01-19": ("🕊️ وقف إطلاق النار",  "#06D6A0", "rgba(6,214,160,0.06)"),
     "2025-04-02": ("🔥 رسوم ترامب",        "#FF9F43", "rgba(255,159,67,0.07)"),
     "2025-04-22": ("🏆 ذهب 3500$",          "#FFD700", "rgba(255,215,0,0.06)"),
     "2025-06-13": ("💥 ضربة إيران",         "#EF476F", "rgba(239,71,111,0.08)"),
 }
 
-# ══════════════════════════════════════════════════════════════════
-#  SCRAPER FUNCTIONS  ← مدمجة داخل الـ app مباشرةً
-# ══════════════════════════════════════════════════════════════════
 def _scrape_gold_usd():
-    """سعر أونصة الذهب بالدولار - goldprice.org"""
     try:
         r = requests.get("https://data-asg.goldprice.org/dbXRates/USD",
                          headers=_HEADERS, timeout=10)
@@ -606,7 +575,6 @@ def _scrape_gold_usd():
         return None
 
 def _scrape_gold_usd_yf():
-    """سعر الذهب - yfinance backup"""
     try:
         df = yf.download("GC=F", period="5d", progress=False, auto_adjust=False)
         if df.empty: return None
@@ -617,7 +585,6 @@ def _scrape_gold_usd_yf():
         return None
 
 def _scrape_usd_egp():
-    """سعر الدولار - exchangerate-api"""
     try:
         r = requests.get("https://api.exchangerate-api.com/v4/latest/USD",
                          headers=_HEADERS, timeout=10)
@@ -626,7 +593,6 @@ def _scrape_usd_egp():
         return None
 
 def _scrape_usd_egp_backup():
-    """سعر الدولار - frankfurter backup"""
     try:
         r = requests.get("https://api.frankfurter.app/latest?from=USD&to=EGP",
                          headers=_HEADERS, timeout=10)
@@ -635,7 +601,6 @@ def _scrape_usd_egp_backup():
         return None
 
 def _scrape_usd_egp_yf():
-    """سعر الدولار - yfinance backup"""
     try:
         df = yf.download("EGP=X", period="5d", progress=False, auto_adjust=False)
         if df.empty: return None
@@ -646,7 +611,6 @@ def _scrape_usd_egp_yf():
         return None
 
 def _scrape_others():
-    """النفط + سندات + S&P500"""
     result = {}
     for name, ticker in [("Crude_Oil","CL=F"),("US_10Y_Treasury","^TNX"),("SP500","^GSPC")]:
         try:
@@ -660,7 +624,6 @@ def _scrape_others():
     return result
 
 def _load_historical(start="2020-01-01"):
-    """يجلب كل التاريخ من yfinance (مرة واحدة فقط عند أول تشغيل)"""
     tickers = {
         "Gold_USD_Ounce":   "GC=F",
         "USD_EGP_Official": "EGP=X",
@@ -690,20 +653,10 @@ def _load_historical(start="2020-01-01"):
     return data
 
 def run_scraper():
-    """
-    ═══════════════════════════════════════════════════════
-    الدالة الرئيسية للـ scraper
-    - أول مرة:       يجلب كل التاريخ من 2020 عبر yfinance
-    - كل مرة بعد كده: يضيف فقط سعر اليوم من web scraping
-    - يحفظ النتيجة في CSV_PATH
-    ═══════════════════════════════════════════════════════
-    """
-    # 1. جلب سعر اليوم
     gold_usd = _scrape_gold_usd() or _scrape_gold_usd_yf()
     usd_egp  = _scrape_usd_egp() or _scrape_usd_egp_backup() or _scrape_usd_egp_yf()
     others   = _scrape_others()
 
-    # 2. هل في CSV موجود؟
     if os.path.exists(CSV_PATH):
         try:
             hist = pd.read_csv(CSV_PATH, index_col="Date", parse_dates=True)
@@ -715,7 +668,6 @@ def run_scraper():
     if hist.empty:
         return False
 
-    # 3. أضف صف اليوم
     if gold_usd and usd_egp:
         today = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         row = {
@@ -729,7 +681,6 @@ def run_scraper():
         hist = hist[hist.index.date != today.date()]
         hist = pd.concat([hist, today_df], sort=False)
 
-    # 4. ترتيب وحفظ
     hist.ffill(inplace=True)
     hist.dropna(how="all", inplace=True)
     hist.sort_index(inplace=True)
@@ -737,7 +688,6 @@ def run_scraper():
     hist.to_csv(CSV_PATH)
     return True
 
-# ── Premium Plotly base ──────────────────────────────────────────
 _BASE = dict(
     template="plotly_dark",
     paper_bgcolor="rgba(0,0,0,0)",
@@ -751,8 +701,6 @@ _BASE = dict(
     modebar=dict(bgcolor="rgba(0,0,0,0)", color="#3A4A65", activecolor="#FFD700"),
 )
 
-# Legend sits at top, rangeselector sits just below it
-# With margin t=160:  legend y=1.28 (top), rangeselector y=1.12 (middle), title inside chart
 def _legend_clean(**kw):
     d = dict(
         orientation="h",
@@ -821,9 +769,6 @@ def plot_layout(height=440, show_legend=True, title_text="", **extra):
             lyt[k] = v
     return lyt
 
-# ══════════════════════════════════════════════════════════════════
-#  DATA LOADING  ← من CSV  (mtime يكسر الـ cache لما الـ scraper يحدّث الملف)
-# ══════════════════════════════════════════════════════════════════
 @st.cache_data(ttl=60, show_spinner=False)
 def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
     data = pd.read_csv(csv_path, index_col="Date", parse_dates=True)
@@ -876,22 +821,12 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
     data['Norm_Cash'] = 100.0
     return data
 
-# ══════════════════════════════════════════════════════════════════
-#  HELPERS
-# ══════════════════════════════════════════════════════════════════
 def add_events(fig, data, rows=None, y_ann=0.98):
-    """
-    يضيف خطوط عمودية + labels لكل الأحداث.
-    - الـ labels كلها على نفس المستوى (y=0.98 في الـ paper) عشان تبان صح
-    - تشتغل في الشارتات العادية والـ subplots
-    - الـ vline يمتد على كل الـ rows لو في subplots
-    """
     sorted_events = sorted(CRISIS_EVENTS.items(), key=lambda x: x[0])
     for date_str, (label, color, fill) in sorted_events:
         dt = pd.to_datetime(date_str)
         if dt < data.index[0]: continue
 
-        # ── خلفية ملونة (vrect) ──
         x1 = (dt + timedelta(days=15)).strftime('%Y-%m-%d')
         rect_kw = dict(x0=date_str, x1=x1, fillcolor=fill,
                        opacity=1, layer="below", line_width=0)
@@ -901,14 +836,12 @@ def add_events(fig, data, rows=None, y_ann=0.98):
         else:
             fig.add_vrect(**rect_kw)
 
-        # ── خط عمودي رفيع يمتد طول الشارت ──
         fig.add_vline(
             x=pd.to_datetime(date_str).timestamp() * 1000,
             line=dict(color=color, width=0.8, dash="dot"),
             opacity=0.55,
         )
 
-        # ── النص: كلهم على نفس y=0.98 في paper coords ──
         fig.add_annotation(
             x=date_str,
             y=y_ann,
@@ -924,14 +857,7 @@ def add_events(fig, data, rows=None, y_ann=0.98):
             borderpad=2,
         )
 
-
 def section(icon, title, sub=""):
-    """
-    Section header - title always right-aligned.
-    Use <bdi> inside title string to isolate LTR fragments (karat numbers etc.).
-    sub: plain string (Arabic) OR list of (text, 'rtl'|'ltr') tuples.
-    """
-    # Wrap any ASCII karat patterns like "21K", "18K", "24K" in <bdi> automatically
     import re
     safe_title = re.sub(r'(\d+K)', r'<bdi>\1</bdi>', title)
 
@@ -955,10 +881,8 @@ def section(icon, title, sub=""):
       {sub_html}
     </div>""", unsafe_allow_html=True)
 
-
 def spacer(h=16):
     st.markdown(f"<div style='height:{h}px'></div>", unsafe_allow_html=True)
-
 
 def kpi_html(value, label, color, delay="0s"):
     return f"""<div class="kpi-card" style="animation-delay:{delay}">
@@ -966,10 +890,8 @@ def kpi_html(value, label, color, delay="0s"):
         <div class="kpi-label">{label}</div>
     </div>"""
 
-
 def insight(html):
     st.markdown(f'<div class="insight-box">{html}</div>', unsafe_allow_html=True)
-
 
 def compute_metrics(data, karat):
     col = f'Port_{karat}'
@@ -983,24 +905,18 @@ def compute_metrics(data, karat):
     return dict(total=total, sharpe=sharpe, max_dd=max_dd, var95=var95,
                 final=data[col].iloc[-1], ann_ret=ann_r*100, ann_vol=ann_v*100)
 
-# ══════════════════════════════════════════════════════════════════
-#  AUTO-SCRAPE  ← يشتغل تلقائياً عند أول تشغيل أو لو الملف قديم
-# ══════════════════════════════════════════════════════════════════
 _need_scrape = False
 if not os.path.exists(CSV_PATH):
     _need_scrape = True
 else:
     _age_hours = (time.time() - os.path.getmtime(CSV_PATH)) / 3600
-    if _age_hours > 6:    # لو الملف عمره أكتر من 6 ساعات → حدّثه تلقائياً
+    if _age_hours > 6:
         _need_scrape = True
 
 if _need_scrape:
     with st.spinner("⏳ جاري جلب بيانات الذهب... (مرة واحدة فقط)"):
         run_scraper()
 
-# ══════════════════════════════════════════════════════════════════
-#  SIDEBAR
-# ══════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("""
     <div class="sb-logo">
@@ -1009,7 +925,6 @@ with st.sidebar:
       <div class="sb-logo-sub">أداة التحليل المالي · منذ 2020</div>
     </div>""", unsafe_allow_html=True)
 
-    # الصفحات + مفاتيح الرابط
     pages = {
         "home": "🏠  الرئيسية",
         "analysis": "📊  تحليل الأسعار",
@@ -1019,18 +934,15 @@ with st.sidebar:
         "forecast": "🔮  التوقعات",
     }
 
-    # قراءة الصفحة من الرابط
     query = st.query_params
     default_key = query.get("page", "home")
 
     if default_key not in pages:
         default_key = "home"
 
-    # تحويلها لقائمة لعرضها
     page_labels = list(pages.values())
     page_keys = list(pages.keys())
 
-    # الصفحة الافتراضية
     default_index = page_keys.index(default_key)
 
     page_label = st.radio(
@@ -1040,10 +952,8 @@ with st.sidebar:
         label_visibility="collapsed"
     )
 
-    # معرفة المفتاح المختار
     selected_key = page_keys[page_labels.index(page_label)]
 
-    # تحديث الرابط
     st.query_params["page"] = selected_key
 
     page = page_label
@@ -1070,14 +980,12 @@ with st.sidebar:
 
     st.markdown('<div class="gold-divider"></div>', unsafe_allow_html=True)
 
-    # زر التحديث اليدوي
     if st.button("🔄 تحديث البيانات الآن", use_container_width=True):
         with st.spinner("⏳ جاري التحديث..."):
             run_scraper()
         st.cache_data.clear()
         st.rerun()
 
-    # حالة الملف
     if os.path.exists(CSV_PATH):
         _mt  = datetime.fromtimestamp(os.path.getmtime(CSV_PATH)).strftime("%Y-%m-%d %H:%M")
         _sc  = "#06D6A0"
@@ -1105,14 +1013,11 @@ with st.sidebar:
       <div class="sb-src-val">DEPI Final Project · 2026</div>
     </div>""", unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════
-#  LOAD DATA
-# ══════════════════════════════════════════════════════════════════
 if not os.path.exists(CSV_PATH):
     st.error("❌ فشل تحميل البيانات - تحقق من الاتصال بالإنترنت")
     st.stop()
 
-_mtime_key = os.path.getmtime(CSV_PATH)   # يكسر الـ cache تلقائياً لما الملف يتحدث
+_mtime_key = os.path.getmtime(CSV_PATH)
 
 with st.spinner(""):
     data = load_data(CSV_PATH, _mtime_key)
@@ -1120,17 +1025,14 @@ with st.spinner(""):
 if data.empty:
     st.error("❌ فشل قراءة البيانات"); st.stop()
 
-# Auto-updating values
 last_date   = data.index[-1]
-last_date_f = last_date.strftime('%d %b %Y')   # "06 Mar 2026" - live from data
+last_date_f = last_date.strftime('%d %b %Y')
 last_price  = data[f'Price_{selected_karat}'].iloc[-1]
 last_usd    = data['USD_EGP_Official'].iloc[-1]
 last_gold   = data['Gold_USD_Ounce'].iloc[-1]
 
-# Wrap everything in page-content for animation
 st.markdown('<div class="page-content">', unsafe_allow_html=True)
 
-# Inject JS to remove Streamlit's injected top padding
 st.markdown("""
 <script>
   const el = window.parent.document.querySelector('.main .block-container');
@@ -1138,14 +1040,10 @@ st.markdown("""
 </script>
 """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════
-#  PAGE 1 - الرئيسية
-# ══════════════════════════════════════════════════════════════════
 if page == "🏠  الرئيسية":
 
     m = compute_metrics(data, selected_karat)
 
-    # ── Hero ──
     st.markdown(f"""
     <div class="hero-wrap">
       <div class="hero-eyebrow">GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM</div>
@@ -1165,7 +1063,6 @@ if page == "🏠  الرئيسية":
       </div>
     </div>""", unsafe_allow_html=True)
 
-    # ── KPI grid ──
     clr24 = '#06D6A0' if m['total'] > 0 else '#EF476F'
     cards_html = (
         kpi_html(f"{last_price:,.0f}", f"جنيه/جرام {selected_karat}", "#FFD700", "0.05s") +
@@ -1178,7 +1075,6 @@ if page == "🏠  الرئيسية":
 
     spacer(24)
 
-    # ── Price chart ──
     section("📈", "مسار سعر الذهب", "")
 
     st.markdown(f"""
@@ -1199,7 +1095,6 @@ if page == "🏠  الرئيسية":
     clr = KARAT_COLORS[selected_karat]
     fill_map = {'24K':'rgba(255,249,196,0.07)','21K':'rgba(255,215,0,0.07)','18K':'rgba(205,127,50,0.07)'}
     fig = go.Figure()
-    # Fill area
     fig.add_trace(go.Scatter(x=data.index, y=data[pc], name=f'{selected_karat} سعر جرام',
         line=dict(color=clr, width=2), fill='tozeroy', fillcolor=fill_map[selected_karat],
         hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:,.0f} جنيه<extra></extra>"))
@@ -1228,7 +1123,6 @@ if page == "🏠  الرئيسية":
 
     spacer(24)
 
-    # ── أحداث الأزمات Timeline ──
     section("🗓️", "أبرز الأحداث المؤثرة على سعر الذهب", "2020 – 2025")
     events_cards = {
         "2020-03-15": ("🦠", "COVID-19", "مارس 2020", "انهيار الأسواق العالمية - الذهب يرتفع كملاذ آمن", "#FF6B6B"),
@@ -1260,7 +1154,6 @@ if page == "🏠  الرئيسية":
 
     spacer(24)
 
-    # ── Correlation + USD ──
     c1, c2 = st.columns([1.2, 1])
     with c1:
         section("🔗", "مصفوفة الارتباط", "")
@@ -1310,10 +1203,6 @@ if page == "🏠  الرئيسية":
         fu.update_layout(**plot_layout(height=420, show_legend=False))
         st.plotly_chart(fu, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
-
-# ══════════════════════════════════════════════════════════════════
-#  PAGE 2 - تحليل الأسعار
-# ══════════════════════════════════════════════════════════════════
 elif page == "📊  تحليل الأسعار":
 
     section("📊", "تشريح السعر - قيمة حقيقية أم تضخم؟", "")
@@ -1361,7 +1250,6 @@ elif page == "📊  تحليل الأسعار":
         font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.98)
     fig.update_layout(**lyt)
     fig.update_xaxes(tickfont=dict(family="Cairo", size=10, color="#4A6A8A"),gridcolor="rgba(255, 255, 255, 0.05)",range=["2020-01-01", data.index.max()])
-    # فقط الـ subplot titles (اللي مش فيها text يبدأ بإيموجي حدث)
     event_labels = {v[0] for v in CRISIS_EVENTS.values()}
     for ann in fig.layout.annotations:
         if ann.text not in event_labels:
@@ -1397,10 +1285,6 @@ elif page == "📊  تحليل الأسعار":
         with col:
             insight(f"<b style='color:{KARAT_COLORS[karat]}'>{karat}</b><br>متوسط العلاوة: <span class='num'>{ap:.1f}%</span><br>الذروة التاريخية: <span class='num-red'>{mx:.1f}%</span>")
 
-
-# ══════════════════════════════════════════════════════════════════
-#  PAGE 3 - مقارنة العيارات
-# ══════════════════════════════════════════════════════════════════
 elif page == "⚖️  مقارنة العيارات":
 
     section("⚖️", "مقارنة العيارات", "")
@@ -1480,10 +1364,6 @@ elif page == "⚖️  مقارنة العيارات":
             yaxis=dict(title_text="العائد الكلي %")))
         st.plotly_chart(fb, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
-
-# ══════════════════════════════════════════════════════════════════
-#  PAGE 4 - محاكاة الاستثمار
-# ══════════════════════════════════════════════════════════════════
 elif page == "💼  محاكاة الاستثمار":
 
     section("💼", "محاكاة الاستثمار", "")
@@ -1515,7 +1395,6 @@ elif page == "💼  محاكاة الاستثمار":
 
     spacer()
 
-    # Metric cards - premium
     cols = st.columns(3)
     for col, karat in zip(cols, KARAT_FACTORS):
         m = compute_metrics(data, karat)
@@ -1549,7 +1428,6 @@ elif page == "💼  محاكاة الاستثمار":
             name=karat, line=dict(color=color, width=1.8),
             fill='tozeroy', fillcolor=fc_map[karat],
             hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
-    # Events at bottom - no overlap with legend
     for date_str, (label, color, fill) in CRISIS_EVENTS.items():
         dt = pd.to_datetime(date_str)
         if dt < data.index[0]: continue
@@ -1561,10 +1439,6 @@ elif page == "💼  محاكاة الاستثمار":
     fdd.update_yaxes(title_text="Drawdown %")
     st.plotly_chart(fdd, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
-
-# ══════════════════════════════════════════════════════════════════
-#  PAGE 5 - المؤشرات التقنية
-# ══════════════════════════════════════════════════════════════════
 elif page == "📡  المؤشرات التقنية":
 
     k = selected_karat
@@ -1588,7 +1462,6 @@ elif page == "📡  المؤشرات التقنية":
         row_heights=[0.55,0.25,0.20], vertical_spacing=0.07,
         subplot_titles=[f"السعر + Bollinger Bands ({k})", "MACD - زخم الاتجاه", "RSI-14 - مستوى التشبع"])
 
-    # P1: BB + price + SMAs + signals
     fig.add_trace(go.Scatter(x=data.index, y=data[f'BB_up_{k}'],
         line=dict(width=0), showlegend=False), row=1, col=1)
     fig.add_trace(go.Scatter(x=data.index, y=data[f'BB_dn_{k}'],
@@ -1610,7 +1483,6 @@ elif page == "📡  المؤشرات التقنية":
         name='SELL ▼', marker=dict(symbol='triangle-down', color='#EF476F', size=7,
                                     line=dict(width=1, color='white'))), row=1, col=1)
 
-    # P2: MACD
     hc = ['#06D6A0' if v>=0 else '#EF476F' for v in data[f'MACDHist_{k}']]
     fig.add_trace(go.Bar(x=data.index, y=data[f'MACDHist_{k}'],
         name='Histogram', marker_color=hc, opacity=0.7), row=2, col=1)
@@ -1619,7 +1491,6 @@ elif page == "📡  المؤشرات التقنية":
     fig.add_trace(go.Scatter(x=data.index, y=data[f'MACDSig_{k}'],
         name='Signal Line', line=dict(color='#FF9F43', width=1.5)), row=2, col=1)
 
-    # P3: RSI
     fig.add_trace(go.Scatter(x=data.index, y=data[f'RSI_{k}'],
         name='RSI-14', line=dict(color='#A855F7', width=1.7)), row=3, col=1)
     fig.add_hline(y=70, line_dash='dot', line_color='#EF476F', opacity=0.4, row=3, col=1)
@@ -1637,7 +1508,6 @@ elif page == "📡  المؤشرات التقنية":
     lyt['xaxis']['rangeselector']['y'] = 1.06
     fig.update_layout(**lyt)
     fig.update_xaxes(tickfont=dict(family="Cairo", size=10, color="#3A4A65"),gridcolor="rgba(255, 255, 255, 0.05)",range=["2020-01-01", data.index.max()])
-    # فقط الـ subplot titles - نتجنب تعديل annotations الأحداث
     event_labels = {v[0] for v in CRISIS_EVENTS.values()}
     for ann in fig.layout.annotations:
         if ann.text not in event_labels:
@@ -1670,10 +1540,6 @@ elif page == "📡  المؤشرات التقنية":
       <div><b style="color:#FF9F43">BB</b>&nbsp;{bbp}</div>
     </div>""")
 
-
-# ══════════════════════════════════════════════════════════════════
-#  PAGE 6 - التوقعات
-# ══════════════════════════════════════════════════════════════════
 elif page == "🔮  التوقعات":
 
     section("🔮", f"توقعات الأسعار - {selected_karat}", "")
