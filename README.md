@@ -4,8 +4,11 @@
 
 
 
-<br/>
 
+<br/>
+🌐 Try the Live Dashboard Now
+
+🔗 https://goldegy.streamlit.app/
 <p>
   <img src="https://img.shields.io/badge/Python-3.10+-FFD700?style=for-the-badge&logo=python&logoColor=black" />
   <img src="https://img.shields.io/badge/Streamlit-App-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
