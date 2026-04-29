@@ -1651,3 +1651,15 @@ elif page == "🔮  التوقعات":
             st.error(f"خطأ: {e}")
 
 st.markdown('</div>', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    import sys
+    if "--update" in sys.argv:
+        print("⏳ Starting background data update...")
+        success = run_scraper()
+        if success:
+            print("✅ Data updated and saved to Gold_Egypt.csv")
+        else:
+            print("❌ Failed to update data")
+    else:
+        pass
