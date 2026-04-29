@@ -14,7 +14,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH = os.path.join(DATA_DIR, "new_gold_data.csv")
+CSV_PATH = os.path.join(DATA_DIR, "Gold_Egypt.csv")
 
 _HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36",
