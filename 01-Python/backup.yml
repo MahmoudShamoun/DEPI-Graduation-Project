@@ -1,0 +1,34 @@
+name: Auto Backup Data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: 
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas requests yfinance 
+
+      - name: Run Update Script
+        run: |
+          python Gold_Egypt_App.py --update
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add Gold_Egypt.csv
+          git commit -m "Auto-update gold data: $(date)" || exit 0
+          git push
