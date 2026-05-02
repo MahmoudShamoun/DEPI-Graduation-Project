@@ -704,7 +704,7 @@ _BASE = dict(
 def _legend_clean(**kw):
     d = dict(
         orientation="h",
-        y=1.15,
+        y=1.10,
         yanchor="top",
         x=0.5,
         xanchor="center",
@@ -723,7 +723,7 @@ def _xax(**kw):
              rangeselector=dict(
                  x=0,
                  xanchor="left",
-                 y=1.12,
+                 y=1.10,
                  yanchor="top", bgcolor="#0A1525",
                  bordercolor="#132238", borderwidth=1, activecolor="#1E3A5F",
                  font=dict(size=9.5, color="#8D99AE"),
@@ -927,8 +927,7 @@ with st.sidebar:
 
     pages = {
         "home": "🏠  الرئيسية",
-        "analysis": "📊  تحليل الأسعار",
-        "compare": "⚖️  مقارنة العيارات",
+        "analysis": "📊  تحليل الأسعار",    
         "investment": "💼  محاكاة الاستثمار",
         "technical": "📡  المؤشرات التقنية",
         "forecast": "🔮  التوقعات",
@@ -1117,7 +1116,7 @@ if page == "🏠  الرئيسية":
 
     c1, c2 = st.columns(2)
     with c1:
-        insight(f"📌 <b>الأداء الإجمالي:</b> ارتفع الذهب {selected_karat} بنسبة <span class='num'>{price_chg:.0f}%</span> منذ يناير 2020، مقارنةً بالدولار الذي ارتفع <span class='num'>{usd_chg:.0f}%</span> فقط خلال نفس الفترة.")
+        insight(f"‫📌 <b>الأداء الإجمالي:</b> ارتفع الذهب {selected_karat} بنسبة <span class='num'>{price_chg:.0f}‬%</span> ‫منذ يناير 2020، مقارنةً بالدولار الذي ارتفع‬ <span class='num'>{usd_chg:.0f}%</span> ‫فقط خلال نفس الفترة.‬")
     with c2:
         insight(f"🏔️ <b>القمة التاريخية:</b> <span class='num'>{peak_p:,.0f} جنيه</span> لجرام {selected_karat} في <b>{peak_d}</b> - مدفوعاً بتراجع الجنيه وارتفاع الأسعار العالمية.")
 
@@ -1242,10 +1241,10 @@ elif page == "📊  تحليل الأسعار":
     if show_events: add_events(fig, data, rows=[1,2,3])
     lyt = plot_layout(height=800)
     lyt['margin'] = dict(l=8, r=8, t=160, b=8)
-    lyt['legend'] = dict(orientation="h", y=1.12, x=0.5, xanchor="center",
+    lyt['legend'] = dict(orientation="h", y=1.20, x=0.5, xanchor="center",
         bgcolor="rgba(0,0,0,0)", borderwidth=0,
         font=dict(size=10, family="Cairo"), itemsizing="constant")
-    lyt['xaxis']['rangeselector']['y'] = 1.06
+    lyt['xaxis']['rangeselector']['y'] = 1.20
     lyt['title'] = dict(text="تشريح السعر: القيمة الحقيقية مقابل علاوة التضخم",
         font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.98)
     fig.update_layout(**lyt)
@@ -1285,159 +1284,146 @@ elif page == "📊  تحليل الأسعار":
         with col:
             insight(f"<b style='color:{KARAT_COLORS[karat]}'>{karat}</b><br>متوسط العلاوة: <span class='num'>{ap:.1f}%</span><br>الذروة التاريخية: <span class='num-red'>{mx:.1f}%</span>")
 
-elif page == "⚖️  مقارنة العيارات":
-
-    section("⚖️", "مقارنة العيارات", "")
-
-    st.markdown("""
-    <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-
-    <div style="direction:rtl">
-    كل الأصول تبدأ من نقطة واحدة - أيها حقق أفضل أداء؟
-    </div>
-    
-    <div style="direction:ltr">
-    Base 100 · يناير 2020 = 100
-    </div>
-
-    </div>
-    """, unsafe_allow_html=True)
-    fig = go.Figure()
-    for karat, color in KARAT_COLORS.items():
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'Norm_{karat}'],
-            name=f'{karat} ذهب', line=dict(color=color, width=2.5),
-            hovertemplate=f"<b>{karat}</b>: %{{y:.1f}}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=data.index, y=data['Norm_USD'],
-        name='دولار 💵', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
-        hovertemplate="دولار: %{y:.1f}<extra></extra>"))
-    fig.add_trace(go.Scatter(x=data.index, y=data['Norm_Cash'],
-        name='كاش 💸', line=dict(color='#1E3A5F', width=1.2, dash='dot'),
-        hovertemplate="كاش: %{y:.1f}<extra></extra>"))
-    if show_events: add_events(fig, data)
-    lyt_kc = plot_layout(height=460, yaxis=dict(title_text="مؤشر (يناير 2020 = 100)"))
-    lyt_kc['title'] = dict(text="المقارنة الموحدة لكل الأصول منذ 2020",
-        font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
-    fig.update_layout(**lyt_kc)
-    st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-
-    spacer(24)
-    c1, c2 = st.columns([1.15, 1])
-
-    with c1:
-        section("📋", "جدول المقاييس المالية", "")
-
-        st.markdown("""
-        <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="direction:rtl">مقارنة شاملة لكل عيار وأصل</div>
-        <div style="direction:ltr">Sharpe · Max DD · VaR 95%</div>
-        </div>
-        """, unsafe_allow_html=True)
-        rows = []
-        for karat in KARAT_FACTORS:
-            m = compute_metrics(data, karat)
-            rows.append({"العيار":karat, "العائد الكلي":f"{m['total']:+.1f}%",
-                         "Sharpe":f"{m['sharpe']:.2f}", "Max DD":f"{m['max_dd']:.1f}%",
-                         "VaR 95%":f"{m['var95']:.2f}%", "القيمة النهائية":f"{m['final']:,.0f}"})
-        usd_ret = (data['Port_USD'].iloc[-1]/100_000-1)*100
-        rows.append({"العيار":"دولار 💵","العائد الكلي":f"{usd_ret:+.1f}%",
-                     "Sharpe":"-","Max DD":"-","VaR 95%":"-",
-                     "القيمة النهائية":f"{data['Port_USD'].iloc[-1]:,.0f}"})
-        st.dataframe(pd.DataFrame(rows).set_index("العيار"), use_container_width=True)
-
-    with c2:
-        section("📊", "مقارنة العوائد", "")
-
-        st.markdown("""
-        <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="direction:rtl">100,000 جنيه · يناير 2020</div>
-        <div style="direction:ltr">Total Return % · Bar Chart</div>
-        </div>
-        """, unsafe_allow_html=True)
-        bv = [compute_metrics(data,'18K')['total'], compute_metrics(data,'21K')['total'],
-              compute_metrics(data,'24K')['total'], usd_ret, 0]
-        fb = go.Figure(go.Bar(x=['18K','21K','24K','USD','Cash'], y=bv,
-            marker_color=['#CD7F32','#FFD700','#FFF9C4','#4CC9F0','#132238'],
-            text=[f"{v:+.0f}%" for v in bv], textposition='outside',
-            textfont=dict(size=11.5, color='white', family="DM Mono"),
-            hovertemplate="%{x}: %{y:+.1f}%<extra></extra>"))
-        fb.update_layout(**plot_layout(height=360, show_legend=False,
-            yaxis=dict(title_text="العائد الكلي %")))
-        st.plotly_chart(fb, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
 elif page == "💼  محاكاة الاستثمار":
 
-    section("💼", "محاكاة الاستثمار", "")
+        section("💼", "محاكاة الاستثمار", "")
 
-    st.markdown("""
-    <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">لو استثمرت 100,000 جنيه في يناير 2020 - كم تساوي اليوم؟</div>
-    <div style="direction:ltr">Portfolio Simulation · EGP 100K</div>
-    </div>
-    """, unsafe_allow_html=True)
+        # --- تعريف تكاليف المصنعية والـ Spread (القيم تقريبية للسوق المصري) ---
+        MAKING_CHARGES = {'24K': 60, '21K': 150, '18K': 220} 
+        SELL_SPREAD = {'24K': 0.005, '21K': 0.01, '18K': 0.015} 
 
-    fig = go.Figure()
-    for karat, color in KARAT_COLORS.items():
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'Port_{karat}'],
-            name=f'{karat} ذهب', line=dict(color=color, width=2.2),
-            hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} جنيه<extra></extra>"))
-    fig.add_trace(go.Scatter(x=data.index, y=data['Port_USD'],
-        name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
-        hovertemplate="دولار: %{y:,.0f} جنيه<extra></extra>"))
-    fig.add_trace(go.Scatter(x=data.index, y=data['Port_Cash'],
-        name='كاش', line=dict(color='#1E3A5F', width=1.2, dash='dot'),
-        hovertemplate="كاش: %{y:,.0f} جنيه<extra></extra>"))
-    if show_events: add_events(fig, data)
-    lyt_inv = plot_layout(height=440, yaxis=dict(title_text="القيمة (جنيه)"))
-    lyt_inv['title'] = dict(text="نمو محفظة 100,000 جنيه منذ يناير 2020",
-        font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
-    fig.update_layout(**lyt_inv)
-    st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        st.markdown(f"""
+        <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="direction:rtl">لو استثمرنا 100,000 جنيه في أول 2020 - القيمة الصافية بعد خصم المصنعية وفروق البيع</div>
+        <div style="direction:ltr">Realistic Portfolio Simulation · Net Value</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    spacer()
+        fig = go.Figure()
+        real_metrics_data = {} # لتخزين الحسابات واستخدامها في البطاقات بالأسفل
 
-    cols = st.columns(3)
-    for col, karat in zip(cols, KARAT_FACTORS):
-        m = compute_metrics(data, karat)
-        tc = '#06D6A0' if m['total']>0 else '#EF476F'
-        with col:
+        for karat, color in KARAT_COLORS.items():
+            # 1. السعر وقت الشراء بالمصنعية
+            initial_raw_price = data[f'Price_{karat}'].iloc[0]
+            price_with_making = initial_raw_price + MAKING_CHARGES[karat]
+            
+            # 2. كمية الذهب "الصافي" المشتراة
+            grams_bought = 100_000 / price_with_making
+            
+            # 3. حساب سلسلة القيمة الصافية (القيمة الخام مخصوم منها فرق سعر البيع Spread)
+            # ملاحظة: نستخدم سعر الذهب الخام فقط عند البيع لأن المصنعية لا تُسترد
+            net_value_series = (data[f'Price_{karat}'] * grams_bought) * (1 - SELL_SPREAD[karat])
+            
+            # تخزين البيانات للبطاقات
+            real_metrics_data[karat] = {
+                'grams': grams_bought,
+                'entry_price': price_with_making,
+                'final_val': net_value_series.iloc[-1],
+                'total_ret': (net_value_series.iloc[-1] / 100_000 - 1) * 100
+            }
+
+            fig.add_trace(go.Scatter(x=data.index, y=net_value_series,
+                name=f'{karat} ذهب (صافي)', line=dict(color=color, width=2.2),
+                hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} جنيه<extra></extra>"))
+        
+        # إضافة الدولار والكاش (بدون تغيير في منطقهم)
+        fig.add_trace(go.Scatter(x=data.index, y=data['Port_USD'],
+            name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot')))
+            
+        fig.add_trace(go.Scatter(x=data.index, y=data['Port_Cash'],
+            name='كاش', line=dict(color='#1E3A5F', width=1.2, dash='dot')))
+
+        if show_events: add_events(fig, data)
+        
+        lyt_inv = plot_layout(height=440, yaxis=dict(title_text="القيمة الصافية (جنيه)"))
+        lyt_inv['title'] = dict(text="نمو الثروة الحقيقي (مخصوم منه تكاليف الدخول والخروج)",
+            font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
+        fig.update_layout(**lyt_inv)
+        st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False))
+
+        spacer()
+        cols = st.columns(4)
+        
+        # عرض بطاقات الذهب (العيارات الثلاثة) بالنتائج الجديدة
+        for col, karat in zip(cols[:3], KARAT_FACTORS):
+            m_real = real_metrics_data[karat] # البيانات الواقعية
+            m_orig = compute_metrics(data, karat) # للبيانات الفنية مثل Sharpe
+            
+            tc = '#06D6A0' if m_real['total_ret'] > 0 else '#EF476F'
+            
+            with col:
+                st.markdown(f"""
+                <div class="metric-card" style="padding:15px 10px;">
+                  <div class="metric-card-title" style="color:{KARAT_COLORS[karat]}">{karat} ذهب</div>
+                  <div class="metric-row"><span class="metric-label">الكمية الصافية</span><span class="metric-val" style="color:#E8EDF5">{m_real['grams']:,.1f} جم</span></div>
+                  <div class="metric-row"><span class="metric-label">سعر 2020 (+مصنعية)</span><span class="metric-val" style="color:#8D99AE">{m_real['entry_price']:,.0f} ج</span></div>
+                  <div class="metric-row"><span class="metric-label">القيمة الصافية</span><span class="metric-val" style="color:#FFD700">{m_real['final_val']:,.0f} ج</span></div>
+                  <div class="metric-row"><span class="metric-label">العائد الفعلي</span><span class="metric-val" style="color:{tc}">{m_real['total_ret']:+.1f}%</span></div>
+                  <div class="metric-row"><span class="metric-label">Sharpe Ratio</span><span class="metric-val" style="color:#4CC9F0">{m_orig['sharpe']:.2f}</span></div>
+                  <div class="metric-row"><span class="metric-label">Max DD</span><span class="metric-val" style="color:#EF476F">{m_orig['max_dd']:.1f}%</span></div>
+                </div>""", unsafe_allow_html=True)
+
+        # حساب وعرض بطاقة الدولار (كما هي)
+        usd_initial_price = data['USD_EGP_Official'].iloc[0]
+        usd_bought = 100_000 / usd_initial_price
+        usd_final_val = data['Port_USD'].iloc[-1]
+        usd_total_ret = (usd_final_val / 100_000 - 1) * 100
+        usd_tc = '#06D6A0' if usd_total_ret > 0 else '#EF476F'
+        
+        # حسابات Drawdown للدولار
+        usd_dd_series = (data['Port_USD'] / data['Port_USD'].cummax() - 1) * 100
+        usd_dd = usd_dd_series.min()
+        usd_ret_daily = data['Port_USD'].pct_change().dropna()
+        usd_ann_r = usd_ret_daily.mean() * 252
+        usd_ann_v = usd_ret_daily.std() * np.sqrt(252)
+        usd_sharpe = usd_ann_r / usd_ann_v if usd_ann_v else 0
+
+        with cols[3]:
             st.markdown(f"""
-            <div class="metric-card">
-              <div class="metric-card-title" style="color:{KARAT_COLORS[karat]}">{karat} ذهب</div>
-              <div class="metric-row"><span class="metric-label">العائد الكلي</span><span class="metric-val" style="color:{tc}">{m['total']:+.1f}%</span></div>
-              <div class="metric-row"><span class="metric-label">Sharpe Ratio</span><span class="metric-val" style="color:#4CC9F0">{m['sharpe']:.2f}</span></div>
-              <div class="metric-row"><span class="metric-label">Max Drawdown</span><span class="metric-val" style="color:#EF476F">{m['max_dd']:.1f}%</span></div>
-              <div class="metric-row"><span class="metric-label">VaR 95% يومي</span><span class="metric-val" style="color:#FF9F43">{m['var95']:.2f}%</span></div>
-              <div class="metric-row"><span class="metric-label">العائد السنوي</span><span class="metric-val" style="color:#A855F7">{m['ann_ret']:.1f}%</span></div>
-              <div class="metric-row"><span class="metric-label">القيمة النهائية</span><span class="metric-val" style="color:#FFD700">{m['final']:,.0f} ج</span></div>
+            <div class="metric-card" style="padding:15px 10px;">
+              <div class="metric-card-title" style="color:#4CC9F0">الدولار USD</div>
+              <div class="metric-row"><span class="metric-label">الكمية المشتراة</span><span class="metric-val" style="color:#E8EDF5">${usd_bought:,.0f}</span></div>
+              <div class="metric-row"><span class="metric-label">سعر 2020</span><span class="metric-val" style="color:#8D99AE">{usd_initial_price:,.2f} ج</span></div>
+              <div class="metric-row"><span class="metric-label">القيمة الحالية</span><span class="metric-val" style="color:#FFD700">{usd_final_val:,.0f} ج</span></div>
+              <div class="metric-row"><span class="metric-label">العائد الكلي</span><span class="metric-val" style="color:{usd_tc}">{usd_total_ret:+.1f}%</span></div>
+              <div class="metric-row"><span class="metric-label">Sharpe Ratio</span><span class="metric-val" style="color:#4CC9F0">{usd_sharpe:.2f}</span></div>
+              <div class="metric-row"><span class="metric-label">Max DD</span><span class="metric-val" style="color:#EF476F">{usd_dd:.1f}%</span></div>
             </div>""", unsafe_allow_html=True)
 
-    spacer(24)
-    section("📉", "Max Drawdown", "")
+        spacer(24)
+        section("📉", "Max Drawdown", "")
 
-    st.markdown("""
-    <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">الانخفاض عن القمة - يقيس الخسارة في أسوأ الأوقات</div>
-    <div style="direction:ltr">Peak-to-Trough Drawdown %</div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="direction:rtl">الانخفاض عن القمة - يقيس الخسارة في أسوأ الأوقات</div>
+        <div style="direction:ltr">Peak-to-Trough Drawdown %</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    fdd = go.Figure()
-    for karat, color in KARAT_COLORS.items():
-        fc_map = {'24K':'rgba(255,249,196,0.09)','21K':'rgba(255,215,0,0.09)','18K':'rgba(205,127,50,0.09)'}
-        fdd.add_trace(go.Scatter(x=data.index, y=data[f'DD_{karat}'],
-            name=karat, line=dict(color=color, width=1.8),
-            fill='tozeroy', fillcolor=fc_map[karat],
-            hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
-    for date_str, (label, color, fill) in CRISIS_EVENTS.items():
-        dt = pd.to_datetime(date_str)
-        if dt < data.index[0]: continue
-        x1 = (dt + timedelta(days=20)).strftime('%Y-%m-%d')
-        fdd.add_vrect(x0=date_str, x1=x1, fillcolor=fill, opacity=1, layer="below", line_width=0)
-        fdd.add_annotation(x=date_str, y=0.04, yref="paper", text=label, showarrow=False,
-            font=dict(size=8, color=color), textangle=-90, xanchor="left", yanchor="bottom")
-    fdd.update_layout(**plot_layout(height=300))
-    fdd.update_yaxes(title_text="Drawdown %")
-    st.plotly_chart(fdd, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        fdd = go.Figure()
+        for karat, color in KARAT_COLORS.items():
+            fc_map = {'24K':'rgba(255,249,196,0.09)','21K':'rgba(255,215,0,0.09)','18K':'rgba(205,127,50,0.09)'}
+            fdd.add_trace(go.Scatter(x=data.index, y=data[f'DD_{karat}'],
+                name=karat, line=dict(color=color, width=1.8),
+                fill='tozeroy', fillcolor=fc_map.get(karat, 'rgba(255,255,255,0.1)'),
+                hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
+                
+        fdd.add_trace(go.Scatter(x=data.index, y=usd_dd_series,
+            name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
+            hovertemplate="دولار: %{y:.1f}%<extra></extra>"))
+            
+        for date_str, (label, color, fill) in CRISIS_EVENTS.items():
+            dt = pd.to_datetime(date_str)
+            if dt < data.index[0]: continue
+            x1 = (dt + timedelta(days=20)).strftime('%Y-%m-%d')
+            fdd.add_vrect(x0=date_str, x1=x1, fillcolor=fill, opacity=1, layer="below", line_width=0)
+            fdd.add_annotation(x=date_str, y=0.04, yref="paper", text=label, showarrow=False,
+                font=dict(size=8, color=color), textangle=-90, xanchor="left", yanchor="bottom")
+                
+        fdd.update_layout(**plot_layout(height=300))
+        fdd.update_yaxes(title_text="Drawdown %")
+        st.plotly_chart(fdd, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
 elif page == "📡  المؤشرات التقنية":
 
@@ -1600,7 +1586,7 @@ elif page == "🔮  التوقعات":
                 line=dict(width=0), showlegend=False))
             fig.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
                 fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
-                line=dict(width=0), name='نطاق الثقة 95%'))
+                line=dict(width=0), name='نطاق ‫الثقة 95%‬'))
             fig.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
                 name='توقع Prophet', line=dict(color='#4CC9F0', width=2.5),
                 hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} جنيه</b><extra></extra>"))
