@@ -29,8 +29,8 @@ IMAGE_HTML_SRC = f"data:image/png;base64,{img_base64}"
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS & CONSTANTS
 # ─────────────────────────────────────────────────────────────────────────────
-CSV_PATH           = "../02_Dataset\Gold_Egypt.csv"
-PROCESSED_CSV_PATH = "../02_Dataset\Gold_Egypt_Processed.csv"
+CSV_PATH           = r"../02_Dataset\Gold_Egypt.csv"
+PROCESSED_CSV_PATH = r"../02_Dataset\Gold_Egypt_Processed.csv"
 
 _HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36",
@@ -79,7 +79,6 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
-icon_img = Image.open("logo.png")
 st.set_page_config(
     page_title="GOLD EGYPT · ذهب مصر",
     page_icon=icon_img,
