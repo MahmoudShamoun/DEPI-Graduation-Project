@@ -21,7 +21,7 @@ def get_img_as_base64(file_path):
     except Exception:
         return ""
 base_path = os.path.dirname(os.path.abspath(__file__))
-image_path = os.path.join(base_path, "..\\03_Streamlit\\logo.png")
+image_path = os.path.join(base_path, "logo.png")
 icon_img = Image.open(image_path)
 img_base64 = get_img_as_base64(image_path) 
 IMAGE_HTML_SRC = f"data:image/png;base64,{img_base64}"
@@ -79,7 +79,7 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
-icon_img = Image.open("..\\03_Streamlit\\logo.png")
+icon_img = Image.open("logo.png")
 st.set_page_config(
     page_title="GOLD EGYPT · ذهب مصر",
     page_icon=icon_img,
