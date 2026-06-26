@@ -79,7 +79,7 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
-icon_img = Image.open("../03_Streamlit/logo.png")
+icon_img = Image.open("logo.png")
 st.set_page_config(
     page_title="GOLD EGYPT · ذهب مصر",
     page_icon=icon_img,
