@@ -11,6 +11,18 @@ import time
 import os
 import warnings
 warnings.filterwarnings("ignore")
+from PIL import Image
+import base64
+def get_img_as_base64(file_path):
+    try:
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except Exception:
+        return ""
+
+img_base64 = get_img_as_base64("../03_Streamlit/logo.png") 
+IMAGE_HTML_SRC = f"data:image/png;base64,{img_base64}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS & CONSTANTS
@@ -65,9 +77,10 @@ except ImportError:
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
+icon_img = Image.open("../03_Streamlit/logo.png")
 st.set_page_config(
     page_title="GOLD EGYPT · ذهب مصر",
-    page_icon="🥇",
+    page_icon=icon_img,
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -947,9 +960,9 @@ if _need_scrape:
 # ─────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown("""
+    st.markdown(f"""
     <div class="sb-logo">
-      <div class="sb-logo-icon">🥇</div>
+      <div class="sb-logo-icon"><img src="{IMAGE_HTML_SRC}" width="80" style="border-radius:8px;"></div>
       <div class="sb-logo-text">GOLD EGYPT</div>
       <div class="sb-logo-sub">أداة التحليل المالي · منذ 2020</div>
     </div>""", unsafe_allow_html=True)
@@ -1093,11 +1106,13 @@ if page == "🏠  الرئيسية":
     st.markdown(f"""
     <div class="hero-wrap">
       <div class="hero-eyebrow">GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM</div>
-      <div class="hero-title">🥇 الذهب كأداة مالية في مصر</div>
+      <div class="hero-title">
+        <img src="{IMAGE_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px;"> الذهب كأداة مالية في مصر
+      </div>
       <div class="hero-sub">
         تحليل شامل لأداء الذهب بالعيارات
         <span style="font-family:'DM Mono',monospace; direction:ltr; display:inline;"> 18K · 21K · 24K </span>
-        كأداة للحفاظ على القيمة في مواجهة التضخم وانخفاض الجنيه - محاكاة واقعية تشمل المصنعية وفروق أسعار البيع
+        كأداة للحفاظ على القيمة في مواجهة التضخم وانخفاض الجنيه - محاكاة واقعية تشمل المصنعية وفرق أسعار البيع
       </div>
       <div class="hero-date">
         <span class="dot"></span>
