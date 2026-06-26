@@ -1108,7 +1108,7 @@ if page == "🏠  الرئيسية":
     <div class="hero-wrap">
       <div class="hero-eyebrow">GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM</div>
       <div class="hero-title">
-        <img src="{IMAGE_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px;"> الذهب كأداة مالية في مصر
+        <img src="{IMAGE_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px; position: relative; top: -5px;"> الذهب كأداة مالية في مصر
       </div>
       <div class="hero-sub">
         تحليل شامل لأداء الذهب بالعيارات
