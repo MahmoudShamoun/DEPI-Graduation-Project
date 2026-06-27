@@ -1204,14 +1204,23 @@ if embed_q:
 
     # Q5: محاكاة المحفظة الاستثمارية (Portfolio Net Returns)
     elif embed_q == "q5":
-        fig = go.Figure()
+        fig_inv = go.Figure()
         for karat, color in KARAT_COLORS.items():
-            if f'Port_{karat}' in data.columns:
-                fig.add_trace(go.Scatter(x=data.index, y=data[f'Port_{karat}'], name=f'صافي عائد {karat}', line=dict(color=color)))
-        if 'Port_USD' in data.columns:
-            fig.add_trace(go.Scatter(x=data.index, y=data['Port_USD'], name='استثمار الدولار', line=dict(color='#4CC9F0', dash='dot')))
-        fig.update_layout(**plot_layout(height=460))
-        st.plotly_chart(fig, use_container_width=True)
+            fig_inv.add_trace(go.Scatter(x=data.index, y=data[f'Port_{karat}'],
+                name=f'{karat} ذهب (صافي)', line=dict(color=color, width=2.2),
+                hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} جنيه<extra></extra>"))
+        fig_inv.add_trace(go.Scatter(x=data.index, y=data['Port_USD'],
+            name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
+            hovertemplate="دولار: %{y:,.0f}<extra></extra>"))
+        fig_inv.add_trace(go.Scatter(x=data.index, y=data['Port_Cash'],
+            name='كاش (جنيه)', line=dict(color='#1E3A5F', width=1.2, dash='dot'),
+            hovertemplate="كاش: %{y:,.0f}<extra></extra>"))
+        if show_events: add_events(fig_inv, data)
+        lyt_inv = plot_layout(height=440, yaxis=dict(title_text="القيمة الصافية (جنيه)"))
+        lyt_inv['title'] = dict(text="نمو الثروة الحقيقي (مخصوم منه تكاليف الدخول والخروج)",
+            font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
+        fig_inv.update_layout(**lyt_inv)
+        st.plotly_chart(fig_inv, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     # Q6: التنبؤ المستقبلي (Prophet Forecasting Time Series)
     elif embed_q == "q6":
