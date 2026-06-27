@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
-import plotly.io as pio
 from plotly.subplots import make_subplots
 from datetime import datetime, timedelta
 import requests
@@ -1303,13 +1302,7 @@ elif page == "📊  تحليل الأسعار":
         fig.update_yaxes(tickfont=dict(family="Cairo", size=11, color="#4A6A8A"),
                          title_text="جنيه", title_font=dict(size=9), row=r, col=1)
     st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-    pio.write_html(
-    fig,
-    file="price_structure_chart.html",
-    auto_open=False,
-    include_plotlyjs="cdn",
-    full_html=True
-    )
+
     spacer(24)
     section("📐", "نسبة علاوة التضخم %", "")
     st.markdown("""
