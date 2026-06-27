@@ -9,7 +9,6 @@ import requests
 import yfinance as yf
 import time
 import os
-import json
 import warnings
 warnings.filterwarnings("ignore")
 from PIL import Image
@@ -64,147 +63,6 @@ CRISIS_EVENTS = {
     "2025-04-22": ("🏆 ذهب 3500$",          "#FFD700", "rgba(255,215,0,0.06)"),
     "2025-06-13": ("💥 ضربة إيران",         "#EF476F", "rgba(239,71,111,0.08)"),
 }
-
-# ─────────────────────────────────────────────────────────────────────────────
-# CHART ↔ QUESTION TAGGING SYSTEM
-# Every Plotly figure that answers one of the 7 research questions gets tagged
-# here with its question_id / question_title / source page. register_chart()
-# is called right AFTER the existing st.plotly_chart(...) call for that figure
-# — it never replaces or alters any existing rendering logic, it only stores a
-# copy of the already-rendered figure (via fig.to_json(), which is JSON-safe
-# for numpy/pandas/datetime values) into st.session_state for later export.
-# ─────────────────────────────────────────────────────────────────────────────
-CHARTS_EXPORT_PATH = os.path.abspath(os.path.join(base_path, "..", "07_Presentation_HTML", "charts.json"))
-QUESTION_CHART_MAP = {
-    "analysis_decomposition": {
-        "question_id":    "price_decomposition",
-        "question_title": "Q1 · ما الذي يحرك سعر الذهب في مصر؟ (تشريح السعر)",
-        "page":            "📊  تحليل الأسعار",
-    },
-    "analysis_fair_value": {
-        "question_id":    "fair_value_index",
-        "question_title": "Q2 · ما هي القيمة العادلة للذهب في مصر الآن؟ (Fair Value Index)",
-        "page":            "📊  تحليل الأسعار",
-    },
-    "analysis_premium_pct": {
-        "question_id":    "crisis_premium",
-        "question_title": "Q3 · هل توجد فقاعات علاوة مضاربة خلال الأزمات؟",
-        "page":            "📊  تحليل الأسعار",
-    },
-    "home_correlation": {
-        "question_id":    "macro_drivers",
-        "question_title": "Q4 · أي متغير اقتصادي كلي له التأثير الأكبر على الذهب؟",
-        "page":            "🏠  الرئيسية",
-    },
-    "investment_portfolio": {
-        "question_id":    "net_return_comparison",
-        "question_title": "Q5 · كيف يقارن العائد الصافي للذهب بالدولار والكاش؟",
-        "page":            "💼  محاكاة الاستثمار",
-    },
-    "forecast_prophet": {
-        "question_id":    "prophet_forecast",
-        "question_title": "Q6 · هل يمكن لنموذج Prophet التنبؤ الدقيق بأسعار الذهب؟",
-        "page":            "🔮  التوقعات",
-    },
-    "technical_indicators": {
-        "question_id":    "technical_signals",
-        "question_title": "Q7 · ما هي أفضل إشارة تقنية لتحديد نقاط الدخول والخروج؟",
-        "page":            "📡  المؤشرات التقنية",
-    },
-}
-
-# Preserves Q1→Q7 order when grouping charts by question on export
-_QUESTION_ORDER = [
-    "price_decomposition", "fair_value_index", "crisis_premium", "macro_drivers",
-    "net_return_comparison", "prophet_forecast", "technical_signals",
-]
-
-def _read_existing_export() -> dict:
-    """Read whatever charts.json already has on disk (from earlier renders/
-    sessions). Returns {} if missing or unreadable — never raises."""
-    if os.path.exists(CHARTS_EXPORT_PATH):
-        try:
-            with open(CHARTS_EXPORT_PATH, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
-
-def _write_export(charts_by_id: dict, karat_label: str = "") -> None:
-    """Write charts_by_id (dict of chart_id -> chart entry) to charts.json in
-    BOTH the flat shape (`charts`) index03.html already reads and a
-    question-grouped shape (`questions`, Q1→Q7 order) for any consumer that
-    wants charts nested directly under their related question."""
-    grouped: dict = {}
-    for c in charts_by_id.values():
-        qid = c["question_id"]
-        bucket = grouped.setdefault(qid, {"id": qid, "title": c["title"], "charts": []})
-        bucket["charts"] = [{"id": c["id"], "data": c["data"]}]  # one chart per question slot
-
-    questions = [grouped[q] for q in _QUESTION_ORDER if q in grouped]
-
-    payload = {
-        "exported_at": datetime.utcnow().isoformat() + "Z",
-        "karat":       karat_label,
-        "charts":      list(charts_by_id.values()),  # flat list — read by index03.html's existing loader
-        "questions":   questions,                     # grouped by question_id/title — Q1→Q7 order
-    }
-    with open(CHARTS_EXPORT_PATH, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False)
-
-def register_chart(chart_id: str, fig) -> None:
-    """Tag an already-rendered Plotly figure with its question metadata and
-    IMMEDIATELY merge-write it into charts.json on disk. This means charts.json
-    builds up automatically as pages are visited — in any order, across any
-    number of reruns or browser sessions — without depending on session_state
-    surviving between page switches, and without requiring the export button
-    to be clicked at all. Never raises - a tagging/write failure must never
-    break the Streamlit page itself."""
-    meta = QUESTION_CHART_MAP.get(chart_id)
-    if meta is None or fig is None:
-        return
-    try:
-        fig_payload = json.loads(fig.to_json())
-    except Exception:
-        return
-
-    entry = {
-        "id":          chart_id,
-        "title":       meta["question_title"],
-        "page":        meta["page"],
-        "question_id": meta["question_id"],
-        "data":        fig_payload,
-    }
-
-    # Keep an in-memory copy too (used by the manual export button below)
-    registry = st.session_state.setdefault("chart_registry", {})
-    registry[chart_id] = entry
-
-    try:
-        existing = _read_existing_export()
-        existing_charts = {c["id"]: c for c in existing.get("charts", [])}
-        existing_charts[chart_id] = entry
-        _write_export(existing_charts, st.session_state.get("selected_karat_for_export", ""))
-    except Exception:
-        pass   # e.g. read-only filesystem on some hosting platforms - don't crash the page
-
-def export_charts_to_json():
-    """Manual 'force export' button action. Merges the in-memory session
-    registry (covers charts rendered earlier THIS run) with whatever is
-    already saved on disk from previous visits/sessions, writes the combined
-    result, and reports back how many of the 7 questions are covered and
-    which (if any) are still missing."""
-    existing = _read_existing_export()
-    existing_charts = {c["id"]: c for c in existing.get("charts", [])}
-    existing_charts.update(st.session_state.get("chart_registry", {}))
-    _write_export(existing_charts, st.session_state.get("selected_karat_for_export", ""))
-
-    present_ids = set(existing_charts.keys())
-    missing_titles = [
-        meta["question_title"] for cid, meta in QUESTION_CHART_MAP.items()
-        if cid not in present_ids
-    ]
-    return len(existing_charts), missing_titles
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TASK 1 - SAFE AUTO-REFRESH (every 5 minutes during market hours UTC 13–21)
@@ -1177,27 +1035,6 @@ with st.sidebar:
         f'font-family:DM Mono,monospace;margin-top:6px;line-height:1.8;">{_stx}</div>',
         unsafe_allow_html=True)
 
-    st.session_state["selected_karat_for_export"] = selected_karat
-
-    spacer(6)
-    if st.button("📊 تصدير جميع المخططات", use_container_width=True,
-                  help="يحفظ كل المخططات المُعلَّمة حتى الآن في charts.json لعرضها داخل عرض HTML التقديمي"):
-        try:
-            n_exported, missing_titles = export_charts_to_json()
-            if not missing_titles:
-                st.success(f"✅ تم تصدير جميع المخططات ({n_exported}/7) إلى charts.json")
-            else:
-                st.warning(f"⚠️ تم تصدير {n_exported}/7 - افتح هذه الصفحات لاستكمال الباقي:")
-                for _title in missing_titles:
-                    st.caption(f"• {_title}")
-        except Exception as e:
-            st.error(f"⚠️ فشل التصدير: {e}")
-    st.markdown(
-        '<div style="font-size:0.6rem;color:#3A4A65;direction:rtl;text-align:right;line-height:1.7;margin-top:2px;">'
-        '✅ جميع المخططات السبعة تُولَّد تلقائياً عند بدء التطبيق وتُحفَظ في charts.json مباشرة - '
-        'لا حاجة لزيارة أي صفحة. هذا الزر يُجبر إعادة الحفظ الفوري ويعرض حالة كل مخطط.</div>',
-        unsafe_allow_html=True)
-
     st.markdown('<div class="gold-divider"></div>', unsafe_allow_html=True)
 
     st.markdown("""
@@ -1255,314 +1092,6 @@ last_date_f = last_date.strftime('%d %b %Y')
 last_price  = data[f'Price_{selected_karat}'].iloc[-1]
 last_usd    = data['USD_EGP_Official'].iloc[-1]
 last_gold   = data['Gold_USD_Ounce'].iloc[-1]
-
-# ─────────────────────────────────────────────────────────────────────────────
-# AUTO-GENERATE ALL 7 CHARTS AT STARTUP
-# These functions mirror the exact chart-building logic inside each page block,
-# but run unconditionally at startup so charts.json is always complete without
-# requiring the user to visit every page. The existing register_chart() / page
-# rendering code is left completely unchanged below — it still fires when a
-# page is visited, giving an incremental update (e.g. with the user's karat /
-# forecast-horizon selection). At startup we use the sidebar default (21K) and
-# a 180-day forecast horizon as sensible defaults.
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _auto_q1(d):
-    """Q1 – Price Decomposition stacked area (all 3 karats)."""
-    try:
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True,
-            row_heights=[0.34, 0.33, 0.33], vertical_spacing=0.10,
-            subplot_titles=["24K", "21K", "18K"])
-        KFILL = {'24K': 'rgba(255,249,196,0.65)', '21K': 'rgba(255,215,0,0.65)', '18K': 'rgba(205,127,50,0.65)'}
-        KROW  = {'24K': 1, '21K': 2, '18K': 3}
-        for karat in ['24K', '21K', '18K']:
-            row = KROW[karat]
-            fig.add_trace(go.Scatter(x=d.index, y=d[f'ValueDriven_{karat}'],
-                name='قيمة عالمية', stackgroup=f'g{row}', mode='lines',
-                line=dict(width=0), fillcolor=KFILL[karat],
-                showlegend=(row==1), legendgroup='gv',
-                hovertemplate=f"{karat} - قيمة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
-            fig.add_trace(go.Scatter(x=d.index, y=d[f'InflPrem_{karat}'],
-                name='علاوة تضخم', stackgroup=f'g{row}', mode='lines',
-                line=dict(width=0), fillcolor='rgba(239,71,111,0.50)',
-                showlegend=(row==1), legendgroup='gi',
-                hovertemplate=f"{karat} - علاوة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
-        add_events(fig, d, rows=[1,2,3])
-        lyt = plot_layout(height=800)
-        lyt['margin'] = dict(l=8, r=8, t=160, b=8)
-        lyt['legend'] = dict(orientation="h", y=1.20, x=0.5, xanchor="center",
-            bgcolor="rgba(0,0,0,0)", borderwidth=0,
-            font=dict(size=10, family="Cairo"), itemsizing="constant")
-        lyt['xaxis']['rangeselector']['y'] = 1.20
-        lyt['title'] = dict(text="تشريح السعر: القيمة الحقيقية مقابل علاوة التضخم والعملة",
-            font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.98)
-        fig.update_layout(**lyt)
-        return fig
-    except Exception:
-        return None
-
-def _auto_q2(d):
-    """Q2 – Fair Value Index."""
-    try:
-        fig = go.Figure()
-        for karat, color in KARAT_COLORS.items():
-            fair_price = d[f'ValueDriven_{karat}'] + MAKING_CHARGES[karat]
-            fvi_series = d[f'Price_{karat}'] / fair_price
-            fig.add_trace(go.Scatter(x=d.index, y=fvi_series, name=karat,
-                line=dict(color=color, width=2),
-                hovertemplate=f"{karat} FVI: %{{y:.2f}}<extra></extra>"))
-        fig.add_hline(y=1.0, line_dash="dot", line_color="#06D6A0", opacity=0.85,
-            annotation_text="FVI = 1 (عادل)", annotation_font=dict(color="#06D6A0", size=10))
-        add_events(fig, d)
-        fig.update_layout(**plot_layout(height=340, yaxis=dict(title_text="FVI")))
-        return fig
-    except Exception:
-        return None
-
-def _auto_q3(d):
-    """Q3 – Inflation Premium %."""
-    try:
-        fig = go.Figure()
-        for karat, color in KARAT_COLORS.items():
-            fig.add_trace(go.Scatter(x=d.index, y=d[f'PremPct_{karat}'],
-                name=karat, line=dict(color=color, width=2),
-                hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
-        fig.add_hline(y=0, line_dash="dot", line_color="#1E3A5F", opacity=0.8)
-        add_events(fig, d)
-        fig.update_layout(**plot_layout(height=340, yaxis=dict(title_text="علاوة %")))
-        return fig
-    except Exception:
-        return None
-
-def _auto_q4(d):
-    """Q4 – Correlation heatmap."""
-    try:
-        cols_  = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
-        names_ = ['ذهب عالمي', 'دولار/جنيه', 'نفط', 'سندات أمريكية', 'S&P 500']
-        cd     = d[cols_].dropna().corr()
-        cd.columns = names_; cd.index = names_
-        fc  = px.imshow(cd, text_auto=".2f",
-            color_continuous_scale=[[0,'#EF476F'],[0.5,'#060C18'],[1,'#06D6A0']],
-            zmin=-1, zmax=1)
-        cl  = plot_layout(height=420, show_legend=False)
-        cl['margin'] = dict(l=8, r=8, t=30, b=50)
-        cl['coloraxis_showscale'] = False
-        fc.update_layout(**cl)
-        fc.update_traces(textfont=dict(size=12, family="DM Mono"))
-        return fc
-    except Exception:
-        return None
-
-def _auto_q5(d):
-    """Q5 – Portfolio net return comparison."""
-    try:
-        fig = go.Figure()
-        for karat, color in KARAT_COLORS.items():
-            fig.add_trace(go.Scatter(x=d.index, y=d[f'Port_{karat}'],
-                name=f'{karat} ذهب (صافي)', line=dict(color=color, width=2.2),
-                hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} جنيه<extra></extra>"))
-        fig.add_trace(go.Scatter(x=d.index, y=d['Port_USD'],
-            name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
-            hovertemplate="دولار: %{y:,.0f}<extra></extra>"))
-        fig.add_trace(go.Scatter(x=d.index, y=d['Port_Cash'],
-            name='كاش (جنيه)', line=dict(color='#1E3A5F', width=1.2, dash='dot'),
-            hovertemplate="كاش: %{y:,.0f}<extra></extra>"))
-        add_events(fig, d)
-        lyt = plot_layout(height=440, yaxis=dict(title_text="القيمة الصافية (جنيه)"))
-        lyt['title'] = dict(text="نمو الثروة الحقيقي (مخصوم منه تكاليف الدخول والخروج)",
-            font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
-        fig.update_layout(**lyt)
-        return fig
-    except Exception:
-        return None
-
-def _auto_q6(d):
-    """Q6 – Prophet forecast chart (21K, 180-day horizon)."""
-    try:
-        from prophet import Prophet
-        k = '21K'
-        fv_col = f'Price_{k}'
-        forecast_days = 180
-        train = d.reset_index()[['Date', fv_col, 'USD_EGP_Official', 'Crude_Oil']].copy()
-        train.columns = ['ds', 'y', 'USD', 'OIL']
-        train['ds'] = pd.to_datetime(train['ds'])
-        train['USD'] = train['USD'].ffill().bfill()
-        train['OIL'] = train['OIL'].ffill().bfill()
-        train = train.dropna(subset=['y'])
-
-        def _fc_reg(col_name, n_days):
-            df_reg = d.reset_index()[['Date', col_name]].copy()
-            df_reg.columns = ['ds', 'y']
-            df_reg['ds'] = pd.to_datetime(df_reg['ds'])
-            df_reg = df_reg.dropna(subset=['y'])
-            mr = Prophet(yearly_seasonality=True, weekly_seasonality=False,
-                         daily_seasonality=False, changepoint_prior_scale=0.05, interval_width=0.80)
-            mr.fit(df_reg)
-            fut  = mr.make_future_dataframe(periods=n_days, freq='D')
-            fc_r = mr.predict(fut)[['ds', 'yhat']]
-            last_hist = df_reg['ds'].max()
-            return fc_r[fc_r['ds'] > last_hist].reset_index(drop=True)
-
-        usd_future_df = _fc_reg('USD_EGP_Official', forecast_days)
-        oil_future_df = _fc_reg('Crude_Oil', forecast_days)
-
-        pm = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False,
-                     changepoint_prior_scale=0.10, seasonality_prior_scale=10.0,
-                     interval_width=0.90, n_changepoints=30)
-        pm.add_regressor('USD', standardize=True)
-        pm.add_regressor('OIL', standardize=True)
-        pm.fit(train)
-
-        future_raw = pm.make_future_dataframe(periods=forecast_days, freq='D')
-        future_raw['ds'] = pd.to_datetime(future_raw['ds'])
-        hist_regs = train[['ds', 'USD', 'OIL']].copy()
-        future_merged = future_raw.merge(hist_regs, on='ds', how='left')
-        usd_future_df.columns = ['ds', 'USD_fc']
-        oil_future_df.columns = ['ds', 'OIL_fc']
-        future_merged = future_merged.merge(usd_future_df, on='ds', how='left')
-        future_merged = future_merged.merge(oil_future_df, on='ds', how='left')
-        future_merged['USD'] = future_merged['USD'].fillna(future_merged['USD_fc'])
-        future_merged['OIL'] = future_merged['OIL'].fillna(future_merged['OIL_fc'])
-        future_merged.drop(columns=['USD_fc', 'OIL_fc'], inplace=True)
-        future_merged['USD'] = future_merged['USD'].ffill().bfill()
-        future_merged['OIL'] = future_merged['OIL'].ffill().bfill()
-        future_final = future_merged[['ds', 'USD', 'OIL']].copy()
-
-        fc = pm.predict(future_final)
-        last_hist = train['ds'].max()
-        fc_out = fc[fc['ds'] > last_hist].head(forecast_days).copy()
-        actual_last = train['y'].iloc[-1]
-        pred_last   = fc[fc['ds'] == last_hist]['yhat'].values
-        offset      = actual_last - (pred_last[0] if len(pred_last) else fc.iloc[:len(train)]['yhat'].iloc[-1])
-        fc_out['yhat']       += offset
-        fc_out['yhat_upper'] += offset
-        fc_out['yhat_lower'] += offset
-
-        fig = go.Figure()
-        hw = d[fv_col].resample('W').last()
-        fig.add_trace(go.Scatter(x=hw.index, y=hw, name='السعر الفعلي',
-            line=dict(color='#4A6A8A', width=1.5),
-            hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} جنيه<extra></extra>"))
-        fig.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_upper'],
-            line=dict(width=0), showlegend=False))
-        fig.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
-            fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
-            line=dict(width=0), name='نطاق الثقة 90%'))
-        fig.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
-            name='توقع Prophet', line=dict(color='#4CC9F0', width=2.5),
-            hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} جنيه</b><extra></extra>"))
-        fig.add_vline(x=datetime.today().timestamp() * 1000,
-            line_dash='dash', line_color='#FFD700', opacity=0.5,
-            annotation_text='اليوم',
-            annotation_font=dict(color='#FFD700', size=9.5),
-            annotation_position="top right")
-        add_events(fig, d)
-        lyt_fc = plot_layout(height=500, yaxis=dict(title_text="السعر (جنيه)"))
-        lyt_fc['title'] = dict(text=f"توقعات ذهب {k} · {forecast_days} يوم قادماً",
-            font=dict(size=13, color="#FFD700", family="Cairo"),
-            x=0.5, xanchor='center', y=0.97)
-        fig.update_layout(**lyt_fc)
-        return fig
-    except Exception:
-        return None
-
-def _auto_q7(d):
-    """Q7 – Technical indicators (21K)."""
-    try:
-        k = '21K'
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True,
-            row_heights=[0.55, 0.25, 0.20], vertical_spacing=0.07,
-            subplot_titles=[f"السعر + Bollinger Bands ({k})", "MACD - زخم الاتجاه", "RSI-14 - مستوى التشبع"])
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'BB_up_{k}'],
-            line=dict(width=0), showlegend=False), row=1, col=1)
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'BB_dn_{k}'],
-            fill='tonexty', fillcolor='rgba(180,180,255,0.04)',
-            line=dict(width=0), name='Bollinger Bands'), row=1, col=1)
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'Price_{k}'],
-            name='السعر', line=dict(color='#D8E4F0', width=1.8),
-            hovertemplate="%{x|%d %b %Y} - %{y:,.0f} جنيه<extra></extra>"), row=1, col=1)
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'SMA50_{k}'],
-            name='SMA 50', line=dict(color='#FF9F43', width=1.1, dash='dot')), row=1, col=1)
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'SMA200_{k}'],
-            name='SMA 200', line=dict(color='#A855F7', width=1.1, dash='dot')), row=1, col=1)
-        buys  = d[d[f'Signal_{k}'] == 'BUY']
-        sells = d[d[f'Signal_{k}'] == 'SELL']
-        fig.add_trace(go.Scatter(x=buys.index, y=buys[f'Price_{k}'], mode='markers',
-            name='BUY ▲', marker=dict(symbol='triangle-up', color='#06D6A0', size=7,
-                                      line=dict(width=1, color='white'))), row=1, col=1)
-        fig.add_trace(go.Scatter(x=sells.index, y=sells[f'Price_{k}'], mode='markers',
-            name='SELL ▼', marker=dict(symbol='triangle-down', color='#EF476F', size=7,
-                                       line=dict(width=1, color='white'))), row=1, col=1)
-        hc = ['#06D6A0' if v >= 0 else '#EF476F' for v in d[f'MACDHist_{k}']]
-        fig.add_trace(go.Bar(x=d.index, y=d[f'MACDHist_{k}'],
-            name='Histogram', marker_color=hc, opacity=0.7), row=2, col=1)
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'MACD_{k}'],
-            name='MACD', line=dict(color='#4CC9F0', width=1.5)), row=2, col=1)
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'MACDSig_{k}'],
-            name='Signal Line', line=dict(color='#FF9F43', width=1.5)), row=2, col=1)
-        fig.add_trace(go.Scatter(x=d.index, y=d[f'RSI_{k}'],
-            name='RSI-14', line=dict(color='#A855F7', width=1.7)), row=3, col=1)
-        fig.add_hline(y=70, line_dash='dot', line_color='#EF476F', opacity=0.4, row=3, col=1)
-        fig.add_hline(y=30, line_dash='dot', line_color='#06D6A0', opacity=0.4, row=3, col=1)
-        fig.add_hrect(y0=70, y1=100, fillcolor='rgba(239,71,111,0.04)', line_width=0, row=3, col=1)
-        fig.add_hrect(y0=0,  y1=30,  fillcolor='rgba(6,214,160,0.04)',  line_width=0, row=3, col=1)
-        add_events(fig, d, rows=[1,2,3], y_ann=0.93)
-        lyt = plot_layout(height=900)
-        lyt['margin'] = dict(l=8, r=8, t=160, b=8)
-        lyt['legend'] = dict(orientation="h", y=1.12, x=0.5, xanchor="center",
-            bgcolor="rgba(0,0,0,0)", borderwidth=0,
-            font=dict(size=9.5, family="Cairo"), itemsizing="constant", tracegroupgap=3)
-        fig.update_layout(**lyt)
-        return fig
-    except Exception:
-        return None
-
-def generate_all_charts():
-    """Build all 7 question charts unconditionally and return as a dict of Plotly figures."""
-    return {
-        "analysis_decomposition": _auto_q1(data),
-        "analysis_fair_value":    _auto_q2(data),
-        "analysis_premium_pct":   _auto_q3(data),
-        "home_correlation":       _auto_q4(data),
-        "investment_portfolio":   _auto_q5(data),
-        "forecast_prophet":       _auto_q6(data),
-        "technical_indicators":   _auto_q7(data),
-    }
-
-# ── Auto-generate & persist all 7 charts to charts.json at startup ──────────
-# Runs once per Streamlit session (guarded by session_state key).
-# Uses _write_export so the JSON structure is identical to manual export.
-if "auto_charts_generated" not in st.session_state:
-    try:
-        _auto_figs = generate_all_charts()
-        _auto_entries = {}
-        for chart_id, fig in _auto_figs.items():
-            if fig is None:
-                continue
-            meta = QUESTION_CHART_MAP.get(chart_id)
-            if meta is None:
-                continue
-            try:
-                entry = {
-                    "id":          chart_id,
-                    "title":       meta["question_title"],
-                    "page":        meta["page"],
-                    "question_id": meta["question_id"],
-                    "data":        json.loads(fig.to_json()),
-                }
-                _auto_entries[chart_id] = entry
-            except Exception:
-                pass
-        if _auto_entries:
-            # Merge with anything already on disk, then write
-            _existing = _read_existing_export()
-            _existing_charts = {c["id"]: c for c in _existing.get("charts", [])}
-            _existing_charts.update(_auto_entries)
-            _write_export(_existing_charts, st.session_state.get("selected_karat_for_export", "21K"))
-            st.session_state["chart_registry"] = _existing_charts
-    except Exception:
-        pass  # never crash the app on auto-generation failure
-    st.session_state["auto_charts_generated"] = True
 
 st.markdown('<div class="page-content">', unsafe_allow_html=True)
 
@@ -1701,7 +1230,6 @@ if page == "🏠  الرئيسية":
         fc.update_layout(**cl)
         fc.update_traces(textfont=dict(size=12, family="DM Mono"))
         st.plotly_chart(fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-        register_chart("home_correlation", fc)
 
     with c2:
         section("💱", "مسار الدولار", "")
@@ -1774,45 +1302,6 @@ elif page == "📊  تحليل الأسعار":
         fig.update_yaxes(tickfont=dict(family="Cairo", size=11, color="#4A6A8A"),
                          title_text="جنيه", title_font=dict(size=9), row=r, col=1)
     st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-    register_chart("analysis_decomposition", fig)
-
-    # ─────────────────────────────────────────────────────────────────────
-    # NEW · Q2 — Fair Value Index (FVI = Actual Price ÷ Theoretical Fair Price)
-    # Additive section: doesn't touch any existing chart/logic above or below.
-    # ─────────────────────────────────────────────────────────────────────
-    spacer(24)
-    section("⚖️", "مؤشر القيمة العادلة - Fair Value Index", "")
-    st.markdown("""
-    <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">FVI = السعر الفعلي ÷ السعر النظري العادل (عند سعر صرف ثابت 15.70 جنيه/دولار) - أعلى من 1 = علاوة/تضخم، حول 1 = تسعير عادل</div>
-    <div style="direction:ltr">Fair Value Index · FVI &gt; 1 = Overvalued</div>
-    </div>""", unsafe_allow_html=True)
-
-    fig3 = go.Figure()
-    for karat, color in KARAT_COLORS.items():
-        fair_price = data[f'ValueDriven_{karat}'] + MAKING_CHARGES[karat]
-        fvi_series = data[f'Price_{karat}'] / fair_price
-        fig3.add_trace(go.Scatter(x=data.index, y=fvi_series, name=karat,
-            line=dict(color=color, width=2),
-            hovertemplate=f"{karat} FVI: %{{y:.2f}}<extra></extra>"))
-    fig3.add_hline(y=1.0, line_dash="dot", line_color="#06D6A0", opacity=0.85,
-        annotation_text="FVI = 1 (عادل)", annotation_font=dict(color="#06D6A0", size=10))
-    if show_events: add_events(fig3, data)
-    fig3.update_layout(**plot_layout(height=340, yaxis=dict(title_text="FVI")))
-    st.plotly_chart(fig3, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-    register_chart("analysis_fair_value", fig3)
-
-    spacer()
-    cols_fvi = st.columns(3)
-    for col_fvi, karat in zip(cols_fvi, KARAT_FACTORS):
-        fair_price_now = data[f'ValueDriven_{karat}'] + MAKING_CHARGES[karat]
-        fvi_now = (data[f'Price_{karat}'] / fair_price_now).iloc[-1]
-        fvi_state = ("مقوم بأعلى من قيمته ⚠️" if fvi_now > 1.02 else
-                      "مقوم بأقل من قيمته ✅" if fvi_now < 0.98 else "تسعير عادل تقريباً ⚖️")
-        with col_fvi:
-            insight(f"<b style='color:{KARAT_COLORS[karat]}'>{karat}</b><br>"
-                    f"FVI الحالي: <span class='num'>{fvi_now:.2f}</span><br>{fvi_state}")
-
 
     spacer(24)
     section("📐", "نسبة علاوة التضخم %", "")
@@ -1831,7 +1320,6 @@ elif page == "📊  تحليل الأسعار":
     if show_events: add_events(fig2, data)
     fig2.update_layout(**plot_layout(height=340, yaxis=dict(title_text="علاوة %")))
     st.plotly_chart(fig2, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-    register_chart("analysis_premium_pct", fig2)
 
     spacer()
     cols3 = st.columns(3)
@@ -1879,7 +1367,6 @@ elif page == "💼  محاكاة الاستثمار":
         font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
     fig_inv.update_layout(**lyt_inv)
     st.plotly_chart(fig_inv, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-    register_chart("investment_portfolio", fig_inv)
 
     spacer()
     cols4 = st.columns(4)
@@ -2067,7 +1554,6 @@ elif page == "📡  المؤشرات التقنية":
                           tickfont=dict(family="Cairo", size=9, color="#3A4A65"),
                           title_font=dict(size=9, color="#3A4A65"), row=3, col=1)
     st.plotly_chart(fig_tech, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-    register_chart("technical_indicators", fig_tech)
 
     spacer()
     sig  = data[f'Signal_{k}'].iloc[-1]
@@ -2266,7 +1752,6 @@ elif page == "🔮  التوقعات":
                 x=0.5, xanchor='center', y=0.97)
             fig_fc.update_layout(**lyt_fc)
             st.plotly_chart(fig_fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
-            register_chart("forecast_prophet", fig_fc)
 
             spacer()
             la  = data[fv_col].iloc[-1]
