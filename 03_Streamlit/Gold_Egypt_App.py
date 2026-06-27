@@ -1391,14 +1391,79 @@ if embed_q:
 
     # Q7: المؤشرات الفنية للزخم (Technical Indicators: RSI & MACD)
     elif embed_q == "q7":
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.06, row_heights=[0.5, 0.5])
-        if f'RSI_{k}' in data.columns:
-            fig.add_trace(go.Scatter(x=data.index, y=data[f'RSI_{k}'], name='RSI (مؤشر القوة النسبية)', line=dict(color='#E63946')), row=1, col=1)
-        if f'MACD_{k}' in data.columns and f'Signal_{k}' in data.columns:
-            fig.add_trace(go.Scatter(x=data.index, y=data[f'MACD_{k}'], name='MACD Line', line=dict(color='#4CC9F0')), row=2, col=1)
-            fig.add_trace(go.Scatter(x=data.index, y=data[f'Signal_{k}'], name='Signal Line', line=dict(color='#FFD700')), row=2, col=1)
-        fig.update_layout(**plot_layout(height=460))
-        st.plotly_chart(fig, use_container_width=True)
+        fig_tech = make_subplots(rows=3, cols=1, shared_xaxes=True,
+            row_heights=[0.55, 0.25, 0.20], vertical_spacing=0.07,
+            subplot_titles=[
+                f"السعر + Bollinger Bands ({k})",
+                "MACD - زخم الاتجاه",
+                "RSI-14 - مستوى التشبع"
+            ])
+
+        # Bollinger Bands
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'BB_up_{k}'],
+            line=dict(width=0), showlegend=False), row=1, col=1)
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'BB_dn_{k}'],
+            fill='tonexty', fillcolor='rgba(180,180,255,0.04)',
+            line=dict(width=0), name='Bollinger Bands'), row=1, col=1)
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'Price_{k}'],
+            name='السعر', line=dict(color='#D8E4F0', width=1.8),
+            hovertemplate="%{x|%d %b %Y} - %{y:,.0f} جنيه<extra></extra>"), row=1, col=1)
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'SMA50_{k}'],
+            name='SMA 50', line=dict(color='#FF9F43', width=1.1, dash='dot')), row=1, col=1)
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'SMA200_{k}'],
+            name='SMA 200', line=dict(color='#A855F7', width=1.1, dash='dot')), row=1, col=1)
+
+        # BUY / SELL signal markers overlaid on price chart
+        buys  = data[data[f'Signal_{k}'] == 'BUY']
+        sells = data[data[f'Signal_{k}'] == 'SELL']
+        fig_tech.add_trace(go.Scatter(x=buys.index, y=buys[f'Price_{k}'], mode='markers',
+            name='BUY ▲', marker=dict(symbol='triangle-up', color='#06D6A0', size=7,
+                                    line=dict(width=1, color='white'))), row=1, col=1)
+        fig_tech.add_trace(go.Scatter(x=sells.index, y=sells[f'Price_{k}'], mode='markers',
+            name='SELL ▼', marker=dict(symbol='triangle-down', color='#EF476F', size=7,
+                                        line=dict(width=1, color='white'))), row=1, col=1)
+
+        # MACD histogram and signal line
+        hc = ['#06D6A0' if v >= 0 else '#EF476F' for v in data[f'MACDHist_{k}']]
+        fig_tech.add_trace(go.Bar(x=data.index, y=data[f'MACDHist_{k}'],
+            name='Histogram', marker_color=hc, opacity=0.7), row=2, col=1)
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'MACD_{k}'],
+            name='MACD', line=dict(color='#4CC9F0', width=1.5)), row=2, col=1)
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'MACDSig_{k}'],
+            name='Signal Line', line=dict(color='#FF9F43', width=1.5)), row=2, col=1)
+
+        # RSI-14 with overbought/oversold reference bands
+        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'RSI_{k}'],
+            name='RSI-14', line=dict(color='#A855F7', width=1.7)), row=3, col=1)
+        fig_tech.add_hline(y=70, line_dash='dot', line_color='#EF476F', opacity=0.4, row=3, col=1)
+        fig_tech.add_hline(y=30, line_dash='dot', line_color='#06D6A0', opacity=0.4, row=3, col=1)
+        fig_tech.add_hrect(y0=70, y1=100, fillcolor='rgba(239,71,111,0.04)', line_width=0, row=3, col=1)
+        fig_tech.add_hrect(y0=0,  y1=30,  fillcolor='rgba(6,214,160,0.04)',  line_width=0, row=3, col=1)
+
+        if show_events: add_events(fig_tech, data, rows=[1,2,3], y_ann=0.93)
+
+        lyt_tech = plot_layout(height=900)
+        lyt_tech['margin'] = dict(l=8, r=8, t=160, b=8)
+        lyt_tech['legend'] = dict(orientation="h", y=1.12, x=0.5, xanchor="center",
+            bgcolor="rgba(0,0,0,0)", borderwidth=0,
+            font=dict(size=9.5, family="Cairo"), itemsizing="constant", tracegroupgap=3)
+        lyt_tech['xaxis']['rangeselector']['y'] = 1.06
+        fig_tech.update_layout(**lyt_tech)
+        fig_tech.update_xaxes(tickfont=dict(family="Cairo", size=10, color="#3A4A65"),
+                            gridcolor="rgba(255,255,255,0.05)",
+                            range=["2020-01-01", data.index.max()])
+        event_labels = {v[0] for v in CRISIS_EVENTS.values()}
+        for ann in fig_tech.layout.annotations:
+            if ann.text not in event_labels:
+                ann.update(x=0.98, xanchor='right',
+                        font=dict(color='#FFD700', size=11, family='Cairo'))
+        fig_tech.update_yaxes(title_text="السعر (جنيه)", title_font=dict(size=9, color="#3A4A65"), row=1, col=1)
+        fig_tech.update_yaxes(title_text="MACD", tickfont=dict(family="Cairo", size=9, color="#3A4A65"),
+                            title_font=dict(size=9, color="#3A4A65"), row=2, col=1)
+        fig_tech.update_yaxes(title_text="RSI", range=[0, 100],
+                            tickfont=dict(family="Cairo", size=9, color="#3A4A65"),
+                            title_font=dict(size=9, color="#3A4A65"), row=3, col=1)
+        st.plotly_chart(fig_tech, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     # إيقاف التنفيذ الفوري بعد رسم الشارت المطلوبة لمنع تحميل بقية الـ DOM
     st.stop()
