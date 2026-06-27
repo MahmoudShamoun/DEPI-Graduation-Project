@@ -1016,9 +1016,16 @@ with st.sidebar:
         st.rerun()
 
     if os.path.exists(CSV_PATH):
-        _mt  = datetime.fromtimestamp(os.path.getmtime(CSV_PATH)).strftime("%Y-%m-%d %H:%M")
+        import pytz
+
+        ts = os.path.getmtime(CSV_PATH)
+        _mt = datetime.utcfromtimestamp(ts).replace(tzinfo=pytz.utc).astimezone(
+            pytz.timezone("Africa/Cairo")
+        ).strftime("%Y-%m-%d %H:%M")
+
         _sc  = "#06D6A0"
         _stx = f"‫✅ آخر تحديث:‬<br>{_mt}"
+
     else:
         _sc  = "#EF476F"
         _stx = "⏳ جاري تهيئة البيانات..."
