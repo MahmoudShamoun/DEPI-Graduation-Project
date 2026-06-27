@@ -9,222 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel='stylesheet' href='index.css' />
 
-  <!-- ▶▶▶ NEW: Plotly.js CDN for live chart rendering from charts.json ◀◀◀ -->
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
-
-  <!-- ▶▶▶ NEW: Live Charts panel styles ◀◀◀ -->
-  <style>
-    /* ── Per-question chart containers (chart-q1 … chart-q7) ── */
-    .q-chart-wrap {
-      width: 100%;
-      flex: 1;
-      min-height: 420px;
-      background: rgba(6, 12, 24, 0.6);
-      border: 1px solid rgba(255, 215, 0, 0.12);
-      border-radius: 10px;
-      overflow: hidden;
-      position: relative;
-    }
-    .q-chart-div {
-      width: 100%;
-      height: 100%;
-      min-height: 420px;
-    }
-    .q-chart-loading {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Courier New', monospace;
-      font-size: 0.75rem;
-      color: #3A4A65;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    /* ── Live Charts overlay panel ── */
-    #liveChartsPanel {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: #03060F;
-      overflow-y: auto;
-      padding: 0 0 60px 0;
-      animation: lcFadeIn 0.3s ease both;
-    }
-    @keyframes lcFadeIn {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    #liveChartsPanel.open { display: block; }
-
-    .lc-header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: linear-gradient(135deg, #07101F 0%, #040810 100%);
-      border-bottom: 1px solid #132238;
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-    }
-    .lc-header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .lc-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
-      color: #FFD700;
-      letter-spacing: 1px;
-    }
-    .lc-meta {
-      font-family: 'Courier New', monospace;
-      font-size: 0.65rem;
-      color: #3A4A65;
-      margin-top: 2px;
-    }
-    .lc-close-btn {
-      background: rgba(239,71,111,0.12);
-      border: 1px solid rgba(239,71,111,0.3);
-      color: #EF476F;
-      font-size: 0.78rem;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 600;
-      padding: 7px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-      transition: background 0.2s, border-color 0.2s;
-      white-space: nowrap;
-    }
-    .lc-close-btn:hover {
-      background: rgba(239,71,111,0.25);
-      border-color: rgba(239,71,111,0.6);
-    }
-
-    .lc-status {
-      text-align: center;
-      padding: 60px 20px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.85rem;
-      color: #3A4A65;
-    }
-    .lc-status .lc-spinner {
-      font-size: 2rem;
-      display: block;
-      margin-bottom: 14px;
-      animation: lcSpin 1.2s linear infinite;
-    }
-    @keyframes lcSpin {
-      to { transform: rotate(360deg); }
-    }
-    .lc-status.error { color: #EF476F; }
-    .lc-status.success { color: #06D6A0; }
-
-    .lc-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 680px), 1fr));
-      gap: 20px;
-      padding: 24px 28px;
-    }
-
-    .lc-card {
-      background: linear-gradient(145deg, #0A1525, #0D1E36);
-      border: 1px solid #132238;
-      border-radius: 14px;
-      overflow: hidden;
-      transition: border-color 0.25s;
-    }
-    .lc-card:hover { border-color: rgba(255,215,0,0.2); }
-
-    .lc-card-header {
-      padding: 12px 16px 8px;
-      border-bottom: 1px solid #132238;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .lc-card-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #E8EDF5;
-      direction: rtl;
-    }
-    .lc-card-page {
-      font-family: 'Courier New', monospace;
-      font-size: 0.6rem;
-      color: #3A4A65;
-      background: rgba(255,215,0,0.05);
-      border: 1px solid rgba(255,215,0,0.1);
-      padding: 2px 8px;
-      border-radius: 12px;
-      white-space: nowrap;
-    }
-    .lc-chart-wrap {
-      width: 100%;
-      min-height: 380px;
-      position: relative;
-    }
-    .lc-chart-wrap .lc-chart-div {
-      width: 100%;
-      height: 100%;
-      min-height: 380px;
-    }
-
-    /* Open button — injected into the slide deck footer area */
-    #lcOpenBtn {
-      position: fixed;
-      bottom: 54px;          /* sits just above the footer */
-      right: 18px;
-      z-index: 1000;
-      background: linear-gradient(135deg, #0C1E3D, #071428);
-      border: 1px solid rgba(255,215,0,0.35);
-      color: #FFD700;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      padding: 8px 16px;
-      border-radius: 22px;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 12px rgba(255,215,0,0.08);
-      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    #lcOpenBtn:hover {
-      border-color: rgba(255,215,0,0.7);
-      box-shadow: 0 6px 28px rgba(0,0,0,0.6), 0 0 18px rgba(255,215,0,0.15);
-      transform: translateY(-2px);
-    }
-    #lcOpenBtn .lc-dot {
-      width: 6px; height: 6px;
-      background: #06D6A0;
-      border-radius: 50%;
-      animation: lcBlink 2s ease-in-out infinite;
-    }
-    @keyframes lcBlink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.2; }
-    }
-    #lcOpenBtn.no-data {
-      border-color: rgba(255,255,255,0.1);
-      color: #3A4A65;
-    }
-    #lcOpenBtn.no-data .lc-dot { background: #3A4A65; animation: none; }
-  </style>
 </head>
 
 <body>
@@ -518,10 +302,8 @@
               Baseline FX = <strong>15.70 EGP/USD</strong>
             </div>
           </div>
-          <!-- احذف dashboard-container والـ iframe والـ fallback وضع بدلهم: -->
-          <div class="q-chart-wrap">
-            <div class="q-chart-loading" id="q1-loading">⟳ Loading chart…</div>
-            <div class="q-chart-div" id="chart-q1"></div>
+          <div class="iframe-wrap" style="height: 480px; width: 100%; border: none;">
+            <iframe src="https://gold-egypt-platform.streamlit.app/?embed=true&q=q1" loading="lazy" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
           </div>
           <div class="cta-wrap">
             <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank">
@@ -531,22 +313,6 @@
         </div>
       </div>
     </section>
-
-    <script>
-    function showFallback() {
-      document.getElementById("fallbackBox").style.display = "flex";
-    }
-    setTimeout(() => {
-      const iframe = document.querySelector(".dashboard-iframe");
-      try {
-        if (!iframe.contentWindow || iframe.contentWindow.length === 0) {
-          showFallback();
-        }
-      } catch (e) {
-        showFallback();
-      }
-    }, 2000);
-    </script>
 
     <!-- ══════════ SLIDE 9 · Q2 LIVE ══════════ -->
     <section class="slide" data-n="9" data-title="Q2 · Fair Value Index" aria-label="Q2">
@@ -559,9 +325,8 @@
             <p class="q-hint">📍 Live Chart: <strong>Fair Value Index Line</strong> in the Price Analysis page · FVI &gt; 1 = market trading above fair value (panic/speculation) · FVI ≈ 1 = efficient pricing · Gives investors a real-time signal: "Is now a good time to buy?"</p>
             <div class="formula">FVI = Actual Price ÷ Theoretical Price &nbsp;|&nbsp; FVI &gt; 1 → Overvalued &nbsp;|&nbsp; FVI ≈ 1 → Fair</div>
           </div>
-          <div class="q-chart-wrap">
-            <div class="q-chart-loading" id="q2-loading">⟳ Loading chart…</div>
-            <div class="q-chart-div" id="chart-q2"></div>
+          <div class="iframe-wrap" style="height: 480px; width: 100%; border: none;">
+            <iframe src="https://gold-egypt-platform.streamlit.app/?embed=true&q=q2" loading="lazy" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
           </div>
           <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Fair Value Index chart</a>
         </div>
@@ -578,9 +343,8 @@
             <p class="q-text">"Does the Egyptian gold market exhibit statistically significant speculative or panic premium bubbles during crisis periods?"</p>
             <p class="q-hint">📍 Live Chart: <strong>Inflation Premium % Chart</strong> in the Price Analysis page · Sharp PremPct spikes directly after crises (Mar 2024 devaluation, Iran strike Jun 2025) = statistical proof of panic buying · The premium mean-reverts after calm is restored — investors who bought the spike paid more than necessary</p>
           </div>
-          <div class="q-chart-wrap">
-            <div class="q-chart-loading" id="q3-loading">⟳ Loading chart…</div>
-            <div class="q-chart-div" id="chart-q3"></div>
+          <div class="iframe-wrap" style="height: 480px; width: 100%; border: none;">
+            <iframe src="https://gold-egypt-platform.streamlit.app/?embed=true&q=q3" loading="lazy" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
           </div>
           <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Premium % chart</a>
         </div>
@@ -597,9 +361,8 @@
             <p class="q-text">"Which macroeconomic variable — USD/EGP, Oil, US Treasury Bonds, or S&amp;P 500 — has the highest explanatory power for local gold prices?"</p>
             <p class="q-hint">📍 Live Chart: <strong>Correlation Matrix Heatmap</strong> on the Home page · Result: USD/EGP exchange rate shows the strongest correlation with all karat prices — confirming that Egyptian gold is effectively a bet on the Egyptian pound, not gold itself</p>
           </div>
-          <div class="q-chart-wrap">
-            <div class="q-chart-loading" id="q4-loading">⟳ Loading chart…</div>
-            <div class="q-chart-div" id="chart-q4"></div>
+          <div class="iframe-wrap" style="height: 480px; width: 100%; border: none;">
+            <iframe src="https://gold-egypt-platform.streamlit.app/?embed=true&q=q4" loading="lazy" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
           </div>
           <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Correlation Heatmap on Home page</a>
         </div>
@@ -622,9 +385,8 @@
             </div>
             <p class="q-hint">📍 Live Chart: <strong>Portfolio Performance Chart</strong> in the Investment Simulation page · 5 lines: 24K, 21K, 18K gold + USD + EGP cash · All returns are NET — including all real transaction costs</p>
           </div>
-          <div class="q-chart-wrap">
-            <div class="q-chart-loading" id="q5-loading">⟳ Loading chart…</div>
-            <div class="q-chart-div" id="chart-q5"></div>
+          <div class="iframe-wrap" style="height: 480px; width: 100%; border: none;">
+            <iframe src="https://gold-egypt-platform.streamlit.app/?embed=true&q=q5" loading="lazy" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
           </div>
           <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Investment Simulation page</a>
         </div>
@@ -641,9 +403,8 @@
             <p class="q-text">"Can a multi-stage Prophet model — using USD/EGP and Oil as external regressors — accurately forecast Egyptian gold prices over 6–12 month horizons?"</p>
             <p class="q-hint">📍 Live Chart: <strong>Forecast Chart</strong> in the Forecasting page · Historical Date Merge Strategy resolves Prophet calendar vs. trading-day misalignment · 90% confidence band · MAE and RMSE metrics · Select karat and forecast horizon from 30 to 365 days</p>
           </div>
-          <div class="q-chart-wrap">
-            <div class="q-chart-loading" id="q6-loading">⟳ Loading chart…</div>
-            <div class="q-chart-div" id="chart-q6"></div>
+          <div class="iframe-wrap" style="height: 480px; width: 100%; border: none;">
+            <iframe src="https://gold-egypt-platform.streamlit.app/?embed=true&q=q6" loading="lazy" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
           </div>
           <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Forecasting page</a>
         </div>
@@ -660,9 +421,8 @@
             <p class="q-text">"Which automated technical signal — RSI, MACD, or Bollinger Bands — best identifies optimal entry and exit opportunities across different gold karats?"</p>
             <p class="q-hint">📍 Live Chart: <strong>Triple-Panel Technical Analysis</strong> in the Technical Indicators page · Bollinger Bands: SELL ▼ at upper band / BUY ▲ at lower band · MACD crossover: direction signal · RSI-14: &gt;70 = overbought / &lt;30 = oversold · Combined composite signal: BUY / HOLD / SELL — no technical knowledge required</p>
           </div>
-          <div class="q-chart-wrap">
-            <div class="q-chart-loading" id="q7-loading">⟳ Loading chart…</div>
-            <div class="q-chart-div" id="chart-q7"></div>
+          <div class="iframe-wrap" style="height: 480px; width: 100%; border: none;">
+            <iframe src="https://gold-egypt-platform.streamlit.app/?embed=true&q=q7" loading="lazy" style="width: 100%; height: 100%; border: none; background: transparent;"></iframe>
           </div>
           <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Technical Indicators page</a>
         </div>
@@ -867,405 +627,6 @@
     }, {passive: true});
 
     go(0);
-  </script>
-
-
-  <!-- ═══════════════════════════════════════════════════════
-       ▶▶▶ NEW: Live Charts Panel — reads charts.json,
-               renders every Plotly figure interactively.
-               Completely isolated from slides JS above.
-       ═══════════════════════════════════════════════════════ -->
-
-  <!-- Floating open button (always visible) -->
-  <button id="lcOpenBtn" title="View Live Exported Charts">
-    <span class="lc-dot"></span>
-    📊 Live Charts
-  </button>
-
-  <!-- Full-screen overlay panel -->
-  <div id="liveChartsPanel" role="dialog" aria-modal="true" aria-label="Live Charts Panel">
-
-    <div class="lc-header">
-      <div class="lc-header-left">
-        <div>
-          <div class="lc-title">📊 GOLD EGYPT · LIVE CHARTS</div>
-          <div class="lc-meta" id="lcMeta">Loading charts.json…</div>
-        </div>
-      </div>
-      <button class="lc-close-btn" id="lcCloseBtn">✕ Close</button>
-    </div>
-
-    <div id="lcBody">
-      <!-- Charts injected here by JS -->
-      <div class="lc-status" id="lcStatus">
-        <span class="lc-spinner">⟳</span>
-        Loading charts from <code>charts.json</code>…
-      </div>
-    </div>
-
-  </div>
-
-  <script>
-  /* ═══════════════════════════════════════════════════════════════════════════
-     GOLD EGYPT · Live Chart API Client
-     ═══════════════════════════════════════════════════════════════════════════
-     Fetches all 7 Plotly charts from the Streamlit companion API server at
-     http://localhost:8502/charts — no local files, no http.server required.
-
-     Two independent consumers share one fetch cycle:
-       1. In-slide charts  (chart-q1 … chart-q7)  rendered in the deck itself
-       2. Live Charts Panel (full-screen overlay)  launched via the 📊 button
-
-     API response shape (from chart_server.py):
-     {
-       "charts":       { "q1": {data,layout}, "q2":…, "q7":… },
-       "generated_at": "2025-06-27T10:00:00+00:00",
-       "count":        7
-     }
-  ═══════════════════════════════════════════════════════════════════════════ */
-  (function () {
-    'use strict';
-
-    /* ── Configuration ─────────────────────────────────────────────────────── */
-
-    // Primary source: Streamlit companion API (FastAPI on port 8502)
-    // Fallback source: charts.json in the same directory as index.html
-    // The client tries the API first; on failure it silently falls back.
-    const API_URL      = 'http://localhost:8502/charts';
-    const FALLBACK_URL = '../07_Presentation_HTML/charts.json';
-
-    // How often to re-fetch from the API (ms). 20 s keeps charts live without
-    // hammering the server. Uses Plotly.react() on refreshes — no flicker.
-    const REFRESH_MS = 20_000;
-
-    /* ── Mapping: q-key → DOM element IDs in the slide deck ────────────────── */
-    const SLIDE_MAP = [
-      { qKey: 'q1', divId: 'chart-q1', loadId: 'q1-loading' },
-      { qKey: 'q2', divId: 'chart-q2', loadId: 'q2-loading' },
-      { qKey: 'q3', divId: 'chart-q3', loadId: 'q3-loading' },
-      { qKey: 'q4', divId: 'chart-q4', loadId: 'q4-loading' },
-      { qKey: 'q5', divId: 'chart-q5', loadId: 'q5-loading' },
-      { qKey: 'q6', divId: 'chart-q6', loadId: 'q6-loading' },
-      { qKey: 'q7', divId: 'chart-q7', loadId: 'q7-loading' },
-    ];
-
-    /* ── Shared state ────────────────────────────────────────────────────────── */
-    const slideInitialized = new Set();   // divIds that already have a Plotly plot
-    let   panelRendered    = false;       // panel rendered at least once this session
-    let   lastPayload      = null;        // most recent successful API payload
-    let   usingFallback    = false;       // true when serving from charts.json
-
-    /* ── Plotly config ───────────────────────────────────────────────────────── */
-    const PLOTLY_CFG = {
-      responsive:             true,
-      displayModeBar:         true,
-      displaylogo:            false,
-      modeBarButtonsToRemove: ['sendDataToCloud', 'lasso2d'],
-      toImageButtonOptions:   { format: 'png', scale: 2 },
-    };
-
-    /* ── Layout patcher — dark cyberpunk theme enforcement ───────────────────── */
-    function patchLayout(layout) {
-      return Object.assign({}, layout, {
-        paper_bgcolor: 'rgba(6,12,24,0.95)',
-        plot_bgcolor:  'rgba(0,0,0,0)',
-        font: Object.assign(
-          { family: 'Montserrat, Cairo, sans-serif', color: '#8D99AE', size: 11 },
-          layout.font || {}
-        ),
-        autosize: true,
-        margin:   layout.margin || { l: 36, r: 36, t: 60, b: 36 },
-      });
-    }
-
-    /* ── XSS-safe HTML escape ─────────────────────────────────────────────────── */
-    function esc(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════════
-       FETCH LAYER — tries API first, falls back to charts.json
-    ══════════════════════════════════════════════════════════════════════════ */
-
-    /**
-     * Normalize the API response and fallback JSON into a common shape:
-     *   { charts: { q1: {data,layout}, q2:…, q7:… }, generated_at, count }
-     *
-     * API response already has this shape.
-     * charts.json (legacy) has shape: { charts: [{id, data, title, page}, …], … }
-     * We detect which format we have and normalise accordingly.
-     */
-    function normalise(raw) {
-      if (!raw || typeof raw !== 'object') return null;
-
-      // New API format: charts is an object keyed q1…q7
-      if (raw.charts && !Array.isArray(raw.charts)) {
-        return raw;   // already correct
-      }
-
-      // Legacy charts.json format: charts is an array
-      if (Array.isArray(raw.charts)) {
-        const ID_TO_QKEY = {
-          'analysis_decomposition': 'q1',
-          'analysis_fair_value':    'q2',
-          'analysis_premium_pct':   'q3',
-          'home_correlation':       'q4',
-          'investment_portfolio':   'q5',
-          'forecast_prophet':       'q6',
-          'technical_indicators':   'q7',
-        };
-        const chartsObj = {};
-        raw.charts.forEach(c => {
-          const qk = ID_TO_QKEY[c.id];
-          if (qk) chartsObj[qk] = c.data;   // c.data is {data:[], layout:{}}
-        });
-        return {
-          charts:       chartsObj,
-          generated_at: raw.exported_at || '',
-          count:        Object.keys(chartsObj).length,
-          source:       'fallback',
-        };
-      }
-
-      return null;
-    }
-
-    function fetchCharts() {
-      return fetch(API_URL + '?_=' + Date.now())
-        .then(r => {
-          if (!r.ok) throw new Error(`API ${r.status}`);
-          usingFallback = false;
-          return r.json();
-        })
-        .catch(() =>
-          // API unavailable — try charts.json
-          fetch(FALLBACK_URL + '?_=' + Date.now())
-            .then(r => {
-              if (!r.ok) throw new Error('charts.json not found');
-              usingFallback = true;
-              return r.json();
-            })
-        )
-        .then(raw => {
-          const payload = normalise(raw);
-          if (!payload) throw new Error('Unrecognised payload format');
-          lastPayload = payload;
-          return payload;
-        });
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════════
-       CONSUMER 1 — In-slide Plotly charts (chart-q1 … chart-q7)
-    ══════════════════════════════════════════════════════════════════════════ */
-
-    function renderSlideCharts(payload) {
-      const charts = payload.charts || {};
-
-      SLIDE_MAP.forEach(({ qKey, divId, loadId }) => {
-        const div     = document.getElementById(divId);
-        const loading = document.getElementById(loadId);
-        if (!div) return;
-
-        const fig = charts[qKey];
-        if (!fig) {
-          if (loading && !slideInitialized.has(divId)) {
-            loading.innerHTML =
-              `<span style="color:#FF9F43">⏳ Waiting for Streamlit…</span>` +
-              `<small style="color:#3A4A65;display:block;margin-top:6px;">` +
-              `Make sure <code>streamlit run Gold_Egypt_App.py</code> is running</small>`;
-          }
-          return;
-        }
-
-        if (loading) loading.style.display = 'none';
-
-        const traces = fig.data   || [];
-        const layout = patchLayout(fig.layout || {});
-
-        try {
-          if (slideInitialized.has(divId)) {
-            Plotly.react(div, traces, layout, PLOTLY_CFG);
-          } else {
-            Plotly.newPlot(div, traces, layout, PLOTLY_CFG);
-            slideInitialized.add(divId);
-          }
-        } catch (e) {
-          div.innerHTML =
-            `<div style="padding:20px;color:#EF476F;font-size:0.75rem;font-family:monospace;">` +
-            `⚠ Render error (${esc(qKey)}): ${esc(e.message)}</div>`;
-        }
-      });
-    }
-
-    function setSlideLoadingError(msg) {
-      if (slideInitialized.size > 0) return;   // don't blank already-rendered charts
-      SLIDE_MAP.forEach(({ divId, loadId }) => {
-        if (slideInitialized.has(divId)) return;
-        const el = document.getElementById(loadId);
-        if (el) el.innerHTML =
-          `<span style="color:#EF476F">⚠</span> ${esc(msg)}` +
-          `<br><small style="color:#3A4A65;margin-top:4px;display:block;">` +
-          `Run: <code>streamlit run Gold_Egypt_App.py</code></small>`;
-      });
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════════
-       CONSUMER 2 — Live Charts Panel (full-screen overlay)
-    ══════════════════════════════════════════════════════════════════════════ */
-
-    const openBtn  = document.getElementById('lcOpenBtn');
-    const panel    = document.getElementById('liveChartsPanel');
-    const closeBtn = document.getElementById('lcCloseBtn');
-    const lcBody   = document.getElementById('lcBody');
-    const lcMeta   = document.getElementById('lcMeta');
-
-    if (openBtn) {
-      openBtn.addEventListener('click', () => {
-        panel.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        if (!panelRendered) {
-          if (lastPayload) {
-            renderPanel(lastPayload);
-          } else {
-            fetchCharts().then(renderPanel).catch(err => showPanelError(err.message));
-          }
-        }
-      });
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        panel.classList.remove('open');
-        document.body.style.overflow = '';
-      });
-    }
-
-    if (panel) {
-      panel.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-          panel.classList.remove('open');
-          document.body.style.overflow = '';
-        }
-      });
-    }
-
-    function renderPanel(payload) {
-      const charts  = payload.charts || {};
-      const qKeys   = Object.keys(charts);
-
-      if (!qKeys.length) {
-        showPanelError('No charts available yet — Streamlit may still be loading.');
-        return;
-      }
-
-      // ── Update panel meta bar ──
-      if (lcMeta) {
-        const ts  = payload.generated_at
-          ? new Date(payload.generated_at).toLocaleString()
-          : '—';
-        const src = usingFallback ? '· source: ' : '· source: Live API :8502';
-        lcMeta.textContent = `${qKeys.length}/7 charts · ${ts} ${src}`;
-      }
-
-      // ── Rebuild grid ──
-      if (lcBody) lcBody.innerHTML = '';
-      const grid = document.createElement('div');
-      grid.className = 'lc-grid';
-      if (lcBody) lcBody.appendChild(grid);
-
-      // Labels for panel card headers
-      const Q_LABELS = {
-        q1: 'Q1 · Price Decomposition',      q2: 'Q2 · Fair Value Index',
-        q3: 'Q3 · Crisis Premium %',          q4: 'Q4 · Macro Correlation',
-        q5: 'Q5 · Portfolio Net Return',      q6: 'Q6 · Prophet Forecast',
-        q7: 'Q7 · Technical Indicators',
-      };
-
-      qKeys.sort().forEach((qk, idx) => {
-        const fig = charts[qk];
-        if (!fig) return;
-
-        const card = document.createElement('div');
-        card.className = 'lc-card';
-
-        const hdr = document.createElement('div');
-        hdr.className = 'lc-card-header';
-        hdr.innerHTML =
-          `<span class="lc-card-title">${esc(Q_LABELS[qk] || qk.toUpperCase())}</span>` +
-          `<span class="lc-card-page">Live API</span>`;
-        card.appendChild(hdr);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'lc-chart-wrap';
-        const div = document.createElement('div');
-        div.className = 'lc-chart-div';
-        div.id = `lc-chart-${idx}`;
-        wrap.appendChild(div);
-        card.appendChild(wrap);
-        grid.appendChild(card);
-
-        requestAnimationFrame(() => {
-          try {
-            Plotly.newPlot(div, fig.data || [], patchLayout(fig.layout || {}), PLOTLY_CFG);
-          } catch (e) {
-            div.innerHTML =
-              `<div style="padding:20px;color:#EF476F;font-size:.75rem;font-family:monospace;">` +
-              `⚠ ${esc(e.message)}</div>`;
-          }
-        });
-      });
-
-      panelRendered = true;
-      if (openBtn) openBtn.classList.remove('no-data');
-    }
-
-    function showPanelError(msg) {
-      if (lcBody) lcBody.innerHTML =
-        `<div class="lc-status error">` +
-        `<span style="font-size:2rem;display:block;margin-bottom:12px">⚠</span>` +
-        `<strong>Could not load charts</strong><br><br>` +
-        `<code style="font-size:.72rem;color:#EF476F">${esc(msg)}</code><br><br>` +
-        `<span style="color:#3A4A65;font-size:.72rem">` +
-        `Make sure <strong style="color:#FFD700">streamlit run Gold_Egypt_App.py</strong> is running` +
-        ` · chart API starts automatically on port 8502</span></div>`;
-      if (openBtn) openBtn.classList.add('no-data');
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════════
-       MAIN LOOP — fetch once, render both consumers, then poll
-    ══════════════════════════════════════════════════════════════════════════ */
-
-    function tick() {
-      fetchCharts()
-        .then(payload => {
-          renderSlideCharts(payload);
-          // If panel is open, refresh it too
-          if (panel && panel.classList.contains('open')) {
-            renderPanel(payload);
-          }
-          // Update button state
-          if (openBtn) openBtn.classList.remove('no-data');
-        })
-        .catch(err => setSlideLoadingError(err.message));
-    }
-
-    // Initial fetch
-    tick();
-
-    // Poll for live updates
-    setInterval(tick, REFRESH_MS);
-
-    // Probe API on load to set button state (no-data if API+fallback both fail)
-    Promise.all([
-      fetch(API_URL    + '?probe=1').then(r => r.ok),
-      fetch(FALLBACK_URL + '?probe=1').then(r => r.ok).catch(() => false),
-    ]).then(([apiOk, fbOk]) => {
-      if (!apiOk && !fbOk && openBtn) openBtn.classList.add('no-data');
-    }).catch(() => {});
-
-  })();
   </script>
 
 </body>
