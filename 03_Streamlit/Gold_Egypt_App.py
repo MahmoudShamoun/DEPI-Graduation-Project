@@ -74,10 +74,7 @@ CRISIS_EVENTS = {
 # copy of the already-rendered figure (via fig.to_json(), which is JSON-safe
 # for numpy/pandas/datetime values) into st.session_state for later export.
 # ─────────────────────────────────────────────────────────────────────────────
-CHARTS_EXPORT_PATH = os.path.abspath(
-    os.path.join(base_path, "..", "07_Presentation_HTML", "charts.json")
-)
-
+CHARTS_EXPORT_PATH = os.path.abspath(os.path.join(base_path, "..", "07_Presentation_HTML", "charts.json"))
 QUESTION_CHART_MAP = {
     "analysis_decomposition": {
         "question_id":    "price_decomposition",
