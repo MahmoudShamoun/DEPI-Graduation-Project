@@ -1120,11 +1120,47 @@ if embed_q:
 
     # Q1: تفكيك السعر (Price Decomposition)
     if embed_q == "q1":
-        fig = make_subplots(rows=1, cols=1)
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'ValueDriven_{k}'], name='قيمة عالمية عادلة', fill='tozeroy', line=dict(color='#FFF9C4')))
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'InflPrem_{k}'], name='علاوة تضخم وتحوط', fill='tonexty', line=dict(color='#EF476F')))
-        fig.update_layout(**plot_layout(height=460))
-        st.plotly_chart(fig, use_container_width=True)
+        fig = make_subplots(rows=3, cols=1, shared_xaxes=True,
+        row_heights=[0.34, 0.33, 0.33], vertical_spacing=0.10,
+        subplot_titles=["24K", "21K", "18K"])
+
+        KFILL = {'24K': 'rgba(255,249,196,0.65)', '21K': 'rgba(255,215,0,0.65)', '18K': 'rgba(205,127,50,0.65)'}
+        KROW  = {'24K': 1, '21K': 2, '18K': 3}
+
+        for karat in ['24K', '21K', '18K']:
+            row = KROW[karat]
+            fig.add_trace(go.Scatter(x=data.index, y=data[f'ValueDriven_{karat}'],
+                name='قيمة عالمية', stackgroup=f'g{row}', mode='lines',
+                line=dict(width=0), fillcolor=KFILL[karat],
+                showlegend=(row==1), legendgroup='gv',
+                hovertemplate=f"{karat} - قيمة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
+            fig.add_trace(go.Scatter(x=data.index, y=data[f'InflPrem_{karat}'],
+                name='علاوة تضخم', stackgroup=f'g{row}', mode='lines',
+                line=dict(width=0), fillcolor='rgba(239,71,111,0.50)',
+                showlegend=(row==1), legendgroup='gi',
+                hovertemplate=f"{karat} - علاوة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
+
+        if show_events: add_events(fig, data, rows=[1,2,3])
+        lyt = plot_layout(height=800)
+        lyt['margin'] = dict(l=8, r=8, t=160, b=8)
+        lyt['legend'] = dict(orientation="h", y=1.20, x=0.5, xanchor="center",
+            bgcolor="rgba(0,0,0,0)", borderwidth=0,
+            font=dict(size=10, family="Cairo"), itemsizing="constant")
+        lyt['xaxis']['rangeselector']['y'] = 1.20
+        lyt['title'] = dict(text="تشريح السعر: القيمة الحقيقية مقابل علاوة التضخم والعملة",
+            font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.98)
+        fig.update_layout(**lyt)
+        fig.update_xaxes(tickfont=dict(family="Cairo", size=10, color="#4A6A8A"),
+                        gridcolor="rgba(255,255,255,0.05)",
+                        range=["2020-01-01", data.index.max()])
+        event_labels = {v[0] for v in CRISIS_EVENTS.values()}
+        for ann in fig.layout.annotations:
+            if ann.text not in event_labels:
+                ann.update(x=0.98, xanchor='right', font=dict(color='#B8960C', size=10.5, family='Cairo'))
+        for r in [1,2,3]:
+            fig.update_yaxes(tickfont=dict(family="Cairo", size=11, color="#4A6A8A"),
+                            title_text="جنيه", title_font=dict(size=9), row=r, col=1)
+        st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     # Q2: فجوة السعر العادل (Fair Value Gap)
     elif embed_q == "q2":
