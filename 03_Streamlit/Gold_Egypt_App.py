@@ -29,8 +29,8 @@ IMAGE_HTML_SRC = f"data:image/png;base64,{img_base64}"
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS & CONSTANTS
 # ─────────────────────────────────────────────────────────────────────────────
-CSV_PATH           = os.path.join(base_path, "..", "02_Dataset", "Gold_Egypt.csv")
-CSV_PROCESSED_PATH = os.path.join(base_path, "..", "02_Dataset", "Gold_Egypt_Processed.csv")
+CSV_PATH           = os.path.abspath(os.path.join(base_path, "..", "02_Dataset", "Gold_Egypt.csv"))
+CSV_PROCESSED_PATH = os.path.abspath(os.path.join(base_path, "..", "02_Dataset", "Gold_Egypt_Processed.csv"))
 
 _HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36",
