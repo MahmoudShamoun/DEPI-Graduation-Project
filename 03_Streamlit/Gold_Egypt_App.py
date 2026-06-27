@@ -1224,14 +1224,55 @@ if embed_q:
 
     # Q6: التنبؤ المستقبلي (Prophet Forecasting Time Series)
     elif embed_q == "q6":
-        fig = go.Figure()
-        # عرض البيانات التاريخية الفعلية مع خط التنبؤ المستقبلي الممتد
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'Price_{k}'], name='السعر التاريخي', line=dict(color='#FFD700')))
-        if 'Forecast_Upper' in data.columns and 'Forecast_Lower' in data.columns:
-            fig.add_trace(go.Scatter(x=data.index, y=data['Forecast_Upper'], name='الحد الأعلى المتوقع', line=dict(color='rgba(239,71,111,0.2)', width=0)))
-            fig.add_trace(go.Scatter(x=data.index, y=data['Forecast_Lower'], name='الحد الأدنى المتوقع', fill='tonexty', line=dict(color='rgba(239,71,111,0.2)', width=0)))
-        fig.update_layout(**plot_layout(height=460))
-        st.plotly_chart(fig, use_container_width=True)
+        fig_fc = go.Figure()
+
+        # Weekly-downsampled actuals for cleaner display on long horizons
+        hw = data[fv_col].resample('W').last()
+        fig_fc.add_trace(go.Scatter(x=hw.index, y=hw, name='السعر الفعلي',
+            line=dict(color='#4A6A8A', width=1.5),
+            hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} جنيه<extra></extra>"))
+
+        # 90% confidence band
+        fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_upper'],
+            line=dict(width=0), showlegend=False))
+        fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
+            fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
+            line=dict(width=0), name='‫نطاق الثقة 90%‬'))
+
+        # Point forecast line
+        fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
+            name='‫توقع Prophet‬', line=dict(color='#4CC9F0', width=2.5),
+            hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} جنيه</b><extra></extra>"))
+
+        # Today marker
+        fig_fc.add_vline(x=datetime.today().timestamp() * 1000,
+            line_dash='dash', line_color='#FFD700', opacity=0.5,
+            annotation_text='اليوم',
+            annotation_font=dict(color='#FFD700', size=9.5),
+            annotation_position="top right")
+
+        if show_events: add_events(fig_fc, data)
+
+        lyt_fc = plot_layout(height=500, yaxis=dict(title_text="السعر (جنيه)"))
+        lyt_fc['title'] = dict(text=title_chart,
+            font=dict(size=13, color="#FFD700", family="Cairo"),
+            x=0.5, xanchor='center', y=0.97)
+        fig_fc.update_layout(**lyt_fc)
+        st.plotly_chart(fig_fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+
+        spacer()
+        la  = data[fv_col].iloc[-1]
+        fe  = fc_out['yhat'].iloc[-1]
+        cp  = (fe / la - 1) * 100
+        cc  = '#06D6A0' if cp >= 0 else '#EF476F'
+        cards_html = (
+            kpi_html(f"{la:,.0f}",    "السعر الحالي (جنيه)",        "#FFD700", "0.05s") +
+            kpi_html(f"{fe:,.0f}",    f"التوقع ({forecast_days}ي)",  "#4CC9F0", "0.10s") +
+            kpi_html(f"{cp:+.1f}%",   "التغيير المتوقع",              cc,        "0.15s") +
+            kpi_html(f"{rmse:,.0f}",  "RMSE النموذج",                "#A855F7", "0.20s")
+        )
+        st.markdown(f'<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">{cards_html}</div>',
+                    unsafe_allow_html=True)
 
     # Q7: المؤشرات الفنية للزخم (Technical Indicators: RSI & MACD)
     elif embed_q == "q7":
