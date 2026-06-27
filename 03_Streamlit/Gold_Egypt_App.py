@@ -1101,7 +1101,94 @@ st.markdown("""
   if (el) el.style.paddingTop = '0px';
 </script>
 """, unsafe_allow_html=True)
+# ─────────────────────────────────────────────────────────────────────────────
+# PREMIUM EMBED ROUTER (For Vercel HTML Slides Integration)
+# ─────────────────────────────────────────────────────────────────────────────
+embed_q = st.query_params.get("q")
+if embed_q:
+    # إخفاء عناصر التحكم كلياً لضمان تجربة SaaS انسيابية داخل الـ Iframe
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"], header, footer, .stDeployButton {display: none !important;}
+        .main .block-container {padding: 0 !important; max-width: 100% !important; margin: 0 !important;}
+        .stPlotlyChart {border: none !important; box-shadow: none !important; background: transparent !important;}
+        body {background-color: transparent !important;}
+    </style>
+    """, unsafe_allow_html=True)
 
+    k = selected_karat
+
+    # Q1: تفكيك السعر (Price Decomposition)
+    if embed_q == "q1":
+        fig = make_subplots(rows=1, cols=1)
+        fig.add_trace(go.Scatter(x=data.index, y=data[f'ValueDriven_{k}'], name='قيمة عالمية عادلة', fill='tozeroy', line=dict(color='#FFF9C4')))
+        fig.add_trace(go.Scatter(x=data.index, y=data[f'InflPrem_{k}'], name='علاوة تضخم وتحوط', fill='tonexty', line=dict(color='#EF476F')))
+        fig.update_layout(**plot_layout(height=460))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Q2: فجوة السعر العادل (Fair Value Gap)
+    elif embed_q == "q2":
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=data.index, y=data[f'Price_{k}'], name='السعر الفعلي بمصر', line=dict(color='#FFD700', width=2)))
+        fig.add_trace(go.Scatter(x=data.index, y=data[f'ValueDriven_{k}'], name='السعر العادل نظرياً', line=dict(color='#06D6A0', dash='dash')))
+        fig.update_layout(**plot_layout(height=460))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Q3: نسبة النوازل والعلاوة التاريخية (Premium % Timeline)
+    elif embed_q == "q3":
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=data.index, y=data[f'PremPct_{k}'], name=f'علاوة عيار {k}', line=dict(color='#FFD700')))
+        fig.update_layout(**plot_layout(height=460, yaxis=dict(title_text="نسبة العلاوة %")))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Q4: مصفوفة الارتباط العالمي (Global Correlation Matrix)
+    elif embed_q == "q4":
+        cols_ = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
+        names_ = ['ذهب عالمي', 'دولار رسمي', 'نفط برنت', 'سندات أمريكا', 'S&P 500']
+        valid_cols = [c for c in cols_ if c in data.columns]
+        valid_names = [names_[cols_.index(c)] for c in valid_cols]
+        if valid_cols:
+            cd = data[valid_cols].dropna().corr()
+            cd.columns = valid_names; cd.index = valid_names
+            fig = px.imshow(cd, text_auto=".2f", color_continuous_scale=[[0,'#EF476F'],[0.5,'#060C18'],[1,'#06D6A0']], zmin=-1, zmax=1)
+            fig.update_layout(**plot_layout(height=460))
+            st.plotly_chart(fig, use_container_width=True)
+
+    # Q5: محاكاة المحفظة الاستثمارية (Portfolio Net Returns)
+    elif embed_q == "q5":
+        fig = go.Figure()
+        for karat, color in KARAT_COLORS.items():
+            if f'Port_{karat}' in data.columns:
+                fig.add_trace(go.Scatter(x=data.index, y=data[f'Port_{karat}'], name=f'صافي عائد {karat}', line=dict(color=color)))
+        if 'Port_USD' in data.columns:
+            fig.add_trace(go.Scatter(x=data.index, y=data['Port_USD'], name='استثمار الدولار', line=dict(color='#4CC9F0', dash='dot')))
+        fig.update_layout(**plot_layout(height=460))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Q6: التنبؤ المستقبلي (Prophet Forecasting Time Series)
+    elif embed_q == "q6":
+        fig = go.Figure()
+        # عرض البيانات التاريخية الفعلية مع خط التنبؤ المستقبلي الممتد
+        fig.add_trace(go.Scatter(x=data.index, y=data[f'Price_{k}'], name='السعر التاريخي', line=dict(color='#FFD700')))
+        if 'Forecast_Upper' in data.columns and 'Forecast_Lower' in data.columns:
+            fig.add_trace(go.Scatter(x=data.index, y=data['Forecast_Upper'], name='الحد الأعلى المتوقع', line=dict(color='rgba(239,71,111,0.2)', width=0)))
+            fig.add_trace(go.Scatter(x=data.index, y=data['Forecast_Lower'], name='الحد الأدنى المتوقع', fill='tonexty', line=dict(color='rgba(239,71,111,0.2)', width=0)))
+        fig.update_layout(**plot_layout(height=460))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # Q7: المؤشرات الفنية للزخم (Technical Indicators: RSI & MACD)
+    elif embed_q == "q7":
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.06, row_heights=[0.5, 0.5])
+        if f'RSI_{k}' in data.columns:
+            fig.add_trace(go.Scatter(x=data.index, y=data[f'RSI_{k}'], name='RSI (مؤشر القوة النسبية)', line=dict(color='#E63946')), row=1, col=1)
+        if f'MACD_{k}' in data.columns and f'Signal_{k}' in data.columns:
+            fig.add_trace(go.Scatter(x=data.index, y=data[f'MACD_{k}'], name='MACD Line', line=dict(color='#4CC9F0')), row=2, col=1)
+            fig.add_trace(go.Scatter(x=data.index, y=data[f'Signal_{k}'], name='Signal Line', line=dict(color='#FFD700')), row=2, col=1)
+        fig.update_layout(**plot_layout(height=460))
+        st.plotly_chart(fig, use_container_width=True)
+
+    # إيقاف التنفيذ الفوري بعد رسم الشارت المطلوبة لمنع تحميل بقية الـ DOM
+    st.stop()
 
 # ═════════════════════════════════════════════════════════════════════════════
 # PAGE 1: Home - Executive Summary & Live Stream
