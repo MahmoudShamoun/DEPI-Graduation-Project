@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920" />
+  <title>GOLD EGYPT | Financial Analytics — DEPI 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel='stylesheet' href='index.css' />
+
+  <!-- ▶▶▶ NEW: Plotly.js CDN for live chart rendering from charts.json ◀◀◀ -->
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+
+  <!-- ▶▶▶ NEW: Live Charts panel styles ◀◀◀ -->
+  <style>
+    /* ── Per-question chart containers (chart-q1 … chart-q7) ── */
+    .q-chart-wrap {
+      width: 100%;
+      flex: 1;
+      min-height: 420px;
+      background: rgba(6, 12, 24, 0.6);
+      border: 1px solid rgba(255, 215, 0, 0.12);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    .q-chart-div {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+    }
+    .q-chart-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: #3A4A65;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── Live Charts overlay panel ── */
+    #liveChartsPanel {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #03060F;
+      overflow-y: auto;
+      padding: 0 0 60px 0;
+      animation: lcFadeIn 0.3s ease both;
+    }
+    @keyframes lcFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #liveChartsPanel.open { display: block; }
+
+    .lc-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: linear-gradient(135deg, #07101F 0%, #040810 100%);
+      border-bottom: 1px solid #132238;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    .lc-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .lc-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #FFD700;
+      letter-spacing: 1px;
+    }
+    .lc-meta {
+      font-family: 'Courier New', monospace;
+      font-size: 0.65rem;
+      color: #3A4A65;
+      margin-top: 2px;
+    }
+    .lc-close-btn {
+      background: rgba(239,71,111,0.12);
+      border: 1px solid rgba(239,71,111,0.3);
+      color: #EF476F;
+      font-size: 0.78rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      padding: 7px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .lc-close-btn:hover {
+      background: rgba(239,71,111,0.25);
+      border-color: rgba(239,71,111,0.6);
+    }
+
+    .lc-status {
+      text-align: center;
+      padding: 60px 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: #3A4A65;
+    }
+    .lc-status .lc-spinner {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 14px;
+      animation: lcSpin 1.2s linear infinite;
+    }
+    @keyframes lcSpin {
+      to { transform: rotate(360deg); }
+    }
+    .lc-status.error { color: #EF476F; }
+    .lc-status.success { color: #06D6A0; }
+
+    .lc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 680px), 1fr));
+      gap: 20px;
+      padding: 24px 28px;
+    }
+
+    .lc-card {
+      background: linear-gradient(145deg, #0A1525, #0D1E36);
+      border: 1px solid #132238;
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+    .lc-card:hover { border-color: rgba(255,215,0,0.2); }
+
+    .lc-card-header {
+      padding: 12px 16px 8px;
+      border-bottom: 1px solid #132238;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .lc-card-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #E8EDF5;
+      direction: rtl;
+    }
+    .lc-card-page {
+      font-family: 'Courier New', monospace;
+      font-size: 0.6rem;
+      color: #3A4A65;
+      background: rgba(255,215,0,0.05);
+      border: 1px solid rgba(255,215,0,0.1);
+      padding: 2px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+    .lc-chart-wrap {
+      width: 100%;
+      min-height: 380px;
+      position: relative;
+    }
+    .lc-chart-wrap .lc-chart-div {
+      width: 100%;
+      height: 100%;
+      min-height: 380px;
+    }
+
+    /* Open button — injected into the slide deck footer area */
+    #lcOpenBtn {
+      position: fixed;
+      bottom: 54px;          /* sits just above the footer */
+      right: 18px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #0C1E3D, #071428);
+      border: 1px solid rgba(255,215,0,0.35);
+      color: #FFD700;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      padding: 8px 16px;
+      border-radius: 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 12px rgba(255,215,0,0.08);
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #lcOpenBtn:hover {
+      border-color: rgba(255,215,0,0.7);
+      box-shadow: 0 6px 28px rgba(0,0,0,0.6), 0 0 18px rgba(255,215,0,0.15);
+      transform: translateY(-2px);
+    }
+    #lcOpenBtn .lc-dot {
+      width: 6px; height: 6px;
+      background: #06D6A0;
+      border-radius: 50%;
+      animation: lcBlink 2s ease-in-out infinite;
+    }
+    @keyframes lcBlink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+    #lcOpenBtn.no-data {
+      border-color: rgba(255,255,255,0.1);
+      color: #3A4A65;
+    }
+    #lcOpenBtn.no-data .lc-dot { background: #3A4A65; animation: none; }
+  </style>
+</head>
+
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <!-- ╔══════════════════════════╗
+       ║  HEADER                  ║
+       ╚══════════════════════════╝ -->
+<header class="hdr" role="banner">
+  <div class="hdr-brand">
+    <img 
+      src="data:image/png;base64,[LONG BASE64 DATA]" 
+      class="hdr-logo" 
+      alt="Gold Egypt Logo" 
+    />
+    <span class="hdr-name">GOLD EGYPT</span>
+  </div>
+
+  <div class="hdr-center" id="slideTitle">
+    Financial Analytics · DEPI 2026
+  </div>
+
+  <div class="hdr-tag">
+    DEPI Initiative 2026
+  </div>
+</header>
+
+  <!-- PROGRESS BAR -->
+  <div class="prog" id="prog"></div>
+
+  <!-- NAV ARROWS -->
+  <button class="nav-arrow nav-prev" id="navPrev" aria-label="Previous slide">&#8592;</button>
+  <button class="nav-arrow nav-next" id="navNext" aria-label="Next slide">&#8594;</button>
+
+  <!-- ╔══════════════════════════╗
+       ║  SLIDE DECK              ║
+       ╚══════════════════════════╝ -->
+  <main class="deck" id="deck">
+
+    <!-- ══════════ SLIDE 1 · TITLE ══════════ -->
+    <section class="slide on" data-n="1" data-title="From Panic to Precision" aria-label="Title Slide">
+      <div class="hero-slide">
+
+        <img 
+          src="data:image/png;base64,[LONG BASE64 DATA]" 
+          class="hero-logo-xl" 
+          alt="Gold Egypt" 
+        />
+
+        <div class="hero-title">GOLD EGYPT</div>
+        <div class="hero-subtitle">Gold as a Financial Instrument in Egypt</div>
+        <div class="hero-tagline">Financial Intelligence Platform · DEPI Initiative 2026</div>
+
+        <div class="stat-row">
+          <div class="stat-box"><span class="num">7</span><div class="lbl">Research Questions</div></div>
+          <div class="stat-box"><span class="num">4</span><div class="lbl">System Layers</div></div>
+          <div class="stat-box"><span class="num">5+</span><div class="lbl">Years of Data</div></div>
+          <div class="stat-box"><span class="num">6</span><div class="lbl">Team Members</div></div>
+        </div>
+
+      </div>
+
+      <div class="hero-hint">Press ← → arrow keys or spacebar to navigate</div>
+    </section>
+
+    <!-- ══════════ SLIDE 2 · TEAM ══════════ -->
+    <section class="slide" data-n="2" data-title="Meet the Team" aria-label="Team">
+      <div class="sc center">
+        <span class="part-label">Part 1 · The Team</span>
+        <h1 class="st">Meet the Team</h1>
+        <p class="ss">The analysts behind the numbers</p>
+        <div class="team-grid">
+          <div class="tm">
+            <div class="av"><img src="mahmoud.jpeg"  alt="Mahmoud Shamoun"  style="object-position:50% 50%;transform:scale(1.2)"></div>
+            <span class="tm-name">Mahmoud Shamoun</span>
+          </div>
+          <div class="tm">
+            <div class="av"><img src="mahenour.png"  alt="Mahenour Eissa"   style="object-position:50% 50%;transform:scale(1.3)"></div>
+            <span class="tm-name">Mahenour Eissa</span>
+          </div>
+          <div class="tm">
+            <div class="av"><img src="aya.png"        alt="Aya El-Shorbagy" style="object-position:50% 20%"></div>
+            <span class="tm-name">Aya El-Shorbagy</span>
+          </div>
+          <div class="tm">
+            <div class="av"><img src="malak.jpg"      alt="Malak Muhamed"   style="object-position:50% 50%;transform:scale(1.05)"></div>
+            <span class="tm-name">Malak Muhamed</span>
+          </div>
+          <div class="tm">
+            <div class="av"><img src="marwan.png"     alt="Marwan Yasser"   style="object-position:50% 30%"></div>
+            <span class="tm-name">Marwan Yasser</span>
+          </div>
+          <div class="tm">
+            <div class="av"><img src="marwan 1.png"   alt="Marwan Ehab"     style="object-position:50% 20%"></div>
+            <span class="tm-name">Marwan Ehab</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 3 · THE HOOK ══════════ -->
+    <section class="slide" data-n="3" data-title="From Panic to Precision" aria-label="The Hook">
+      <div class="sc">
+        <span class="part-label">Part 1 · The Problem</span>
+        <h1 class="st">From <em>Panic</em> to Precision</h1>
+        <p class="ss">January 2020 · Before COVID · Before devaluation · Before everything</p>
+        <div class="problem-grid">
+          <div class="pcard">
+            <span class="pcard-num">01</span>
+            <h3>Making Charges</h3>
+            <p>Local jewellers and banks charge <strong>1–5%</strong> craftsmanship or minting premiums that are silently absorbed by buyers.</p>
+          </div>
+          <div class="pcard">
+            <span class="pcard-num">02</span>
+            <h3>Bid-Ask Spreads</h3>
+            <p>The spread between buying and selling price in the Egyptian market can reach <strong>3–8%</strong>, eroding gains before any sale.</p>
+          </div>
+          <div class="pcard">
+            <span class="pcard-num">03</span>
+            <h3>Currency Illusion</h3>
+            <p>Rising EGP prices mask reality — when measured in USD, real gold returns are often <strong>negative</strong> after transaction costs.</p>
+          </div>
+        </div>
+        <div style="margin-top:20px;padding:18px 24px;background:rgba(212,175,55,.07);border:1px solid var(--border-hi);border-radius:var(--r)">
+          <p style="font-size:16px;color:var(--text);line-height:1.7">
+            If you had invested <strong style="color:var(--gold)">100,000 EGP</strong> in 21K gold in January 2020 — after all costs — it would be worth
+            <strong style="color:var(--gold)">500,000+ EGP</strong> today. But <em style="color:var(--text)">why?</em>
+            How much was real gold appreciation vs. EGP collapse vs. local panic premium?
+            The average Egyptian investor doesn't have the tools to answer that. <strong style="color:#fff">We built those tools.</strong>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 4 · CORE PROBLEM ══════════ -->
+    <section class="slide" data-n="4" data-title="The Core Problem" aria-label="Core Problem">
+      <div class="sc">
+        <span class="part-label">Part 1 · The Problem</span>
+        <h1 class="st">The Core Problem</h1>
+        <p class="ss">Three forces drive one price — most investors see none of them</p>
+        <div class="problem-grid">
+          <div class="pcard">
+            <span class="pcard-num">A</span>
+            <h3>Global Spot Price Movement</h3>
+            <p>International gold (XAU/USD) fluctuates with Fed policy, geopolitical risk, and institutional demand — a signal <strong>most Egyptians never isolate</strong>.</p>
+          </div>
+          <div class="pcard">
+            <span class="pcard-num">B</span>
+            <h3>EGP Devaluation</h3>
+            <p>Three major devaluations since 2022 inflated the EGP-denominated price, creating the <strong>illusion of profit</strong>.</p>
+          </div>
+          <div class="pcard">
+            <span class="pcard-num">C</span>
+            <h3>Local Panic Premium</h3>
+            <p>During crises, domestic demand surges push local prices <strong>above fair value</strong> — a speculative bubble hidden in plain sight.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 5 · SOLUTION OVERVIEW ══════════ -->
+    <section class="slide" data-n="5" data-title="The Solution" aria-label="Solution Overview">
+      <div class="sc">
+        <span class="part-label">Part 2 · The Solution</span>
+        <h1 class="st">Gold Egypt Financial Intelligence Platform</h1>
+        <p class="ss">A four-layer production system — not just a dashboard</p>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-icon">⚙️</div>
+            <div>
+              <h4>Layer 1 — ETL Pipeline</h4>
+              <p>Python + Jupyter Notebook · Daily automated data collection from multiple sources with Fallback Chain · Forward-fill for weekends and holidays</p>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-icon">🗄️</div>
+            <div>
+              <h4>Layer 2 — MySQL Database</h4>
+              <p>5 relational tables linked by trade_date · Stores all data from January 2020 to present · Referential integrity enforced</p>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-icon">📊</div>
+            <div>
+              <h4>Layer 3 — Streamlit Web App</h4>
+              <p>5 analytical pages with interactive Plotly charts · Prophet forecasting in real-time · For individual retail investors</p>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-icon">💼</div>
+            <div>
+              <h4>Layer 4 — Power BI Report</h4>
+              <p>6 enterprise pages · KPI Cards · Decomposition Tree · Row-Level Security · Scheduled Refresh from MySQL</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 6 · DATA PIPELINE ══════════ -->
+    <section class="slide" data-n="6" data-title="Data Engineering" aria-label="Data Pipeline">
+      <div class="sc">
+        <span class="part-label">Part 2 · Data Engineering</span>
+        <h1 class="st">ETL Pipeline — From Raw Data to Decisions</h1>
+        <p class="ss">5-step production pipeline with two solved technical challenges</p>
+        <div class="pipeline">
+          <div class="pipe-step">
+            <div class="pipe-num">1</div>
+            <div>
+              <h4>Extract — Python APIs (Fallback Chain)</h4>
+              <p>GoldPrice.org API → ExchangeRate-API / Frankfurter → Yahoo Finance (yfinance) · Daily data from Jan 2020 · Automatic fallback on source failure</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">2</div>
+            <div>
+              <h4>Transform — Jupyter Notebook · Two Critical Challenges Solved</h4>
+              <p><strong style="color:var(--gold-lt)">Challenge 1:</strong> Forward Fill for weekends/holidays · <strong style="color:var(--gold-lt)">Challenge 2:</strong> Historical Date Merge Strategy — fixes Prophet calendar vs. trading-day misalignment errors</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">3</div>
+            <div>
+              <h4>Load — MySQL (5 Tables)</h4>
+              <p>gold_prices · karat_prices · technical_indicators · portfolio_simulation · crisis_events</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">4</div>
+            <div>
+              <h4>Serve — Streamlit App (Individual Investors)</h4>
+              <p>Reads from DB · Executes Prophet Forecast in real-time · Renders 5 interactive analytical pages</p>
+            </div>
+          </div>
+          <div class="pipe-step">
+            <div class="pipe-num">5</div>
+            <div>
+              <h4>Report — Power BI (Enterprise)</h4>
+              <p>Connects to MySQL via Power Query · Scheduled Refresh · Row-Level Security for multi-user deployment</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 7 · RESEARCH QUESTIONS OVERVIEW ══════════ -->
+    <section class="slide" data-n="7" data-title="7 Research Questions" aria-label="Research Questions">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <h1 class="st">7 Core Research Questions</h1>
+        <p class="ss">Each question is answered live via the Streamlit dashboard</p>
+        <div class="three-col" style="margin-top:4px">
+          <div class="pcard"><span class="pcard-num" style="font-size:20px">Q1</span><h3>Price Decomposition</h3><p>What % of local price movement is global XAU vs. EGP devaluation vs. local panic premium?</p></div>
+          <div class="pcard"><span class="pcard-num" style="font-size:20px">Q2</span><h3>Fair Value Index</h3><p>What is the theoretical fair value of gold in Egypt, and what is the current deviation?</p></div>
+          <div class="pcard"><span class="pcard-num" style="font-size:20px">Q3</span><h3>Crisis Premium Bubbles</h3><p>Are there statistically significant speculative premium spikes during crisis windows?</p></div>
+          <div class="pcard"><span class="pcard-num" style="font-size:20px">Q4</span><h3>Macro Drivers</h3><p>Which macro variable — USD/EGP, Oil, T-Bonds, S&amp;P 500 — has the highest explanatory power?</p></div>
+          <div class="pcard"><span class="pcard-num" style="font-size:20px">Q5</span><h3>Net Return Comparison</h3><p>How do net gold returns (after all costs) compare to USD cash and EGP deposits since Jan 2020?</p></div>
+          <div class="pcard"><span class="pcard-num" style="font-size:20px">Q6</span><h3>Prophet Forecast</h3><p>Can a multi-stage Prophet model accurately forecast local gold prices over 6–12 months?</p></div>
+          <div class="pcard" style="grid-column:1/-1"><span class="pcard-num" style="font-size:20px">Q7</span><h3>Technical Signals — Entry &amp; Exit</h3><p>Which automated technical signal — RSI, MACD, or Bollinger Bands — best identifies optimal buy/sell opportunities across karats?</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 8 · Q1 LIVE ══════════ -->
+    <section class="slide" data-n="8" data-title="Q1 · Price Decomposition">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <div class="q-slide-inner">
+          <div class="q-top">
+            <span class="q-tag">Question 1</span>
+            <h2 class="q-text">What drives Egyptian gold prices?</h2>
+            <p class="q-subtext">
+              How much of the price movement comes from 
+              <strong>global gold prices</strong> vs 
+              <strong>EGP devaluation</strong> vs 
+              <strong>local market premium</strong>?
+            </p>
+            <div class="q-insight">
+              📊 <strong>Key Insight:</strong> During the March 2024 devaluation, 
+              <span class="highlight">60–70% of the price surge</span> 
+              was driven by EGP collapse — not global gold prices.
+            </div>
+            <p class="q-hint">
+              📍 <strong>Stacked Area Chart</strong> — Price Analysis Page  
+              🟡 Global Value (Fixed FX 15.7)  
+              🔴 Currency Devaluation + Premium
+            </p>
+            <div class="formula">
+              Theoretical 24K = (XAU/USD ÷ 31.1035) × USD/EGP  
+              <br>
+              Baseline FX = <strong>15.70 EGP/USD</strong>
+            </div>
+          </div>
+          <!-- احذف dashboard-container والـ iframe والـ fallback وضع بدلهم: -->
+          <div class="q-chart-wrap">
+            <div class="q-chart-loading" id="q1-loading">⟳ Loading chart…</div>
+            <div class="q-chart-div" id="chart-q1"></div>
+          </div>
+          <div class="cta-wrap">
+            <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank">
+              🚀 Explore Full Dashboard
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+    function showFallback() {
+      document.getElementById("fallbackBox").style.display = "flex";
+    }
+    setTimeout(() => {
+      const iframe = document.querySelector(".dashboard-iframe");
+      try {
+        if (!iframe.contentWindow || iframe.contentWindow.length === 0) {
+          showFallback();
+        }
+      } catch (e) {
+        showFallback();
+      }
+    }, 2000);
+    </script>
+
+    <!-- ══════════ SLIDE 9 · Q2 LIVE ══════════ -->
+    <section class="slide" data-n="9" data-title="Q2 · Fair Value Index" aria-label="Q2">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <div class="q-slide-inner">
+          <div class="q-top">
+            <span class="q-tag">Question 2</span>
+            <p class="q-text">"What is the theoretical Fair Value of gold in Egypt on any given date — and what is the current deviation from it?"</p>
+            <p class="q-hint">📍 Live Chart: <strong>Fair Value Index Line</strong> in the Price Analysis page · FVI &gt; 1 = market trading above fair value (panic/speculation) · FVI ≈ 1 = efficient pricing · Gives investors a real-time signal: "Is now a good time to buy?"</p>
+            <div class="formula">FVI = Actual Price ÷ Theoretical Price &nbsp;|&nbsp; FVI &gt; 1 → Overvalued &nbsp;|&nbsp; FVI ≈ 1 → Fair</div>
+          </div>
+          <div class="q-chart-wrap">
+            <div class="q-chart-loading" id="q2-loading">⟳ Loading chart…</div>
+            <div class="q-chart-div" id="chart-q2"></div>
+          </div>
+          <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Fair Value Index chart</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 10 · Q3 LIVE ══════════ -->
+    <section class="slide" data-n="10" data-title="Q3 · Crisis Premium Bubbles" aria-label="Q3">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <div class="q-slide-inner">
+          <div class="q-top">
+            <span class="q-tag">Question 3</span>
+            <p class="q-text">"Does the Egyptian gold market exhibit statistically significant speculative or panic premium bubbles during crisis periods?"</p>
+            <p class="q-hint">📍 Live Chart: <strong>Inflation Premium % Chart</strong> in the Price Analysis page · Sharp PremPct spikes directly after crises (Mar 2024 devaluation, Iran strike Jun 2025) = statistical proof of panic buying · The premium mean-reverts after calm is restored — investors who bought the spike paid more than necessary</p>
+          </div>
+          <div class="q-chart-wrap">
+            <div class="q-chart-loading" id="q3-loading">⟳ Loading chart…</div>
+            <div class="q-chart-div" id="chart-q3"></div>
+          </div>
+          <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Premium % chart</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 11 · Q4 LIVE ══════════ -->
+    <section class="slide" data-n="11" data-title="Q4 · Macro Drivers" aria-label="Q4">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <div class="q-slide-inner">
+          <div class="q-top">
+            <span class="q-tag">Question 4</span>
+            <p class="q-text">"Which macroeconomic variable — USD/EGP, Oil, US Treasury Bonds, or S&amp;P 500 — has the highest explanatory power for local gold prices?"</p>
+            <p class="q-hint">📍 Live Chart: <strong>Correlation Matrix Heatmap</strong> on the Home page · Result: USD/EGP exchange rate shows the strongest correlation with all karat prices — confirming that Egyptian gold is effectively a bet on the Egyptian pound, not gold itself</p>
+          </div>
+          <div class="q-chart-wrap">
+            <div class="q-chart-loading" id="q4-loading">⟳ Loading chart…</div>
+            <div class="q-chart-div" id="chart-q4"></div>
+          </div>
+          <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Correlation Heatmap on Home page</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 12 · Q5 LIVE ══════════ -->
+    <section class="slide" data-n="12" data-title="Q5 · Net Return Comparison" aria-label="Q5">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <div class="q-slide-inner">
+          <div class="q-top">
+            <span class="q-tag">Question 5</span>
+            <p class="q-text">"How do net gold returns — after deducting making charges and bid-ask spreads — compare to holding USD or EGP cash as a store of value since January 2020?"</p>
+            <div class="chip-row">
+              <div class="chip">24K: +60 EGP/g entry · 0.5% sell spread</div>
+              <div class="chip">21K: +150 EGP/g entry · 1.0% sell spread</div>
+              <div class="chip">18K: +220 EGP/g entry · 1.5% sell spread</div>
+              <div class="chip">Baseline: 100,000 EGP · Jan 2020</div>
+            </div>
+            <p class="q-hint">📍 Live Chart: <strong>Portfolio Performance Chart</strong> in the Investment Simulation page · 5 lines: 24K, 21K, 18K gold + USD + EGP cash · All returns are NET — including all real transaction costs</p>
+          </div>
+          <div class="q-chart-wrap">
+            <div class="q-chart-loading" id="q5-loading">⟳ Loading chart…</div>
+            <div class="q-chart-div" id="chart-q5"></div>
+          </div>
+          <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Investment Simulation page</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 13 · Q6 LIVE ══════════ -->
+    <section class="slide" data-n="13" data-title="Q6 · Prophet Forecast" aria-label="Q6">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <div class="q-slide-inner">
+          <div class="q-top">
+            <span class="q-tag">Question 6</span>
+            <p class="q-text">"Can a multi-stage Prophet model — using USD/EGP and Oil as external regressors — accurately forecast Egyptian gold prices over 6–12 month horizons?"</p>
+            <p class="q-hint">📍 Live Chart: <strong>Forecast Chart</strong> in the Forecasting page · Historical Date Merge Strategy resolves Prophet calendar vs. trading-day misalignment · 90% confidence band · MAE and RMSE metrics · Select karat and forecast horizon from 30 to 365 days</p>
+          </div>
+          <div class="q-chart-wrap">
+            <div class="q-chart-loading" id="q6-loading">⟳ Loading chart…</div>
+            <div class="q-chart-div" id="chart-q6"></div>
+          </div>
+          <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Forecasting page</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 14 · Q7 LIVE ══════════ -->
+    <section class="slide" data-n="14" data-title="Q7 · Technical Signals" aria-label="Q7">
+      <div class="sc">
+        <span class="part-label">Part 3 · Research Questions</span>
+        <div class="q-slide-inner">
+          <div class="q-top">
+            <span class="q-tag">Question 7</span>
+            <p class="q-text">"Which automated technical signal — RSI, MACD, or Bollinger Bands — best identifies optimal entry and exit opportunities across different gold karats?"</p>
+            <p class="q-hint">📍 Live Chart: <strong>Triple-Panel Technical Analysis</strong> in the Technical Indicators page · Bollinger Bands: SELL ▼ at upper band / BUY ▲ at lower band · MACD crossover: direction signal · RSI-14: &gt;70 = overbought / &lt;30 = oversold · Combined composite signal: BUY / HOLD / SELL — no technical knowledge required</p>
+          </div>
+          <div class="q-chart-wrap">
+            <div class="q-chart-loading" id="q7-loading">⟳ Loading chart…</div>
+            <div class="q-chart-div" id="chart-q7"></div>
+          </div>
+          <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open Full Dashboard — Technical Indicators page</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 15 · STREAMLIT FULL DEMO ══════════ -->
+    <section class="slide" data-n="15" data-title="Live Streamlit Demo" aria-label="Streamlit Demo">
+      <div class="sc">
+        <span class="part-label">Part 4 · Live Demonstration</span>
+        <h1 class="st">Live Streamlit Application</h1>
+        <p class="ss">Individual investor decision-support tool — 5 analytical pages</p>
+        <div class="page-tags">
+          <div class="page-tag active">1 · Home Dashboard</div>
+          <div class="page-tag active">2 · Price Analysis</div>
+          <div class="page-tag active">3 · Investment Simulation</div>
+          <div class="page-tag active">4 · Technical Indicators</div>
+          <div class="page-tag active">5 · Forecasting</div>
+        </div>
+        <div class="iframe-wrap iframe-lg">
+          <iframe src="https://gold-egypt-platform.streamlit.app/" title="Streamlit Full Application" loading="lazy" allowfullscreen></iframe>
+        </div>
+        <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">↗ Open in Full Screen</a>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 16 · POWER BI ══════════ -->
+    <section class="slide" data-n="16" data-title="Power BI Dashboard" aria-label="Power BI">
+      <div class="sc">
+        <span class="part-label">Part 5 · Business Intelligence</span>
+        <h1 class="st">Corporate Power BI Dashboard</h1>
+        <p class="ss">Enterprise-grade analytics · 6 pages · KPI Cards · Row-Level Security · Scheduled Refresh</p>
+        <div class="chip-row">
+          <div class="chip" style="color:#4D9FFF;border-color:rgba(77,159,255,.3)">Executive KPIs</div>
+          <div class="chip" style="color:#4D9FFF;border-color:rgba(77,159,255,.3)">Price Decomposition</div>
+          <div class="chip" style="color:#4D9FFF;border-color:rgba(77,159,255,.3)">Macro Correlation Matrix</div>
+          <div class="chip" style="color:#4D9FFF;border-color:rgba(77,159,255,.3)">Historical Timeline</div>
+          <div class="chip" style="color:#4D9FFF;border-color:rgba(77,159,255,.3)">Portfolio Tracker</div>
+          <div class="chip" style="color:#4D9FFF;border-color:rgba(77,159,255,.3)">Decomposition Tree</div>
+        </div>
+        <div class="iframe-wrap iframe-lg">
+          <iframe title="Gold Egypt Power BI Report"
+            src="https://app.powerbi.com/view?r=eyJrIjoiYzhlM2Q5MmEtY2Y4Yi00NGYyLThmNWItYWIwNTljYWU2MDNkIiwidCI6ImY0ZTg5MTY4LTU4NGUtNGE3MS04MDAxLWE1OWRlMmQ1MThjYiJ9"
+            loading="lazy" allowfullscreen></iframe>
+        </div>
+        <a class="open-btn" href="https://app.powerbi.com/view?r=eyJrIjoiYzhlM2Q5MmEtY2Y4Yi00NGYyLThmNWItYWIwNTljYWU2MDNkIiwidCI6ImY0ZTg5MTY4LTU4NGUtNGE3MS04MDAxLWE1OWRlMmQ1MThjYiJ9" target="_blank" rel="noopener">↗ Open Power BI Report in Full Screen</a>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 17 · KEY INSIGHTS ══════════ -->
+    <section class="slide" data-n="17" data-title="Key Insights" aria-label="Key Insights">
+      <div class="sc">
+        <span class="part-label">Part 6 · Conclusions</span>
+        <h1 class="st">Key Insights</h1>
+        <p class="ss">Three research findings that reframe how Egyptian investors should think about gold</p>
+        <div class="three-col" style="margin-bottom:20px">
+          <div class="pcard" style="border-color:var(--border-hi);background:rgba(212,175,55,.06)">
+            <span class="pcard-num">💡</span>
+            <h3>Finding 1 — Currency Dominance</h3>
+            <p>More than half of the gold price increase in Egypt since 2020 is attributable to <strong>EGP collapse</strong> — not gold appreciation. Egyptian gold is effectively a bet on the Egyptian pound.</p>
+          </div>
+          <div class="pcard">
+            <span class="pcard-num">📈</span>
+            <h3>Finding 2 — Karat Efficiency</h3>
+            <p>After accounting for all real transaction costs, <strong>21K gold</strong> delivered the best net return for individual investors — not 24K as conventional wisdom suggests. Total cost structure matters more than purity.</p>
+          </div>
+          <div class="pcard">
+            <span class="pcard-num">🎯</span>
+            <h3>Finding 3 — The Right Question</h3>
+            <p>Investors ask "Where is the gold price?" — the more important question is <strong>"Where is the EGP exchange rate?"</strong> Any gold purchase decision must start with an FX view.</p>
+          </div>
+        </div>
+        <div class="impact-row">
+          <div class="impact-card bad">
+            <h3>⚠ Before — Panic-Driven</h3>
+            <p>Buying at peak premiums during crises · Ignoring transaction costs · Confusing currency devaluation with real gold gains · Following social media rumours</p>
+          </div>
+          <div class="impact-card good">
+            <h3>✅ After — Data-Driven</h3>
+            <p>Fair Value awareness before every purchase · Net-return calculation including all costs · Prophet-based price forecasting · Technical entry/exit signals backed by backtested evidence</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ SLIDE 18 · THANK YOU ══════════ -->
+    <section class="slide" data-n="18" data-title="Thank You" aria-label="Thank You">
+      <div class="sc center" style="justify-content:center;align-items:center;min-height:100%">
+        <img src="data:image/png;base64,[LONG BASE64 DATA]" style="height:100px;width:auto;margin-bottom:24px;opacity:.9" alt="Gold Egypt" />
+        <p class="ty-big">Thank You</p>
+        <p class="ty-sub">Questions &amp; Answers</p>
+        <div class="ty-line"></div>
+        <div style="display:flex;gap:16px;justify-content:center;margin-bottom:28px;flex-wrap:wrap">
+          <a class="open-btn" href="https://gold-egypt-platform.streamlit.app/" target="_blank" rel="noopener">▶ Streamlit App</a>
+          <a class="open-btn" href="https://app.powerbi.com/view?r=eyJrIjoiYzhlM2Q5MmEtY2Y4Yi00NGYyLThmNWItYWIwNTljYWU2MDNkIiwidCI6ImY0ZTg5MTY4LTU4NGUtNGE3MS04MDAxLWE1OWRlMmQ1MThjYiJ9"   target="_blank" rel="noopener">📊 Power BI Report</a>
+        </div>
+        <p class="ty-contact">GOLD EGYPT &nbsp;·&nbsp; FINANCIAL ANALYTICS &nbsp;·&nbsp; DEPI INITIATIVE 2026</p>
+        <p style="font-size:12px;color:var(--text-dim);margin-top:8px;letter-spacing:.06em">
+          Data Science in service of every Egyptian investor
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ╔══════════════════════════╗
+       ║  FOOTER                  ║
+       ╚══════════════════════════╝ -->
+  <footer class="foot">
+    <div class="counter"><b id="cNum">1</b> / <span id="cTotal">18</span></div>
+    <div class="dots" id="dots"></div>
+    <div class="key-hint">← → Arrow Keys &nbsp;|&nbsp; Space &nbsp;|&nbsp; Page Up/Down</div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ORIGINAL navigation, progress, dots — UNCHANGED
+       ═══════════════════════════════════════════════════════ -->
+  <script>
+    const presenterNotes = [
+      /* 1  */ "Title slide. Open with the GOLD EGYPT brand. Let the audience absorb the visual before speaking.",
+      /* 2  */ "Introduce team members. Name each person and their role in the presentation.",
+      /* 3  */ "The Hook: 100,000 EGP in Jan 2020. Tell the story: COVID → Russia → devaluations → March 2024 → Trump tariffs → XAU at $3500. Pause after each event. End: 'We built the tools to answer WHY.'",
+      /* 4  */ "The Core Problem: Three forces drive one price. Audience must understand A/B/C before seeing the solution.",
+      /* 5  */ "Four-layer architecture. Not just a dashboard — a production system. Walk through each layer briefly.",
+      /* 6  */ "ETL Pipeline. Focus on the TWO solved challenges: Forward Fill + Historical Date Merge Strategy.",
+      /* 7  */ "Overview of 7 research questions. Each will be answered live via Streamlit in the next slides.",
+      /* 8  */ "Q1: Price Decomposition. Open Streamlit → Price Analysis page. Point to the Stacked Area chart. Highlight March 2024 red spike: 60-70% was EGP collapse, not gold.",
+      /* 9  */ "Q2: Fair Value Index. Same Streamlit page. Show FVI line. Explain: FVI>1 means you're paying a panic premium. FVI≈1 means fair pricing.",
+      /* 10 */ "Q3: Crisis Premiums. Show Premium % chart. Identify spikes after each crisis event. The premium mean-reverts — panic buyers overpay.",
+      /* 11 */ "Q4: Macro Drivers. Switch to Home page. Show Correlation Heatmap. USD/EGP dominates all other variables. Key insight: Egyptian gold = EGP bet.",
+      /* 12 */ "Q5: Net Returns. Switch to Investment Simulation. Show Portfolio Performance chart. All 5 lines with real costs. Which karat won?",
+      /* 13 */ "Q6: Prophet Forecast. Switch to Forecasting page. Select karat and horizon. Show 90% confidence band. Mention Historical Date Merge Strategy fix.",
+      /* 14 */ "Q7: Technical Signals. Switch to Technical Indicators. Show three panels. Point to BUY/HOLD/SELL composite signal. Investor doesn't need to understand technicals.",
+      /* 15 */ "Full Streamlit demo slide. Walk through all 5 pages if time permits or committee requests.",
+      /* 16 */ "Power BI enterprise dashboard. Show 6 pages. Highlight: KPI Cards, Decomposition Tree, RLS, Scheduled Refresh.",
+      /* 17 */ "Three key findings. Impact comparison: panic-driven vs. data-driven. Close with the paradigm shift.",
+      /* 18 */ "Thank you. Q&A. Keep links visible for committee to test live."
+    ];
+
+    const slides  = Array.from(document.querySelectorAll('.slide'));
+    const TOTAL   = slides.length;
+    const prog    = document.getElementById('prog');
+    const cNum    = document.getElementById('cNum');
+    const cTotal  = document.getElementById('cTotal');
+    const navPrev = document.getElementById('navPrev');
+    const navNext = document.getElementById('navNext');
+    const dotsEl  = document.getElementById('dots');
+    const titleEl = document.getElementById('slideTitle');
+
+    cTotal.textContent = TOTAL;
+
+    slides.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.title = slides[i].dataset.title || ('Slide ' + (i + 1));
+      d.addEventListener('click', () => go(i));
+      dotsEl.appendChild(d);
+    });
+
+    let cur = 0;
+
+    function go(n) {
+      if (n < 0 || n >= TOTAL) return;
+      slides[cur].classList.remove('on');
+      dotsEl.children[cur].classList.remove('active');
+      cur = n;
+      slides[cur].classList.add('on');
+      dotsEl.children[cur].classList.add('active');
+      prog.style.width = ((cur / (TOTAL - 1)) * 100).toFixed(2) + '%';
+      cNum.textContent = cur + 1;
+      titleEl.textContent = slides[cur].dataset.title || 'Gold Egypt · DEPI 2026';
+      navPrev.disabled = (cur === 0);
+      navNext.disabled = (cur === TOTAL - 1);
+      slides.forEach((sl, i) => {
+        const iframes = sl.querySelectorAll('iframe[data-src]');
+        iframes.forEach(f => {
+          if (Math.abs(i - cur) <= 1) {
+            f.src = f.dataset.src;
+            delete f.dataset.src;
+          }
+        });
+      });
+    }
+
+    navPrev.addEventListener('click', () => go(cur - 1));
+    navNext.addEventListener('click', () => go(cur + 1));
+
+    document.addEventListener('keydown', e => {
+      const fwd = ['ArrowRight', ' ', 'PageDown', 'ArrowDown'];
+      const bwd = ['ArrowLeft',  'Backspace', 'PageUp', 'ArrowUp'];
+      if (fwd.includes(e.key)) { e.preventDefault(); go(cur + 1); }
+      if (bwd.includes(e.key)) { e.preventDefault(); go(cur - 1); }
+      if (e.key === 'Home') go(0);
+      if (e.key === 'End')  go(TOTAL - 1);
+    });
+
+    let touchX = 0;
+    document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, {passive: true});
+    document.addEventListener('touchend',   e => {
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 60) go(dx < 0 ? cur + 1 : cur - 1);
+    }, {passive: true});
+
+    go(0);
+  </script>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       ▶▶▶ NEW: Live Charts Panel — reads charts.json,
+               renders every Plotly figure interactively.
+               Completely isolated from slides JS above.
+       ═══════════════════════════════════════════════════════ -->
+
+  <!-- Floating open button (always visible) -->
+  <button id="lcOpenBtn" title="View Live Exported Charts">
+    <span class="lc-dot"></span>
+    📊 Live Charts
+  </button>
+
+  <!-- Full-screen overlay panel -->
+  <div id="liveChartsPanel" role="dialog" aria-modal="true" aria-label="Live Charts Panel">
+
+    <div class="lc-header">
+      <div class="lc-header-left">
+        <div>
+          <div class="lc-title">📊 GOLD EGYPT · LIVE CHARTS</div>
+          <div class="lc-meta" id="lcMeta">Loading charts.json…</div>
+        </div>
+      </div>
+      <button class="lc-close-btn" id="lcCloseBtn">✕ Close</button>
+    </div>
+
+    <div id="lcBody">
+      <!-- Charts injected here by JS -->
+      <div class="lc-status" id="lcStatus">
+        <span class="lc-spinner">⟳</span>
+        Loading charts from <code>charts.json</code>…
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+  /* ═══════════════════════════════════════════════════════════════════════════
+     GOLD EGYPT · Live Chart API Client
+     ═══════════════════════════════════════════════════════════════════════════
+     Fetches all 7 Plotly charts from the Streamlit companion API server at
+     http://localhost:8502/charts — no local files, no http.server required.
+
+     Two independent consumers share one fetch cycle:
+       1. In-slide charts  (chart-q1 … chart-q7)  rendered in the deck itself
+       2. Live Charts Panel (full-screen overlay)  launched via the 📊 button
+
+     API response shape (from chart_server.py):
+     {
+       "charts":       { "q1": {data,layout}, "q2":…, "q7":… },
+       "generated_at": "2025-06-27T10:00:00+00:00",
+       "count":        7
+     }
+  ═══════════════════════════════════════════════════════════════════════════ */
+  (function () {
+    'use strict';
+
+    /* ── Configuration ─────────────────────────────────────────────────────── */
+
+    // Primary source: Streamlit companion API (FastAPI on port 8502)
+    // Fallback source: charts.json in the same directory as index.html
+    // The client tries the API first; on failure it silently falls back.
+    const API_URL      = 'http://localhost:8502/charts';
+    const FALLBACK_URL = '../07_Presentation_HTML/charts.json';
+
+    // How often to re-fetch from the API (ms). 20 s keeps charts live without
+    // hammering the server. Uses Plotly.react() on refreshes — no flicker.
+    const REFRESH_MS = 20_000;
+
+    /* ── Mapping: q-key → DOM element IDs in the slide deck ────────────────── */
+    const SLIDE_MAP = [
+      { qKey: 'q1', divId: 'chart-q1', loadId: 'q1-loading' },
+      { qKey: 'q2', divId: 'chart-q2', loadId: 'q2-loading' },
+      { qKey: 'q3', divId: 'chart-q3', loadId: 'q3-loading' },
+      { qKey: 'q4', divId: 'chart-q4', loadId: 'q4-loading' },
+      { qKey: 'q5', divId: 'chart-q5', loadId: 'q5-loading' },
+      { qKey: 'q6', divId: 'chart-q6', loadId: 'q6-loading' },
+      { qKey: 'q7', divId: 'chart-q7', loadId: 'q7-loading' },
+    ];
+
+    /* ── Shared state ────────────────────────────────────────────────────────── */
+    const slideInitialized = new Set();   // divIds that already have a Plotly plot
+    let   panelRendered    = false;       // panel rendered at least once this session
+    let   lastPayload      = null;        // most recent successful API payload
+    let   usingFallback    = false;       // true when serving from charts.json
+
+    /* ── Plotly config ───────────────────────────────────────────────────────── */
+    const PLOTLY_CFG = {
+      responsive:             true,
+      displayModeBar:         true,
+      displaylogo:            false,
+      modeBarButtonsToRemove: ['sendDataToCloud', 'lasso2d'],
+      toImageButtonOptions:   { format: 'png', scale: 2 },
+    };
+
+    /* ── Layout patcher — dark cyberpunk theme enforcement ───────────────────── */
+    function patchLayout(layout) {
+      return Object.assign({}, layout, {
+        paper_bgcolor: 'rgba(6,12,24,0.95)',
+        plot_bgcolor:  'rgba(0,0,0,0)',
+        font: Object.assign(
+          { family: 'Montserrat, Cairo, sans-serif', color: '#8D99AE', size: 11 },
+          layout.font || {}
+        ),
+        autosize: true,
+        margin:   layout.margin || { l: 36, r: 36, t: 60, b: 36 },
+      });
+    }
+
+    /* ── XSS-safe HTML escape ─────────────────────────────────────────────────── */
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       FETCH LAYER — tries API first, falls back to charts.json
+    ══════════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Normalize the API response and fallback JSON into a common shape:
+     *   { charts: { q1: {data,layout}, q2:…, q7:… }, generated_at, count }
+     *
+     * API response already has this shape.
+     * charts.json (legacy) has shape: { charts: [{id, data, title, page}, …], … }
+     * We detect which format we have and normalise accordingly.
+     */
+    function normalise(raw) {
+      if (!raw || typeof raw !== 'object') return null;
+
+      // New API format: charts is an object keyed q1…q7
+      if (raw.charts && !Array.isArray(raw.charts)) {
+        return raw;   // already correct
+      }
+
+      // Legacy charts.json format: charts is an array
+      if (Array.isArray(raw.charts)) {
+        const ID_TO_QKEY = {
+          'analysis_decomposition': 'q1',
+          'analysis_fair_value':    'q2',
+          'analysis_premium_pct':   'q3',
+          'home_correlation':       'q4',
+          'investment_portfolio':   'q5',
+          'forecast_prophet':       'q6',
+          'technical_indicators':   'q7',
+        };
+        const chartsObj = {};
+        raw.charts.forEach(c => {
+          const qk = ID_TO_QKEY[c.id];
+          if (qk) chartsObj[qk] = c.data;   // c.data is {data:[], layout:{}}
+        });
+        return {
+          charts:       chartsObj,
+          generated_at: raw.exported_at || '',
+          count:        Object.keys(chartsObj).length,
+          source:       'fallback',
+        };
+      }
+
+      return null;
+    }
+
+    function fetchCharts() {
+      return fetch(API_URL + '?_=' + Date.now())
+        .then(r => {
+          if (!r.ok) throw new Error(`API ${r.status}`);
+          usingFallback = false;
+          return r.json();
+        })
+        .catch(() =>
+          // API unavailable — try charts.json
+          fetch(FALLBACK_URL + '?_=' + Date.now())
+            .then(r => {
+              if (!r.ok) throw new Error('charts.json not found');
+              usingFallback = true;
+              return r.json();
+            })
+        )
+        .then(raw => {
+          const payload = normalise(raw);
+          if (!payload) throw new Error('Unrecognised payload format');
+          lastPayload = payload;
+          return payload;
+        });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CONSUMER 1 — In-slide Plotly charts (chart-q1 … chart-q7)
+    ══════════════════════════════════════════════════════════════════════════ */
+
+    function renderSlideCharts(payload) {
+      const charts = payload.charts || {};
+
+      SLIDE_MAP.forEach(({ qKey, divId, loadId }) => {
+        const div     = document.getElementById(divId);
+        const loading = document.getElementById(loadId);
+        if (!div) return;
+
+        const fig = charts[qKey];
+        if (!fig) {
+          if (loading && !slideInitialized.has(divId)) {
+            loading.innerHTML =
+              `<span style="color:#FF9F43">⏳ Waiting for Streamlit…</span>` +
+              `<small style="color:#3A4A65;display:block;margin-top:6px;">` +
+              `Make sure <code>streamlit run Gold_Egypt_App.py</code> is running</small>`;
+          }
+          return;
+        }
+
+        if (loading) loading.style.display = 'none';
+
+        const traces = fig.data   || [];
+        const layout = patchLayout(fig.layout || {});
+
+        try {
+          if (slideInitialized.has(divId)) {
+            Plotly.react(div, traces, layout, PLOTLY_CFG);
+          } else {
+            Plotly.newPlot(div, traces, layout, PLOTLY_CFG);
+            slideInitialized.add(divId);
+          }
+        } catch (e) {
+          div.innerHTML =
+            `<div style="padding:20px;color:#EF476F;font-size:0.75rem;font-family:monospace;">` +
+            `⚠ Render error (${esc(qKey)}): ${esc(e.message)}</div>`;
+        }
+      });
+    }
+
+    function setSlideLoadingError(msg) {
+      if (slideInitialized.size > 0) return;   // don't blank already-rendered charts
+      SLIDE_MAP.forEach(({ divId, loadId }) => {
+        if (slideInitialized.has(divId)) return;
+        const el = document.getElementById(loadId);
+        if (el) el.innerHTML =
+          `<span style="color:#EF476F">⚠</span> ${esc(msg)}` +
+          `<br><small style="color:#3A4A65;margin-top:4px;display:block;">` +
+          `Run: <code>streamlit run Gold_Egypt_App.py</code></small>`;
+      });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CONSUMER 2 — Live Charts Panel (full-screen overlay)
+    ══════════════════════════════════════════════════════════════════════════ */
+
+    const openBtn  = document.getElementById('lcOpenBtn');
+    const panel    = document.getElementById('liveChartsPanel');
+    const closeBtn = document.getElementById('lcCloseBtn');
+    const lcBody   = document.getElementById('lcBody');
+    const lcMeta   = document.getElementById('lcMeta');
+
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        panel.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        if (!panelRendered) {
+          if (lastPayload) {
+            renderPanel(lastPayload);
+          } else {
+            fetchCharts().then(renderPanel).catch(err => showPanelError(err.message));
+          }
+        }
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        panel.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    }
+
+    if (panel) {
+      panel.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          panel.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      });
+    }
+
+    function renderPanel(payload) {
+      const charts  = payload.charts || {};
+      const qKeys   = Object.keys(charts);
+
+      if (!qKeys.length) {
+        showPanelError('No charts available yet — Streamlit may still be loading.');
+        return;
+      }
+
+      // ── Update panel meta bar ──
+      if (lcMeta) {
+        const ts  = payload.generated_at
+          ? new Date(payload.generated_at).toLocaleString()
+          : '—';
+        const src = usingFallback ? '· source: ' : '· source: Live API :8502';
+        lcMeta.textContent = `${qKeys.length}/7 charts · ${ts} ${src}`;
+      }
+
+      // ── Rebuild grid ──
+      if (lcBody) lcBody.innerHTML = '';
+      const grid = document.createElement('div');
+      grid.className = 'lc-grid';
+      if (lcBody) lcBody.appendChild(grid);
+
+      // Labels for panel card headers
+      const Q_LABELS = {
+        q1: 'Q1 · Price Decomposition',      q2: 'Q2 · Fair Value Index',
+        q3: 'Q3 · Crisis Premium %',          q4: 'Q4 · Macro Correlation',
+        q5: 'Q5 · Portfolio Net Return',      q6: 'Q6 · Prophet Forecast',
+        q7: 'Q7 · Technical Indicators',
+      };
+
+      qKeys.sort().forEach((qk, idx) => {
+        const fig = charts[qk];
+        if (!fig) return;
+
+        const card = document.createElement('div');
+        card.className = 'lc-card';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'lc-card-header';
+        hdr.innerHTML =
+          `<span class="lc-card-title">${esc(Q_LABELS[qk] || qk.toUpperCase())}</span>` +
+          `<span class="lc-card-page">Live API</span>`;
+        card.appendChild(hdr);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'lc-chart-wrap';
+        const div = document.createElement('div');
+        div.className = 'lc-chart-div';
+        div.id = `lc-chart-${idx}`;
+        wrap.appendChild(div);
+        card.appendChild(wrap);
+        grid.appendChild(card);
+
+        requestAnimationFrame(() => {
+          try {
+            Plotly.newPlot(div, fig.data || [], patchLayout(fig.layout || {}), PLOTLY_CFG);
+          } catch (e) {
+            div.innerHTML =
+              `<div style="padding:20px;color:#EF476F;font-size:.75rem;font-family:monospace;">` +
+              `⚠ ${esc(e.message)}</div>`;
+          }
+        });
+      });
+
+      panelRendered = true;
+      if (openBtn) openBtn.classList.remove('no-data');
+    }
+
+    function showPanelError(msg) {
+      if (lcBody) lcBody.innerHTML =
+        `<div class="lc-status error">` +
+        `<span style="font-size:2rem;display:block;margin-bottom:12px">⚠</span>` +
+        `<strong>Could not load charts</strong><br><br>` +
+        `<code style="font-size:.72rem;color:#EF476F">${esc(msg)}</code><br><br>` +
+        `<span style="color:#3A4A65;font-size:.72rem">` +
+        `Make sure <strong style="color:#FFD700">streamlit run Gold_Egypt_App.py</strong> is running` +
+        ` · chart API starts automatically on port 8502</span></div>`;
+      if (openBtn) openBtn.classList.add('no-data');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       MAIN LOOP — fetch once, render both consumers, then poll
+    ══════════════════════════════════════════════════════════════════════════ */
+
+    function tick() {
+      fetchCharts()
+        .then(payload => {
+          renderSlideCharts(payload);
+          // If panel is open, refresh it too
+          if (panel && panel.classList.contains('open')) {
+            renderPanel(payload);
+          }
+          // Update button state
+          if (openBtn) openBtn.classList.remove('no-data');
+        })
+        .catch(err => setSlideLoadingError(err.message));
+    }
+
+    // Initial fetch
+    tick();
+
+    // Poll for live updates
+    setInterval(tick, REFRESH_MS);
+
+    // Probe API on load to set button state (no-data if API+fallback both fail)
+    Promise.all([
+      fetch(API_URL    + '?probe=1').then(r => r.ok),
+      fetch(FALLBACK_URL + '?probe=1').then(r => r.ok).catch(() => false),
+    ]).then(([apiOk, fbOk]) => {
+      if (!apiOk && !fbOk && openBtn) openBtn.classList.add('no-data');
+    }).catch(() => {});
+
+  })();
+  </script>
+
+</body>
+</html>
