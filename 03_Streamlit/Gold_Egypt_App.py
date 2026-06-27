@@ -1941,6 +1941,15 @@ if __name__ == "__main__":
         print("⏳ Starting background data update...")
         success = run_scraper()
         if success:
-            print("✅ Data updated and saved to Gold_Egypt.csv")
+            print("⚙️ Scraper succeeded. Generating Processed CSV...")
+            try:
+                _mt = os.path.getmtime(CSV_PATH)
+                df_proc = load_data(CSV_PATH, _mt)
+                df_proc.to_csv(CSV_PROCESSED_PATH, index=True, index_label="Date")
+                print("✅ Both Gold_Egypt.csv & Processed.csv updated!")
+            except Exception as e:
+                print(f"⚠️ Processed generation failed: {e}")
+                sys.exit(1) 
         else:
-            print("❌ Failed to update data")
+            print("❌ Failed to update spot/fx data")
+            sys.exit(1)
