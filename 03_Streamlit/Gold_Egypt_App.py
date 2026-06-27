@@ -1183,16 +1183,19 @@ if embed_q:
 
     # Q4: مصفوفة الارتباط العالمي (Global Correlation Matrix)
     elif embed_q == "q4":
-        cols_ = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
-        names_ = ['ذهب عالمي', 'دولار رسمي', 'نفط برنت', 'سندات أمريكا', 'S&P 500']
-        valid_cols = [c for c in cols_ if c in data.columns]
-        valid_names = [names_[cols_.index(c)] for c in valid_cols]
-        if valid_cols:
-            cd = data[valid_cols].dropna().corr()
-            cd.columns = valid_names; cd.index = valid_names
-            fig = px.imshow(cd, text_auto=".2f", color_continuous_scale=[[0,'#EF476F'],[0.5,'#060C18'],[1,'#06D6A0']], zmin=-1, zmax=1)
-            fig.update_layout(**plot_layout(height=460))
-            st.plotly_chart(fig, use_container_width=True)
+        cols_  = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
+        names_ = ['ذهب عالمي', 'دولار/جنيه', 'نفط', 'سندات أمريكية', 'S&P 500']
+        cd     = data[cols_].dropna().corr()
+        cd.columns = names_; cd.index = names_
+        fc  = px.imshow(cd, text_auto=".2f",
+            color_continuous_scale=[[0,'#EF476F'],[0.5,'#060C18'],[1,'#06D6A0']],
+            zmin=-1, zmax=1)
+        cl  = plot_layout(height=420, show_legend=False)
+        cl['margin'] = dict(l=8, r=8, t=30, b=50)
+        cl['coloraxis_showscale'] = False
+        fc.update_layout(**cl)
+        fc.update_traces(textfont=dict(size=12, family="DM Mono"))
+        st.plotly_chart(fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     # Q5: محاكاة المحفظة الاستثمارية (Portfolio Net Returns)
     elif embed_q == "q5":
