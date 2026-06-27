@@ -1076,7 +1076,7 @@ if data.empty:
 # Includes fair values, technical indicators, signals, and portfolio metrics
 # for all three karats. Non-fatal: UI continues even if export fails.
 try:
-    data.to_csv(PROCESSED_CSV_PATH, index=True, index_label="Date")
+    data.to_csv(CSV_PROCESSED_PATH, index=True, index_label="Date")
 except Exception:
     pass
 
