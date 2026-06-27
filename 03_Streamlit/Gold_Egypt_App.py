@@ -1176,10 +1176,15 @@ if embed_q:
 
     # Q3: نسبة النوازل والعلاوة التاريخية (Premium % Timeline)
     elif embed_q == "q3":
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'PremPct_{k}'], name=f'علاوة عيار {k}', line=dict(color='#FFD700')))
-        fig.update_layout(**plot_layout(height=460, yaxis=dict(title_text="نسبة العلاوة %")))
-        st.plotly_chart(fig, use_container_width=True)
+        fig2 = go.Figure()
+        for karat, color in KARAT_COLORS.items():
+            fig2.add_trace(go.Scatter(x=data.index, y=data[f'PremPct_{karat}'],
+                name=karat, line=dict(color=color, width=2),
+                hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
+        fig2.add_hline(y=0, line_dash="dot", line_color="#1E3A5F", opacity=0.8)
+        if show_events: add_events(fig2, data)
+        fig2.update_layout(**plot_layout(height=340, yaxis=dict(title_text="علاوة %")))
+        st.plotly_chart(fig2, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     # Q4: مصفوفة الارتباط العالمي (Global Correlation Matrix)
     elif embed_q == "q4":
