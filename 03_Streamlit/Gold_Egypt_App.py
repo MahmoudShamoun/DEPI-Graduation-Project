@@ -1224,55 +1224,170 @@ if embed_q:
 
     # Q6: التنبؤ المستقبلي (Prophet Forecasting Time Series)
     elif embed_q == "q6":
-        fig_fc = go.Figure()
+        st.markdown('<div class="fc-label">أفق التوقع (أيام)</div>', unsafe_allow_html=True)
+        forecast_days = st.slider("d", 30, 365, 180, 30, label_visibility="collapsed")
 
-        # Weekly-downsampled actuals for cleaner display on long horizons
-        hw = data[fv_col].resample('W').last()
-        fig_fc.add_trace(go.Scatter(x=hw.index, y=hw, name='السعر الفعلي',
-            line=dict(color='#4A6A8A', width=1.5),
-            hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} جنيه<extra></extra>"))
+        with st.spinner("⏳ جاري تدريب نموذج Prophet..."):
+            try:
+                from prophet import Prophet
 
-        # 90% confidence band
-        fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_upper'],
-            line=dict(width=0), showlegend=False))
-        fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
-            fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
-            line=dict(width=0), name='‫نطاق الثقة 90%‬'))
+                k      = selected_karat
+                fv_col = f'Price_{k}'
 
-        # Point forecast line
-        fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
-            name='‫توقع Prophet‬', line=dict(color='#4CC9F0', width=2.5),
-            hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} جنيه</b><extra></extra>"))
+                # ── Step 1: Prepare main training frame ──
+                train = data.reset_index()[['Date', fv_col, 'USD_EGP_Official', 'Crude_Oil']].copy()
+                train.columns = ['ds', 'y', 'USD', 'OIL']
+                train['ds'] = pd.to_datetime(train['ds'])
+                train['ds'] = pd.to_datetime(train['ds'])
+                
+                # Forward fill and backward fill regressors so we don't lose rows
+                train['USD'] = train['USD'].ffill().bfill()
+                train['OIL'] = train['OIL'].ffill().bfill()
+                
+                # Drop rows ONLY where the target 'y' (Gold Price) is missing
+                train = train.dropna(subset=['y'])
 
-        # Today marker
-        fig_fc.add_vline(x=datetime.today().timestamp() * 1000,
-            line_dash='dash', line_color='#FFD700', opacity=0.5,
-            annotation_text='اليوم',
-            annotation_font=dict(color='#FFD700', size=9.5),
-            annotation_position="top right")
+                # ── Step 2: Train independent regressor models and project N days forward ──
+                def forecast_regressor(col_name: str, n_days: int) -> pd.DataFrame:
+                    """
+                    Train a lightweight Prophet model on a single regressor series and
+                    return a future DataFrame [ds, yhat] covering the next n_days.
+                    Changepoint scale is conservative (0.05) to avoid overfitting.
+                    """
+                    df_reg = data.reset_index()[['Date', col_name]].copy()
+                    df_reg.columns = ['ds', 'y']
+                    df_reg['ds'] = pd.to_datetime(df_reg['ds'])
+                    
+                    # Explicitly drop missing values in the target 'y' before fitting
+                    df_reg = df_reg.dropna(subset=['y'])
+                    mr = Prophet(
+                        yearly_seasonality=True,
+                        weekly_seasonality=False,    # FX and oil have no intra-week cycle
+                        daily_seasonality=False,
+                        changepoint_prior_scale=0.05, # conservative - macro series trend slowly
+                        interval_width=0.80
+                    )
+                    mr.fit(df_reg)
+                    fut   = mr.make_future_dataframe(periods=n_days, freq='D')
+                    fc_r  = mr.predict(fut)[['ds', 'yhat']]
+                    # Return only the future (post-training) slice
+                    last_hist_date = df_reg['ds'].max()
+                    return fc_r[fc_r['ds'] > last_hist_date].reset_index(drop=True)
 
-        if show_events: add_events(fig_fc, data)
+                usd_future_df = forecast_regressor('USD_EGP_Official', forecast_days)
+                oil_future_df = forecast_regressor('Crude_Oil',         forecast_days)
 
-        lyt_fc = plot_layout(height=500, yaxis=dict(title_text="السعر (جنيه)"))
-        lyt_fc['title'] = dict(text=title_chart,
-            font=dict(size=13, color="#FFD700", family="Cairo"),
-            x=0.5, xanchor='center', y=0.97)
-        fig_fc.update_layout(**lyt_fc)
-        st.plotly_chart(fig_fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+                # ── Step 3: Fit the main gold Prophet model with tuned parameters ──
+                # TASK 3 - Financial time-series best practices applied:
+                #   • changepoint_prior_scale=0.10  - moderate flexibility; prevents overfitting to
+                #     short-term spikes while still capturing structural breaks (devaluations).
+                #   • yearly_seasonality=True        - gold has an annual demand cycle (festive seasons).
+                #   • weekly_seasonality=False       - gold markets are 5-day (Mon–Fri) without a
+                #     meaningful intra-week price pattern in EGP terms.
+                #   • interval_width=0.90            - wider confidence band acknowledges high gold
+                #     price volatility; 95% was too wide and obscured the point forecast visually.
+                #   • n_changepoints=30 (default 25) - slightly more change-points for a 5-year series
+                #     that has experienced multiple structural regime shifts.
+                pm = Prophet(
+                    yearly_seasonality=True,
+                    weekly_seasonality=False,
+                    daily_seasonality=False,
+                    changepoint_prior_scale=0.10,   # tuned: less aggressive than 0.15 to avoid overfitting
+                    seasonality_prior_scale=10.0,   # allow seasonal components to fit gold's amplitude
+                    interval_width=0.90,            # 90% CI - realistic for commodity price volatility
+                    n_changepoints=30,              # extra change-points for a regime-heavy series
+                )
+                pm.add_regressor('USD', standardize=True)  # standardize regressors for numerical stability
+                pm.add_regressor('OIL', standardize=True)
+                pm.fit(train)
 
-        spacer()
-        la  = data[fv_col].iloc[-1]
-        fe  = fc_out['yhat'].iloc[-1]
-        cp  = (fe / la - 1) * 100
-        cc  = '#06D6A0' if cp >= 0 else '#EF476F'
-        cards_html = (
-            kpi_html(f"{la:,.0f}",    "السعر الحالي (جنيه)",        "#FFD700", "0.05s") +
-            kpi_html(f"{fe:,.0f}",    f"التوقع ({forecast_days}ي)",  "#4CC9F0", "0.10s") +
-            kpi_html(f"{cp:+.1f}%",   "التغيير المتوقع",              cc,        "0.15s") +
-            kpi_html(f"{rmse:,.0f}",  "RMSE النموذج",                "#A855F7", "0.20s")
-        )
-        st.markdown(f'<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">{cards_html}</div>',
-                    unsafe_allow_html=True)
+                # ── Step 4: Build future dataframe using HISTORICAL DATE MERGE STRATEGY ──
+                # make_future_dataframe adds rows into the future (calendar days).
+                future_raw = pm.make_future_dataframe(periods=forecast_days, freq='D')
+                future_raw['ds'] = pd.to_datetime(future_raw['ds'])
+
+                # 4a. Attach historical regressors via left-join on ds
+                hist_regs = train[['ds', 'USD', 'OIL']].copy()
+                future_merged = future_raw.merge(hist_regs, on='ds', how='left')
+
+                # 4b. For days beyond historical range, merge forecasted regressor values
+                usd_future_df.columns = ['ds', 'USD_fc']
+                oil_future_df.columns = ['ds', 'OIL_fc']
+                future_merged = future_merged.merge(usd_future_df, on='ds', how='left')
+                future_merged = future_merged.merge(oil_future_df, on='ds', how='left')
+
+                # 4c. Fill missing historical USD/OIL with forecasted values (weekend/holiday gaps)
+                future_merged['USD'] = future_merged['USD'].fillna(future_merged['USD_fc'])
+                future_merged['OIL'] = future_merged['OIL'].fillna(future_merged['OIL_fc'])
+                future_merged.drop(columns=['USD_fc', 'OIL_fc'], inplace=True)
+
+                # 4d. Safety: forward-fill then back-fill any remaining NaNs
+                future_merged['USD'] = future_merged['USD'].ffill().bfill()
+                future_merged['OIL'] = future_merged['OIL'].ffill().bfill()
+
+                future_final = future_merged[['ds', 'USD', 'OIL']].copy()
+
+                # ── Step 5: Generate predictions ──
+                fc = pm.predict(future_final)
+
+                # ── Step 6: In-sample evaluation on historical training data ──
+                n        = len(train)
+                y_true   = train['y'].values
+                y_pred   = fc.iloc[:n]['yhat'].values
+                mae      = np.abs(y_true - y_pred).mean()
+                rmse     = np.sqrt(((y_true - y_pred) ** 2).mean())
+
+                # ── Step 7: Extract the forward forecast horizon ──
+                last_hist = train['ds'].max()
+                fc_out    = fc[fc['ds'] > last_hist].head(forecast_days).copy()
+                actual_last_price = train['y'].iloc[-1]
+                predicted_last_price = fc[fc['ds'] == last_hist]['yhat'].values[0] if len(fc[fc['ds'] == last_hist]) > 0 else fc.iloc[:n]['yhat'].iloc[-1]
+                continuity_offest = actual_last_price - predicted_last_price
+                fc_out['yhat'] = fc_out['yhat'] + continuity_offest  # adjust forecast to ensure smooth transition from historical to forecasted values
+                fc_out['yhat_upper'] = fc_out['yhat_upper'] + continuity_offest
+                fc_out['yhat_lower'] = fc_out['yhat_lower'] + continuity_offest 
+
+                # ── Forecast chart ──
+                title_chart = f"توقعات ذهب \u2066{k}\u2069 · {forecast_days} يوم قادماً"
+                fig_fc = go.Figure()
+
+                # Weekly-downsampled actuals for cleaner display on long horizons
+                hw = data[fv_col].resample('W').last()
+                fig_fc.add_trace(go.Scatter(x=hw.index, y=hw, name='السعر الفعلي',
+                    line=dict(color='#4A6A8A', width=1.5),
+                    hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} جنيه<extra></extra>"))
+
+                # 90% confidence band
+                fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_upper'],
+                    line=dict(width=0), showlegend=False))
+                fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
+                    fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
+                    line=dict(width=0), name='‫نطاق الثقة 90%‬'))
+
+                # Point forecast line
+                fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
+                    name='‫توقع Prophet‬', line=dict(color='#4CC9F0', width=2.5),
+                    hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} جنيه</b><extra></extra>"))
+
+                # Today marker
+                fig_fc.add_vline(x=datetime.today().timestamp() * 1000,
+                    line_dash='dash', line_color='#FFD700', opacity=0.5,
+                    annotation_text='اليوم',
+                    annotation_font=dict(color='#FFD700', size=9.5),
+                    annotation_position="top right")
+
+                if show_events: add_events(fig_fc, data)
+
+                lyt_fc = plot_layout(height=500, yaxis=dict(title_text="السعر (جنيه)"))
+                lyt_fc['title'] = dict(text=title_chart,
+                    font=dict(size=13, color="#FFD700", family="Cairo"),
+                    x=0.5, xanchor='center', y=0.97)
+                fig_fc.update_layout(**lyt_fc)
+                st.plotly_chart(fig_fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+            except (ModuleNotFoundError, ImportError):
+                st.error("لا يمكن استيراد Prophet. يرجى تثبيت الحزمة وتشغيل التطبيق مرة أخرى.")
+            except Exception as e:
+                st.error(f"حدث خطأ أثناء التنبؤ: {e}")
 
     # Q7: المؤشرات الفنية للزخم (Technical Indicators: RSI & MACD)
     elif embed_q == "q7":
