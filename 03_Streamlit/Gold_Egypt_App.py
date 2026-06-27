@@ -1164,11 +1164,15 @@ if embed_q:
 
     # Q2: فجوة السعر العادل (Fair Value Gap)
     elif embed_q == "q2":
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'Price_{k}'], name='السعر الفعلي بمصر', line=dict(color='#FFD700', width=2)))
-        fig.add_trace(go.Scatter(x=data.index, y=data[f'ValueDriven_{k}'], name='السعر العادل نظرياً', line=dict(color='#06D6A0', dash='dash')))
-        fig.update_layout(**plot_layout(height=460))
-        st.plotly_chart(fig, use_container_width=True)
+        fig2 = go.Figure()
+        for karat, color in KARAT_COLORS.items():
+            fig2.add_trace(go.Scatter(x=data.index, y=data[f'PremPct_{karat}'],
+                name=karat, line=dict(color=color, width=2),
+                hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
+        fig2.add_hline(y=0, line_dash="dot", line_color="#1E3A5F", opacity=0.8)
+        if show_events: add_events(fig2, data)
+        fig2.update_layout(**plot_layout(height=340, yaxis=dict(title_text="علاوة %")))
+        st.plotly_chart(fig2, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     # Q3: نسبة النوازل والعلاوة التاريخية (Premium % Timeline)
     elif embed_q == "q3":
