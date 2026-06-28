@@ -222,10 +222,59 @@
         </div>
       </section>
 
+      <!-- ────────────────────────── SLIDE 5 (NEW) ────────────────────────── -->
+      <section class="slide" data-n="5" data-title="Data Extraction Pipeline" aria-label="Data Extraction Pipeline">
+        <div class="sc">
+          <span class="part-label">Part 2 · Data Engineering</span>
+          <h1 class="st">Data Extraction Pipeline</h1>
+          <p class="ss">Multi-source web scraping architecture</p>
+          <ul class="bl">
+            <li class="step-item"><strong>Source 1:</strong> Global spot prices (XAU/USD) via financial APIs and Yahoo Finance scraping.</li>
+            <li class="step-item"><strong>Source 2:</strong> Local Egyptian gold prices (24K, 21K, 18K) from jewellery market portals.</li>
+            <li class="step-item"><strong>Source 3:</strong> USD/EGP exchange rates from the Central Bank of Egypt and parallel market trackers.</li>
+            <li class="step-item"><strong>Source 4:</strong> Macroeconomic indicators — inflation, interest rates, money supply (M2), reserves.</li>
+          </ul>
+          <div class="ph step-item" style="margin-top:clamp(1.2rem,2.5vh,2rem)">
+            <span class="cn tl"></span><span class="cn tr"></span><span class="cn bl"></span><span class="cn br"></span>
+            <span class="ph-label">[ Placeholder for Data Pipeline Architecture Diagram ]</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ────────────────────────── SLIDE 6 (NEW) ────────────────────────── -->
+      <section class="slide" data-n="6" data-title="MySQL Architecture" aria-label="MySQL Architecture">
+        <div class="sc">
+          <span class="part-label">Part 2 · Data Engineering</span>
+          <h1 class="st">MySQL Architecture</h1>
+          <p class="ss">Relational schema for the Gold Egypt data warehouse</p>
+          <div class="ph step-item" style="flex:1 1 0;min-height:0;margin-top:12px">
+            <span class="cn tl"></span><span class="cn tr"></span><span class="cn bl"></span><span class="cn br"></span>
+            <span class="ph-label">[ Placeholder for SQL ERD Image ]</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ────────────────────────── SLIDE 7 (NEW) ────────────────────────── -->
+      <section class="slide" data-n="7" data-title="Data Preprocessing" aria-label="Data Preprocessing">
+        <div class="sc">
+          <span class="part-label">Part 2 · Data Engineering</span>
+          <h1 class="st">Data Preprocessing</h1>
+          <p class="ss">Cleaning, aligning, and preparing the dataset</p>
+          <ul class="bl">
+            <li class="step-item"><strong>Unified Timeframe:</strong> All series aligned to a daily index starting <strong>January 2020</strong> through present.</li>
+            <li class="step-item"><strong>Missing Values:</strong> Forward-fill for weekends/holidays; linear interpolation for sporadic gaps (&lt;3 consecutive days).</li>
+            <li class="step-item"><strong>Outlier Detection:</strong> IQR-based flagging on daily percentage changes; manual review for confirmed events.</li>
+            <li class="step-item"><strong>Currency Normalization:</strong> Parallel-market EGP/USD rates used for periods of official-rate divergence.</li>
+            <li class="step-item"><strong>Feature Engineering:</strong> Rolling means (7/30/90d), volatility bands, RSI, MACD, and Bollinger derived columns.</li>
+            <li class="step-item"><strong>Validation:</strong> Cross-checked against LBMA benchmarks and CBE published rates for consistency.</li>
+          </ul>
+        </div>
+      </section>
+
       <!-- ─────────────────────────────────────────────
-           SLIDE 5 · DATA PIPELINE
+           SLIDE 8 · DATA PIPELINE (was 5)
       ──────────────────────────────────────────────── -->
-      <section class="slide" data-n="5" data-title="ETL Pipeline — From Raw Data to Decisions" aria-label="Pipeline Slide">
+      <section class="slide" data-n="8" data-title="ETL Pipeline — From Raw Data to Decisions" aria-label="Pipeline Slide">
         <div class="sc">
           <span class="part-label">Part 2 · Data Engineering</span>
           <h1 class="st">ETL Pipeline — From Raw Data to Decisions</h1>
@@ -271,9 +320,9 @@
       </section>
 
       <!-- ─────────────────────────────────────────────
-           SLIDE 6 · RESEARCH QUESTIONS OVERVIEW
+           SLIDE 9 · RESEARCH QUESTIONS OVERVIEW (was 6)
       ──────────────────────────────────────────────── -->
-      <section class="slide" data-n="6" data-title="7 Core Research Questions" aria-label="Research Questions Overview">
+      <section class="slide" data-n="9" data-title="7 Core Research Questions" aria-label="Research Questions Overview">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <h1 class="st">7 Core Research Questions</h1>
@@ -319,9 +368,9 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           SLIDE 7 / Q1 · PRICE DECOMPOSITION
+           SLIDE 10 / Q1 · PRICE DECOMPOSITION (was 7)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q1" data-n="7" data-title="Q1 · Price Decomposition" aria-label="Question 1 — Price Decomposition">
+      <section class="slide" id="q1" data-n="10" data-title="Q1 · Price Decomposition" aria-label="Question 1 — Price Decomposition">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -349,9 +398,9 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           SLIDE 8 / Q2 · FAIR VALUE INDEX
+           SLIDE 11 / Q2 · FAIR VALUE INDEX (was 8)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q2" data-n="8" data-title="Q2 · Fair Value Index" aria-label="Question 2 — Fair Value Index">
+      <section class="slide" id="q2" data-n="11" data-title="Q2 · Fair Value Index" aria-label="Question 2 — Fair Value Index">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -379,9 +428,9 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           SLIDE 9 / Q3 · SPECULATIVE BUBBLES
+           SLIDE 12 / Q3 · SPECULATIVE BUBBLES (was 9)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q3" data-n="9" data-title="Q3 · Crisis Premium Bubbles" aria-label="Question 3 — Speculative Bubbles">
+      <section class="slide" id="q3" data-n="12" data-title="Q3 · Crisis Premium Bubbles" aria-label="Question 3 — Speculative Bubbles">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -409,9 +458,9 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           SLIDE 10 / Q4 · MACRO DRIVERS
+           SLIDE 13 / Q4 · MACRO DRIVERS (was 10)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q4" data-n="10" data-title="Q4 · Macroeconomic Drivers" aria-label="Question 4 — Macro Drivers">
+      <section class="slide" id="q4" data-n="13" data-title="Q4 · Macroeconomic Drivers" aria-label="Question 4 — Macro Drivers">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -438,9 +487,9 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           SLIDE 11 / Q5 · NET RETURN COMPARISON
+           SLIDE 14 / Q5 · NET RETURN COMPARISON (was 11)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q5" data-n="11" data-title="Q5 · Net Return Comparison" aria-label="Question 5 — Net Return Comparison">
+      <section class="slide" id="q5" data-n="14" data-title="Q5 · Net Return Comparison" aria-label="Question 5 — Net Return Comparison">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -468,9 +517,9 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           SLIDE 12 / Q6 · PROPHET FORECAST
+           SLIDE 15 / Q6 · PROPHET FORECAST (was 12)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q6" data-n="12" data-title="Q6 · Prophet Multi-Stage Forecast" aria-label="Question 6 — Prophet Forecast">
+      <section class="slide" id="q6" data-n="15" data-title="Q6 · Prophet Multi-Stage Forecast" aria-label="Question 6 — Prophet Forecast">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -499,9 +548,9 @@
       </section>
 
       <!-- ═══════════════════════════════════════════════
-           SLIDE 13 / Q7 · TECHNICAL SIGNALS
+           SLIDE 16 / Q7 · TECHNICAL SIGNALS (was 13)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q7" data-n="13" data-title="Q7 · Automated Technical Signals" aria-label="Question 7 — Technical Signals">
+      <section class="slide" id="q7" data-n="16" data-title="Q7 · Automated Technical Signals" aria-label="Question 7 — Technical Signals">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -529,9 +578,9 @@
       </section>
 
       <!-- ─────────────────────────────────────────────
-           SLIDE 14 · LIVE STREAMLIT DEMO
+           SLIDE 17 · LIVE STREAMLIT DEMO (was 14)
       ──────────────────────────────────────────────── -->
-      <section class="slide" data-n="14" data-title="Live Streamlit Application" aria-label="Live Demo Slide">
+      <section class="slide" data-n="17" data-title="Live Streamlit Application" aria-label="Live Demo Slide">
         <div class="sc">
           <span class="part-label">Part 4 · Live Demonstration</span>
           <h1 class="st">Live Streamlit Application</h1>
@@ -551,9 +600,9 @@
       </section>
 
       <!-- ─────────────────────────────────────────────
-           SLIDE 15 · POWER BI DASHBOARD
+           SLIDE 18 · POWER BI DASHBOARD (was 15)
       ──────────────────────────────────────────────── -->
-      <section class="slide" data-n="15" data-title="Corporate Power BI Dashboard" aria-label="Power BI Slide">
+      <section class="slide" data-n="18" data-title="Corporate Power BI Dashboard" aria-label="Power BI Slide">
         <div class="sc">
           <span class="part-label">Part 5 · Business Intelligence</span>
           <h1 class="st">Corporate Power BI Dashboard</h1>
@@ -574,9 +623,9 @@
       </section>
 
       <!-- ─────────────────────────────────────────────
-           SLIDE 16 · KEY INSIGHTS
+           SLIDE 19 · KEY INSIGHTS (was 16)
       ──────────────────────────────────────────────── -->
-      <section class="slide" data-n="16" data-title="Key Insights & Findings" aria-label="Key Insights Slide">
+      <section class="slide" data-n="19" data-title="Key Insights & Findings" aria-label="Key Insights Slide">
         <div class="sc">
           <span class="part-label">Part 6 · Conclusions</span>
           <h1 class="st">Key Insights &amp; Findings</h1>
@@ -612,9 +661,9 @@
       </section>
 
       <!-- ─────────────────────────────────────────────
-           SLIDE 17 · THANK YOU
+           SLIDE 20 · THANK YOU (was 17)
       ──────────────────────────────────────────────── -->
-      <section class="slide" data-n="17" data-title="Thank You" aria-label="Thank You Slide">
+      <section class="slide" data-n="20" data-title="Thank You" aria-label="Thank You Slide">
         <div class="sc center">
           <div class="ty-logo-mark">◆</div>
           <p class="ty-big">Thank You</p>
@@ -635,7 +684,7 @@
   <!-- ── FOOTER ── -->
   <footer class="foot">
     <div class="counter">
-      <b id="cNum">1</b>/<span id="cTotal">17</span>
+      <b id="cNum">1</b>/<span id="cTotal">20</span>
     </div>
     <div id="dots" class="dots" role="navigation" aria-label="Slide navigation"></div>
     <div class="key-hint">← → Arrow Keys &nbsp;|&nbsp; Space &nbsp;|&nbsp; Page Up/Down</div>
@@ -649,7 +698,7 @@
   'use strict';
 
   /* ── CONFIG ────────────────────────────────────────────────── */
-  const TOTAL   = 17;
+  const TOTAL   = 20;
   let   cur     = 1;
 
   /* ── ELEMENTS ────────────────────────────────────────────────*/
