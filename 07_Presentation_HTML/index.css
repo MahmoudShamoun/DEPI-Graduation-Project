@@ -434,6 +434,7 @@ align-items: center;
 justify-content: center;
 margin-bottom: 14px;
 transition: 0.4s ease;
+image-rendering: -webkit-optimize-contrast;
 }
 
 .av img {
@@ -442,8 +443,10 @@ height: 100%;
 object-fit: cover;
 object-position: center;
 transition: 0.4s ease;
+image-rendering: auto;
+backface-visibility: hidden;
+transform: translateZ(0); /* GPU fix */
 }
-
 
 .av-placeholder {
   font-family: var(--font-display);
