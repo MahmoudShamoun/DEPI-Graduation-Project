@@ -409,53 +409,40 @@ em { font-style: italic; color: var(--gold-lt); }
 
 /* ── TEAM GRID ───────────────────────────────────────────────────────────────── */
 .team-grid {
-display: flex;
-flex-wrap: wrap;
-justify-content: center;
-gap: 40px;
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  flex-wrap: wrap;
+  flex: 1 1 0;
+  align-items: center;
 }
 
 .tm {
-display: flex;
-flex-direction: column;
-align-items: center;
-max-width: 260px;
-text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
-
 .av {
-width: 240px;
-height: 240px;
-border-radius: 50%;
-overflow: hidden;
-border: 3px solid var(--gold);
-background: rgba(212,175,55,0.08);
-display: flex;
-align-items: center;
-justify-content: center;
-transition: 0.4s ease;
+  width: 210px; 
+  height: 210px; 
+  border-radius: 50%; 
+  overflow: hidden; 
+  background: rgba(212,175,55,0.1);
+  border: 2px solid var(--gold-dim); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  margin-bottom: 12px;
 }
 
 .av img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-object-position: center;
-
-/* يمنع البيكسلة */
-transform: translateZ(0);
-backface-visibility: hidden;
-}
-
-/* Hover Effect */
-.tm:hover .av {
-transform: scale(1.05);
-box-shadow: 0 0 35px rgba(212,175,55,0.35);
-}
-
-.tm:hover img {
-transform: scale(1.08);
+  width: 150%;
+  height: 150%;
+  object-fit: cover;
+  object-position: 50% 15%;
+  transform: scale(1.1); 
 }
 
 .av-placeholder {
