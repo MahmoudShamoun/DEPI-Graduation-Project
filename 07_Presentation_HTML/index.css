@@ -425,8 +425,8 @@ em { font-style: italic; color: var(--gold-lt); }
 }
 
 .av {
-  width: 210px; 
-  height: 210px; 
+  width: 240px; 
+  height: 240px; 
   border-radius: 50%; 
   overflow: hidden; 
   background: rgba(212,175,55,0.1);
