@@ -270,6 +270,7 @@ em { font-style: italic; color: var(--gold-lt); }
   flex-direction: column;
   padding: 20px var(--px) 14px;
   overflow: hidden;
+  margin: 0 auto
 }
 
 .sc.center {
