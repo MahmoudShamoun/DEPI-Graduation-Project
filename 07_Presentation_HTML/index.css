@@ -1229,3 +1229,62 @@ em { font-style: italic; color: var(--gold-lt); }
   .q-kpi-bar { gap: 5px; }
   .q-kpi { padding: 3px 8px; font-size: 10px; }
 }
+/* ===== TEAM SECTION ===== */
+.team {
+text-align: center;
+}
+
+.section-title {
+font-size: 36px;
+margin-bottom: 10px;
+color: #FFD700;
+}
+
+.section-subtitle {
+color: #aaa;
+margin-bottom: 50px;
+}
+
+/* Grid Layout */
+.team-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+gap: 30px;
+}
+
+/* Card */
+.team-card {
+background: rgba(255,255,255,0.05);
+border-radius: 20px;
+padding: 25px;
+transition: 0.3s;
+backdrop-filter: blur(10px);
+}
+
+.team-card:hover {
+transform: translateY(-10px);
+box-shadow: 0 10px 30px rgba(255,215,0,0.2);
+}
+
+/* Image */
+.team-card img {
+width: 100%;
+border-radius: 15px;
+margin-bottom: 15px;
+}
+
+/* Text */
+.team-card h3 {
+margin-bottom: 5px;
+}
+
+.team-card p {
+color: #bbb;
+}
+
+/* Responsive Fix */
+@media (max-width: 768px) {
+.container {
+padding: 0 20px;
+}
+}
