@@ -1206,17 +1206,13 @@ em { font-style: italic; color: var(--gold-lt); }
   .problem-grid,
   .three-col { grid-template-columns: 1fr 1fr; }
 
-  .team-grid { gap: 18px; }
-
-  .av { width: 80px; height: 80px; }
+  .team-grid { gap: 24px; }
+  .av { width: 140px; height: 140px; } 
   .av-placeholder { font-size: 18px; }
 
   .stat-row { gap: 8px; }
-
   .impact-row { grid-template-columns: 1fr; }
-
   .key-hint { display: none; }
-
   .hdr-tag { display: none; }
 }
 
@@ -1230,4 +1226,6 @@ em { font-style: italic; color: var(--gold-lt); }
 
   .q-kpi-bar { gap: 5px; }
   .q-kpi { padding: 3px 8px; font-size: 10px; }
+
+  .av { width: 110px; height: 110px; }
 }
