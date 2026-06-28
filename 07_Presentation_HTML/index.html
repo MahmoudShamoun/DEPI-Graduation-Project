@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark" />
   <meta name="theme-color" content="#0A0A0F" />
-  <title>GOLD EGYPT | Financial Analytics — DEPI 2026</title>
+  <title>GOLD EGYPT | Financial Analytics - DEPI 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -151,12 +151,12 @@
             <div class="pcard">
               <span class="pcard-num">01</span>
               <h3>Global Spot Price Movements</h3>
-              <p>International gold prices fluctuate based on geopolitical events, Fed decisions, and risk-off sentiment — driving the underlying commodity value.</p>
+              <p>International gold prices fluctuate based on geopolitical events, Fed decisions, and risk-off sentiment - driving the underlying commodity value.</p>
             </div>
             <div class="pcard">
               <span class="pcard-num">02</span>
               <h3>Egyptian Pound Devaluation</h3>
-              <p>Three major devaluations since 2022 — each causing gold prices to surge in EGP terms, masking whether the gain reflects gold value or currency collapse.</p>
+              <p>Three major devaluations since 2022 - each causing gold prices to surge in EGP terms, masking whether the gain reflects gold value or currency collapse.</p>
             </div>
             <div class="pcard">
               <span class="pcard-num">03</span>
@@ -194,21 +194,21 @@
               <span class="arch-layer-icon">⚙️</span>
               <div>
                 <h4>ETL Pipeline</h4>
-                <p>Python + Jupyter notebooks — automated data extraction, transformation, and engineering of 15+ derived indicators from raw OHLC feeds</p>
+                <p>Python + Jupyter notebooks - automated data extraction, transformation, and engineering of 15+ derived indicators from raw OHLC feeds</p>
               </div>
             </div>
             <div class="arch-layer">
               <span class="arch-layer-icon">🗄️</span>
               <div>
                 <h4>MySQL Database</h4>
-                <p>Five normalized tables: gold_prices, karat_prices, technical_indicators, portfolio_simulation, crisis_events — structured for reproducibility</p>
+                <p>Five normalized tables: gold_prices, karat_prices, technical_indicators, portfolio_simulation, crisis_events - structured for reproducibility</p>
               </div>
             </div>
             <div class="arch-layer">
               <span class="arch-layer-icon">📊</span>
               <div>
                 <h4>Streamlit Web Application</h4>
-                <p>Five interactive pages — price analysis, investment simulation, technical indicators, forecasting, and an executive summary dashboard</p>
+                <p>Five interactive pages - price analysis, investment simulation, technical indicators, forecasting, and an executive summary dashboard</p>
               </div>
             </div>
             <div class="arch-layer">
@@ -223,33 +223,103 @@
       </section>
 
       <!-- ────────────────────────── SLIDE 5 (NEW) ────────────────────────── -->
+      <!-- ────────────────────────── SLIDE 5 ────────────────────────── -->
       <section class="slide" data-n="5" data-title="Data Extraction Pipeline" aria-label="Data Extraction Pipeline">
         <div class="sc">
           <span class="part-label">Part 2 · Data Engineering</span>
           <h1 class="st">Data Extraction Pipeline</h1>
-          <p class="ss">Multi-source web scraping architecture</p>
-          <ul class="bl">
-            <li class="step-item"><strong>Source 1:</strong> Global spot prices (XAU/USD) via financial APIs and Yahoo Finance scraping.</li>
-            <li class="step-item"><strong>Source 2:</strong> Local Egyptian gold prices (24K, 21K, 18K) from jewellery market portals.</li>
-            <li class="step-item"><strong>Source 3:</strong> USD/EGP exchange rates from the Central Bank of Egypt and parallel market trackers.</li>
-            <li class="step-item"><strong>Source 4:</strong> Macroeconomic indicators — inflation, interest rates, money supply (M2), reserves.</li>
-          </ul>
-          <div class="ph step-item" style="margin-top:clamp(1.2rem,2.5vh,2rem)">
+          <p class="ss">Multi-source web scraping & API architecture</p>
+          
+          <!-- تم إزالة كلاس step-item من هنا حتى لا تختفي مساحة الخطوات بالكامل -->
+          <div class="pipeline" style="margin-top: 10px; flex: 1 1 auto;">
+            
+            <!-- تم إضافة step-item لكل خطوة لتظهر بالترتيب مع كل ضغطة زر -->
+            <div class="pipe-step step-item">
+              <div class="pipe-num">1</div>
+              <div>
+                <h4>Global Gold Spot (XAU/USD)</h4>
+                <p>Scraped live via <strong>goldprice.org API</strong> with a fallback to Yahoo Finance (GC=F) to ensure 100% uptime.</p>
+              </div>
+            </div>
+            
+            <div class="pipe-step step-item">
+              <div class="pipe-num">2</div>
+              <div>
+                <h4>USD/EGP Exchange Rates</h4>
+                <p>Fetched using <strong>ExchangeRate-API</strong> & <strong>Frankfurter.app</strong>, backed up by Yahoo Finance official EGP=X ticker.</p>
+              </div>
+            </div>
+            
+            <div class="pipe-step step-item">
+              <div class="pipe-num">3</div>
+              <div>
+                <h4>Macroeconomic Indicators</h4>
+                <p>Extracting Crude Oil (CL=F), US 10Y Treasury (^TNX), and S&P 500 (^GSPC) via <strong>yfinance</strong> Python library.</p>
+              </div>
+            </div>
+            
+            <div class="pipe-step step-item">
+              <div class="pipe-num">4</div>
+              <div>
+                <h4>Local Price Engineering</h4>
+                <p>Programmatic calculation of 24K, 21K, and 18K combining Spot, FX, Karat Purity Factors, and Fabrication Fees (Making Charges).</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- الصندوق الأخير يأخذ step-item ليظهر كخطوة خامسة وأخيرة -->
+          <div class="ph step-item" style="flex: 0 1 auto; margin-top: 20px; padding: 20px 24px; display: flex; flex-direction: column; justify-content: center; background: rgba(10,10,15,0.6); border: 1px solid var(--border-hi);">
             <span class="cn tl"></span><span class="cn tr"></span><span class="cn bl"></span><span class="cn br"></span>
-            <span class="ph-label">[ Placeholder for Data Pipeline Architecture Diagram ]</span>
+            <h4 style="color: var(--gold-lt); font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 16px;">🔗</span> Active API Endpoints & Tickers
+            </h4>
+            <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; letter-spacing: 0.03em;">
+              <div>
+                <span style="color: var(--green); font-weight: bold; margin-right: 8px;">GET</span> 
+                <a href="https://finance.yahoo.com/" target="_blank" style="color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); transition: border-color 0.2s;">https://finance.yahoo.com/</a>
+              </div>
+              <div>
+                <span style="color: var(--green); font-weight: bold; margin-right: 8px;">GET</span> 
+                <a href="https://goldprice.org/" target="_blank" style="color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); transition: border-color 0.2s;">https://goldprice.org/</a>
+              </div>
+              <div>
+                <span style="color: var(--green); font-weight: bold; margin-right: 8px;">GET</span> 
+                <a href="https://www.exchangerate-api.com/" target="_blank" style="color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); transition: border-color 0.2s;">https://api.exchangerate-api.com/v4/latest/USD</a>
+              </div>
+              <div>
+                <span style="color: var(--green); font-weight: bold; margin-right: 8px;">GET</span> 
+                <a href="https://www.frankfurter.app/" target="_blank" style="color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); transition: border-color 0.2s;">https://api.frankfurter.app/latest?from=USD&to=EGP</a>
+              </div>
+              
+              <div style="margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px;">
+                <span style="color: var(--blue); font-weight: bold; margin-right: 8px;">YF TICKERS:</span> 
+                <span style="color: var(--gold);">GC=F</span> (Gold) · 
+                <span style="color: var(--gold);">EGP=X</span> (USD/EGP) · 
+                <span style="color: var(--gold);">CL=F</span> (Oil) · 
+                <span style="color: var(--gold);">^TNX</span> (10Y Bond) · 
+                <span style="color: var(--gold);">^GSPC</span> (S&P 500)
+              </div>
+            </div>
           </div>
         </div>
       </section>
-
       <!-- ────────────────────────── SLIDE 6 (NEW) ────────────────────────── -->
       <section class="slide" data-n="6" data-title="MySQL Architecture" aria-label="MySQL Architecture">
         <div class="sc">
           <span class="part-label">Part 2 · Data Engineering</span>
           <h1 class="st">MySQL Architecture</h1>
           <p class="ss">Relational schema for the Gold Egypt data warehouse</p>
-          <div class="ph step-item" style="flex:1 1 0;min-height:0;margin-top:12px">
+          
+          <!-- المربع اللي هيشيل الصورتين متسنترين -->
+          <div class="ph step-item" style="flex:1 1 0; min-height:0; margin-top:12px; position:relative; padding: 20px; display: flex; justify-content: center; align-items: center; gap: 30px;">
             <span class="cn tl"></span><span class="cn tr"></span><span class="cn bl"></span><span class="cn br"></span>
-            <span class="ph-label">[ Placeholder for SQL ERD Image ]</span>
+            
+            <!-- الصورة الأولى (المخطط الثابت) -->
+            <img src="Image/ERP_Diagram.png" alt="SQL ERD" style="width: 48%; height: 100%; object-fit: contain;">
+            
+            <!-- الصورة الثانية (المتحركة GIF) -->
+            <img src="Image/Gold Egypt Schema.gif" alt="Gold Egypt Schema Animation" style="width: 48%; height: 100%; object-fit: contain;">
+            
           </div>
         </div>
       </section>
@@ -274,45 +344,45 @@
       <!-- ─────────────────────────────────────────────
            SLIDE 8 · DATA PIPELINE (was 5)
       ──────────────────────────────────────────────── -->
-      <section class="slide" data-n="8" data-title="ETL Pipeline — From Raw Data to Decisions" aria-label="Pipeline Slide">
+      <section class="slide" data-n="8" data-title="ETL Pipeline - From Raw Data to Decisions" aria-label="Pipeline Slide">
         <div class="sc">
           <span class="part-label">Part 2 · Data Engineering</span>
-          <h1 class="st">ETL Pipeline — From Raw Data to Decisions</h1>
+          <h1 class="st">ETL Pipeline - From Raw Data to Decisions</h1>
           <p class="ss">Five-stage pipeline transforming market APIs into decision-ready intelligence</p>
           <div class="pipeline">
             <div class="pipe-step">
               <span class="pipe-num">1</span>
               <div>
-                <h4>Extract — Multi-Source APIs with Fallback Chain</h4>
-                <p>Gold USD spot, USD/EGP official rate, Oil prices, US 10Y yield, S&amp;P 500 — pulled via APIs with automated fallback to secondary sources on failure</p>
+                <h4>Extract - Multi-Source APIs with Fallback Chain</h4>
+                <p>Gold USD spot, USD/EGP official rate, Oil prices, US 10Y yield, S&amp;P 500 - pulled via APIs with automated fallback to secondary sources on failure</p>
               </div>
             </div>
             <div class="pipe-step">
               <span class="pipe-num">2</span>
               <div>
-                <h4>Transform — Jupyter Notebooks + Two Key Innovations</h4>
+                <h4>Transform - Jupyter Notebooks + Two Key Innovations</h4>
                 <p>Karat price engineering (24K/21K/18K), fair-value decomposition, technical indicator computation (RSI-14, MACD, Bollinger Bands), portfolio simulation with real costs</p>
               </div>
             </div>
             <div class="pipe-step">
               <span class="pipe-num">3</span>
               <div>
-                <h4>Load — MySQL Normalized Database</h4>
+                <h4>Load - MySQL Normalized Database</h4>
                 <p>Five interconnected tables stored in a normalized schema, enabling reproducible queries and downstream analytics without reprocessing raw data</p>
               </div>
             </div>
             <div class="pipe-step">
               <span class="pipe-num">4</span>
               <div>
-                <h4>Serve — Streamlit Interactive Application</h4>
+                <h4>Serve - Streamlit Interactive Application</h4>
                 <p>Five-page web app serving live charts, Prophet forecasts, ROI calculators, and composite technical signals to non-technical investors</p>
               </div>
             </div>
             <div class="pipe-step">
               <span class="pipe-num">5</span>
               <div>
-                <h4>Report — Power BI Executive Dashboard</h4>
-                <p>Six-page corporate report with automatic refresh, RLS for institutional use, and KPI scorecards aligned to the seven research questions</p>
+                <h4>Report - Power BI Executive Dashboard</h4>
+                <p>Four-page corporate report with automatic refresh, RLS for institutional use, and KPI scorecards aligned to the seven research questions</p>
               </div>
             </div>
           </div>
@@ -346,7 +416,7 @@
             <div class="pcard">
               <span class="pcard-num pcard-num-q">Q4</span>
               <h3>Macro Drivers</h3>
-              <p>Which variable — USD/EGP, oil, US Treasuries, S&amp;P 500 — drives local gold prices most?</p>
+              <p>Which variable - USD/EGP, oil, US Treasuries, S&amp;P 500 - drives local gold prices most?</p>
             </div>
             <div class="pcard">
               <span class="pcard-num pcard-num-q">Q5</span>
@@ -361,7 +431,7 @@
             <div class="pcard pcard-span3">
               <span class="pcard-num pcard-num-q">Q7</span>
               <h3>Technical Signals</h3>
-              <p>Which automated technical signals — RSI, MACD, Bollinger Bands — best identify optimal entry and exit opportunities across different karats?</p>
+              <p>Which automated technical signals - RSI, MACD, Bollinger Bands - best identify optimal entry and exit opportunities across different karats?</p>
             </div>
           </div>
         </div>
@@ -370,13 +440,13 @@
       <!-- ═══════════════════════════════════════════════
            SLIDE 10 / Q1 · PRICE DECOMPOSITION (was 7)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q1" data-n="10" data-title="Q1 · Price Decomposition" aria-label="Question 1 — Price Decomposition">
+      <section class="slide" id="q1" data-n="10" data-title="Q1 · Price Decomposition" aria-label="Question 1 - Price Decomposition">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
             <div class="q-top">
               <span class="q-tag">Question 1</span>
-              <h2 class="q-text">What percentage of Egyptian gold price movements (2020–present) is attributable to global price increases — to EGP collapse — and to local market premium expansion?</h2>
+              <h2 class="q-text">What percentage of Egyptian gold price movements (2020–present) is attributable to global price increases - to EGP collapse - and to local market premium expansion?</h2>
               <p class="q-subtext">Stacked area decomposition across 24K, 21K, and 18K using a January 2020 fixed exchange rate baseline</p>
               <div class="q-insight">
                 📊 During crisis periods, <span class="highlight">60–70% of price movements are caused by Egyptian pound depreciation</span>, not by gold prices themselves. The March 2024 currency float produced the sharpest spike.
@@ -400,14 +470,14 @@
       <!-- ═══════════════════════════════════════════════
            SLIDE 11 / Q2 · FAIR VALUE INDEX (was 8)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q2" data-n="11" data-title="Q2 · Fair Value Index" aria-label="Question 2 — Fair Value Index">
+      <section class="slide" id="q2" data-n="11" data-title="Q2 · Fair Value Index" aria-label="Question 2 - Fair Value Index">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
             <div class="q-top">
               <span class="q-tag">Question 2</span>
               <h2 class="q-text">What is the theoretically fair value of gold in Egypt on any given date? And how much is the current deviation from it?</h2>
-              <p class="q-subtext">Fair Value Index (FVI) = Actual Price ÷ Theoretical Price — enabling real-time "is now the right time to buy?" signals</p>
+              <p class="q-subtext">Fair Value Index (FVI) = Actual Price ÷ Theoretical Price - enabling real-time "is now the right time to buy?" signals</p>
               <div class="q-insight">
                 📊 <span class="highlight">FVI &gt; 1.05 = Overvalued (speculative premium exists)</span>. FVI ≈ 1.0 = Fair pricing. FVI &lt; 0.97 = Undervalued opportunity. The index enables objective entry timing decisions.
               </div>
@@ -430,7 +500,7 @@
       <!-- ═══════════════════════════════════════════════
            SLIDE 12 / Q3 · SPECULATIVE BUBBLES (was 9)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q3" data-n="12" data-title="Q3 · Crisis Premium Bubbles" aria-label="Question 3 — Speculative Bubbles">
+      <section class="slide" id="q3" data-n="12" data-title="Q3 · Crisis Premium Bubbles" aria-label="Question 3 - Speculative Bubbles">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
@@ -439,7 +509,7 @@
               <h2 class="q-text">Does the Egyptian gold market exhibit statistically significant speculative bubbles or fear premiums during crisis periods?</h2>
               <p class="q-subtext">Premium % tracked across COVID-19 (Mar 2020), EGP float events (2022–2024), Gaza conflict (Oct 2023), and Iran strike (Jun 2025)</p>
               <div class="q-insight">
-                📊 <span class="highlight">Premiums spike sharply during each crisis and are temporary — they dissipate when markets stabilize.</span> Investors who buy at peak premium periods subsequently suffer losses when the premium contracts back to baseline.
+                📊 <span class="highlight">Premiums spike sharply during each crisis and are temporary - they dissipate when markets stabilize.</span> Investors who buy at peak premium periods subsequently suffer losses when the premium contracts back to baseline.
               </div>
               <div class="q-kpi-bar">
                 <span class="q-kpi q-kpi-red"><span class="q-kpi-val">&gt;15%</span><span class="q-kpi-lbl">Bubble Zone (Red)</span></span>
@@ -460,16 +530,16 @@
       <!-- ═══════════════════════════════════════════════
            SLIDE 13 / Q4 · MACRO DRIVERS (was 10)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q4" data-n="13" data-title="Q4 · Macroeconomic Drivers" aria-label="Question 4 — Macro Drivers">
+      <section class="slide" id="q4" data-n="13" data-title="Q4 · Macroeconomic Drivers" aria-label="Question 4 - Macro Drivers">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
             <div class="q-top">
               <span class="q-tag">Question 4</span>
-              <h2 class="q-text">Which macroeconomic variables — US Dollar, Oil, US Treasury Bonds, S&amp;P 500 — have the highest impact on local gold prices in Egypt?</h2>
+              <h2 class="q-text">Which macroeconomic variables - US Dollar, Oil, US Treasury Bonds, S&amp;P 500 - have the highest impact on local gold prices in Egypt?</h2>
               <p class="q-subtext">6×6 correlation matrix heatmap across gold price (24K/21K/18K), XAU/USD, USD/EGP, Brent oil, US 10Y yield, and S&amp;P 500</p>
               <div class="q-insight">
-                📊 <span class="highlight">USD/EGP exchange rate has the strongest correlation with Egyptian gold prices</span> — far exceeding gold's own USD price. Conclusion: Investing in Egyptian gold is primarily a bet on the Egyptian pound, not on gold itself.
+                📊 <span class="highlight">USD/EGP exchange rate has the strongest correlation with Egyptian gold prices</span> - far exceeding gold's own USD price. Conclusion: Investing in Egyptian gold is primarily a bet on the Egyptian pound, not on gold itself.
               </div>
               <div class="q-kpi-bar">
                 <span class="q-kpi q-kpi-green"><span class="q-kpi-val">r ≈ 0.97</span><span class="q-kpi-lbl">USD/EGP Correlation</span></span>
@@ -489,16 +559,16 @@
       <!-- ═══════════════════════════════════════════════
            SLIDE 14 / Q5 · NET RETURN COMPARISON (was 11)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q5" data-n="14" data-title="Q5 · Net Return Comparison" aria-label="Question 5 — Net Return Comparison">
+      <section class="slide" id="q5" data-n="14" data-title="Q5 · Net Return Comparison" aria-label="Question 5 - Net Return Comparison">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
             <div class="q-top">
               <span class="q-tag">Question 5</span>
-              <h2 class="q-text">How do net gold returns — after deducting making charges and sell spreads — compare to holding US dollars or Egyptian pound cash as a store of value?</h2>
-              <p class="q-subtext">Starting capital: 100,000 EGP (January 2020) — five assets compared: 24K gold, 21K gold, 18K gold, USD, EGP cash</p>
+              <h2 class="q-text">How do net gold returns - after deducting making charges and sell spreads - compare to holding US dollars or Egyptian pound cash as a store of value?</h2>
+              <p class="q-subtext">Starting capital: 100,000 EGP (January 2020) - five assets compared: 24K gold, 21K gold, 18K gold, USD, EGP cash</p>
               <div class="q-insight">
-                📊 <span class="highlight">21K gold delivered the best net returns</span> — not 24K. The key finding: lowest total transaction cost = best actual returns, not highest purity. EGP cash suffered severe real-value destruction.
+                📊 <span class="highlight">21K gold delivered the best net returns</span> - not 24K. The key finding: lowest total transaction cost = best actual returns, not highest purity. EGP cash suffered severe real-value destruction.
               </div>
               <div class="q-kpi-bar">
                 <span class="q-kpi q-kpi-gold"><span class="q-kpi-val">21K ⭐</span><span class="q-kpi-lbl">Best Net Return</span></span>
@@ -519,13 +589,13 @@
       <!-- ═══════════════════════════════════════════════
            SLIDE 15 / Q6 · PROPHET FORECAST (was 12)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q6" data-n="15" data-title="Q6 · Prophet Multi-Stage Forecast" aria-label="Question 6 — Prophet Forecast">
+      <section class="slide" id="q6" data-n="15" data-title="Q6 · Prophet Multi-Stage Forecast" aria-label="Question 6 - Prophet Forecast">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
             <div class="q-top">
               <span class="q-tag">Question 6</span>
-              <h2 class="q-text">Can a multi-stage Prophet model — using US Dollar and Oil prices as external regressors — accurately forecast Egyptian gold prices over 6–12 month horizons?</h2>
+              <h2 class="q-text">Can a multi-stage Prophet model - using US Dollar and Oil prices as external regressors - accurately forecast Egyptian gold prices over 6–12 month horizons?</h2>
               <p class="q-subtext">Stage 1: Independent Prophet models for USD/EGP and Oil · Stage 2: Gold model uses Stage 1 forecasts as exogenous regressors · Historical Date Merge Strategy resolves calendar mismatch</p>
               <div class="q-insight">
                 📊 <span class="highlight">The two-stage architecture with the Historical Date Merge Strategy eliminates a systematic error</span> found in standard Prophet implementations on trading-day calendars. Output includes 90% confidence bands and an ROI calculator.
@@ -550,16 +620,16 @@
       <!-- ═══════════════════════════════════════════════
            SLIDE 16 / Q7 · TECHNICAL SIGNALS (was 13)
       ════════════════════════════════════════════════ -->
-      <section class="slide" id="q7" data-n="16" data-title="Q7 · Automated Technical Signals" aria-label="Question 7 — Technical Signals">
+      <section class="slide" id="q7" data-n="16" data-title="Q7 · Automated Technical Signals" aria-label="Question 7 - Technical Signals">
         <div class="sc">
           <span class="part-label">Part 3 · Research Questions</span>
           <div class="q-slide-inner">
             <div class="q-top">
               <span class="q-tag">Question 7</span>
-              <h2 class="q-text">Which automated technical signals — RSI, MACD, Bollinger Bands — best identify optimal entry and exit opportunities across different gold karats?</h2>
+              <h2 class="q-text">Which automated technical signals - RSI, MACD, Bollinger Bands - best identify optimal entry and exit opportunities across different gold karats?</h2>
               <p class="q-subtext">Three-panel synchronized chart: Price + Bollinger Bands · MACD histogram + signal line · RSI-14 with overbought/oversold zones</p>
               <div class="q-insight">
-                📊 <span class="highlight">No single indicator is used in isolation — a composite 3-indicator system delivers BUY / HOLD / SELL signals</span>, requiring zero technical knowledge from the investor. Signals are computed separately for 24K, 21K, and 18K.
+                📊 <span class="highlight">No single indicator is used in isolation - a composite 3-indicator system delivers BUY / HOLD / SELL signals</span>, requiring zero technical knowledge from the investor. Signals are computed separately for 24K, 21K, and 18K.
               </div>
               <div class="q-kpi-bar">
                 <span class="q-kpi q-kpi-green"><span class="q-kpi-val">RSI &lt;30</span><span class="q-kpi-lbl">Oversold → BUY Zone</span></span>
@@ -584,7 +654,7 @@
         <div class="sc">
           <span class="part-label">Part 4 · Live Demonstration</span>
           <h1 class="st">Live Streamlit Application</h1>
-          <p class="ss">Full interactive dashboard — five pages covering all seven research questions</p>
+          <p class="ss">Full interactive dashboard - five pages covering all seven research questions</p>
           <div class="page-tags">
             <span class="page-tag active">🏠 Executive Summary</span>
             <span class="page-tag active">📊 Price Analysis</span>
@@ -629,7 +699,7 @@
         <div class="sc">
           <span class="part-label">Part 6 · Conclusions</span>
           <h1 class="st">Key Insights &amp; Findings</h1>
-          <p class="ss">Seven questions answered — actionable intelligence distilled for every Egyptian investor</p>
+          <p class="ss">Seven questions answered - actionable intelligence distilled for every Egyptian investor</p>
           <div class="three-col">
             <div class="pcard">
               <span class="pcard-num">💡</span>
@@ -639,12 +709,12 @@
             <div class="pcard">
               <span class="pcard-num">📈</span>
               <h3>Lower Costs Beat Higher Purity</h3>
-              <p><span class="highlight">21K gold outperformed 24K on net returns</span> despite lower gold content. Transaction costs are the decisive variable — not karat purity. EGP cash was catastrophically destructive.</p>
+              <p><span class="highlight">21K gold outperformed 24K on net returns</span> despite lower gold content. Transaction costs are the decisive variable - not karat purity. EGP cash was catastrophically destructive.</p>
             </div>
             <div class="pcard">
               <span class="pcard-num">🎯</span>
               <h3>Timing Crises with Data Works</h3>
-              <p>The FVI, premium %, and composite technical signal system <span class="highlight">enable objective, data-driven entry and exit timing</span> — eliminating emotion-driven panic buying at peak premiums.</p>
+              <p>The FVI, premium %, and composite technical signal system <span class="highlight">enable objective, data-driven entry and exit timing</span> - eliminating emotion-driven panic buying at peak premiums.</p>
             </div>
           </div>
           <div class="impact-row">
