@@ -1104,368 +1104,955 @@ st.markdown("""
 # ─────────────────────────────────────────────────────────────────────────────
 # PREMIUM EMBED ROUTER (For Vercel HTML Slides Integration)
 # ─────────────────────────────────────────────────────────────────────────────
+_EMBED_CSS = """
+<style>
+/* ── EMBED IFRAME SHELL ── */
+[data-testid="stSidebar"],
+header, footer,
+.stDeployButton,
+#MainMenu { display: none !important; }
+
+.main .block-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+/* transparent plotly wrapper */
+.stPlotlyChart {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+body, .stApp {
+    background: #03060F !important;
+}
+
+/* ── KPI STRIP ── */
+.eq-kpi-strip {
+    display: flex;
+    gap: 10px;
+    padding: 8px 12px 4px 12px;
+    background: transparent;
+    flex-wrap: wrap;
+}
+.eq-kpi {
+    flex: 1;
+    min-width: 110px;
+    background: linear-gradient(145deg, #0A1525, #0D1E36);
+    border: 1px solid rgba(212,175,55,0.20);
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: center;
+}
+.eq-kpi-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+    display: block;
+}
+.eq-kpi-lbl {
+    font-size: 0.68rem;
+    color: #6a7a99;
+    margin-top: 2px;
+    display: block;
+    letter-spacing: 0.03em;
+}
+
+/* ── SIGNAL BADGE ── */
+.eq-signal-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 12px 6px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.eq-signal {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 900;
+    padding: 10px 36px;
+    border-radius: 10px;
+    letter-spacing: 0.12em;
+}
+.eq-signal.buy  { background: #06D6A0; color: #000; }
+.eq-signal.sell { background: #EF476F; color: #fff; }
+.eq-signal.hold { background: #4CC9F0; color: #000; }
+.eq-sig-meta {
+    font-size: 0.75rem;
+    color: #6a7a99;
+    text-align: center;
+    line-height: 1.7;
+}
+
+/* ── Q-HEADER ── */
+.eq-q-header {
+    padding: 10px 14px 0 14px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #D4AF37;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+</style>
+"""
+
+
+def _kpi_card(val: str, label: str, color: str = "#FFD700") -> str:
+    """Return one KPI card HTML snippet."""
+    return (
+        f'<div class="eq-kpi">'
+        f'<span class="eq-kpi-val" style="color:{color}">{val}</span>'
+        f'<span class="eq-kpi-lbl">{label}</span>'
+        f'</div>'
+    )
+
+
+def _kpi_strip(*cards: str) -> str:
+    inner = "".join(cards)
+    return f'<div class="eq-kpi-strip">{inner}</div>'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 embed_q = st.query_params.get("q")
+
 if embed_q:
-    # إخفاء عناصر التحكم كلياً لضمان تجربة SaaS انسيابية داخل الـ Iframe
-    st.markdown("""
-    <style>
-        [data-testid="stSidebar"], header, footer, .stDeployButton {display: none !important;}
-        .main .block-container {padding: 0 !important; max-width: 100% !important; margin: 0 !important;}
-        .stPlotlyChart {border: none !important; box-shadow: none !important; background: transparent !important;}
-        body {background-color: transparent !important;}
-    </style>
-    """, unsafe_allow_html=True)
+    import streamlit as st
+    import pandas as pd
+    import numpy as np
+    import plotly.graph_objects as go
+    import plotly.express as px
+    from plotly.subplots import make_subplots
+    from datetime import datetime
 
-    k = selected_karat
+    st.markdown(_EMBED_CSS, unsafe_allow_html=True)
 
-    # Q1: تفكيك السعر (Price Decomposition)
+    k = selected_karat  # e.g. '21K'
+
+    # ── KARAT PURITY FACTORS ────────────────────────────────────────────────
+    KARAT_FACTOR = {'24K': 1.0, '21K': 21/24, '18K': 18/24}
+    OUNCE_TO_GRAM = 31.1035
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Q1 — Price Decomposition
+    # Answer: What % of Egyptian gold price movement is global XAU vs EGP collapse vs panic premium?
+    # ─────────────────────────────────────────────────────────────────────────
     if embed_q == "q1":
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True,
-        row_heights=[0.34, 0.33, 0.33], vertical_spacing=0.10,
-        subplot_titles=["24K", "21K", "18K"])
+        # ── KPI: compute decomposition % for most recent data point ──
+        latest = data.dropna(subset=[f'Price_{k}', f'ValueDriven_{k}', f'InflPrem_{k}']).iloc[-1]
+        total   = latest[f'Price_{k}']
+        val_pct = (latest[f'ValueDriven_{k}'] / total * 100) if total else 0
+        prem_pct = (latest[f'InflPrem_{k}'] / total * 100) if total else 0
 
-        KFILL = {'24K': 'rgba(255,249,196,0.65)', '21K': 'rgba(255,215,0,0.65)', '18K': 'rgba(205,127,50,0.65)'}
-        KROW  = {'24K': 1, '21K': 2, '18K': 3}
+        # Also compute at March 2024 (peak devaluation event)
+        mar24 = data['2024-03-01':'2024-03-31'].dropna(subset=[f'Price_{k}', f'ValueDriven_{k}'])
+        if not mar24.empty:
+            mar24_row = mar24.iloc[-1]
+            mar24_tot  = mar24_row[f'Price_{k}']
+            mar24_val  = mar24_row[f'ValueDriven_{k}'] / mar24_tot * 100
+            mar24_prem = mar24_row[f'InflPrem_{k}'] / mar24_tot * 100
+            mar24_val_s  = f"{mar24_val:.0f}%"
+            mar24_prem_s = f"{mar24_prem:.0f}%"
+        else:
+            mar24_val_s = mar24_prem_s = "N/A"
+
+        current_price = f"{total:,.0f} ج"
+        st.markdown(
+            _kpi_strip(
+                _kpi_card(current_price, f"سعر {k} الحالي", "#FFD700"),
+                _kpi_card(f"{val_pct:.0f}%", "قيمة عالمية (الآن)", "#FFF9C4"),
+                _kpi_card(f"{prem_pct:.0f}%", "علاوة عملة + تضخم (الآن)", "#EF476F"),
+                _kpi_card(mar24_prem_s, "علاوة مارس 2024 (ذروة)", "#FF6B6B"),
+                _kpi_card(mar24_val_s, "قيمة عالمية مارس 2024", "#FFD700"),
+            ),
+            unsafe_allow_html=True,
+        )
+
+        # ── Stacked Area — 3-panel (24K / 21K / 18K) ──
+        fig = make_subplots(
+            rows=3, cols=1,
+            shared_xaxes=True,
+            row_heights=[0.34, 0.33, 0.33],
+            vertical_spacing=0.08,
+            subplot_titles=["24 قيراط", "21 قيراط", "18 قيراط"],
+        )
+
+        KFILL = {
+            '24K': 'rgba(255,249,196,0.70)',
+            '21K': 'rgba(255,215,0,0.65)',
+            '18K': 'rgba(205,127,50,0.65)',
+        }
+        KROW = {'24K': 1, '21K': 2, '18K': 3}
 
         for karat in ['24K', '21K', '18K']:
             row = KROW[karat]
-            fig.add_trace(go.Scatter(x=data.index, y=data[f'ValueDriven_{karat}'],
-                name='قيمة عالمية', stackgroup=f'g{row}', mode='lines',
+            fig.add_trace(go.Scatter(
+                x=data.index, y=data[f'ValueDriven_{karat}'],
+                name='قيمة عالمية (سعر ثابت)', stackgroup=f'g{row}', mode='lines',
                 line=dict(width=0), fillcolor=KFILL[karat],
-                showlegend=(row==1), legendgroup='gv',
-                hovertemplate=f"{karat} - قيمة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
-            fig.add_trace(go.Scatter(x=data.index, y=data[f'InflPrem_{karat}'],
-                name='علاوة تضخم', stackgroup=f'g{row}', mode='lines',
-                line=dict(width=0), fillcolor='rgba(239,71,111,0.50)',
-                showlegend=(row==1), legendgroup='gi',
-                hovertemplate=f"{karat} - علاوة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
+                showlegend=(row == 1), legendgroup='gv',
+                hovertemplate=f"{karat} قيمة: %{{y:,.0f}} ج<extra></extra>",
+            ), row=row, col=1)
 
-        if show_events: add_events(fig, data, rows=[1,2,3])
-        lyt = plot_layout(height=800)
-        lyt['margin'] = dict(l=8, r=8, t=160, b=8)
-        lyt['legend'] = dict(orientation="h", y=1.20, x=0.5, xanchor="center",
-            bgcolor="rgba(0,0,0,0)", borderwidth=0,
-            font=dict(size=10, family="Cairo"), itemsizing="constant")
-        lyt['xaxis']['rangeselector']['y'] = 1.20
-        lyt['title'] = dict(text="تشريح السعر: القيمة الحقيقية مقابل علاوة التضخم والعملة",
-            font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.98)
+            fig.add_trace(go.Scatter(
+                x=data.index, y=data[f'InflPrem_{karat}'],
+                name='علاوة العملة والتضخم', stackgroup=f'g{row}', mode='lines',
+                line=dict(width=0), fillcolor='rgba(239,71,111,0.55)',
+                showlegend=(row == 1), legendgroup='gi',
+                hovertemplate=f"{karat} علاوة: %{{y:,.0f}} ج<extra></extra>",
+            ), row=row, col=1)
+
+        # ── March 2024 annotation box (major devaluation) ──
+        for r in [1, 2, 3]:
+            fig.add_vrect(
+                x0='2024-03-01', x1='2024-03-31',
+                fillcolor='rgba(239,71,111,0.12)', line_width=0,
+                layer='below', row=r, col=1,
+            )
+        fig.add_annotation(
+            x='2024-03-15', y=1.04, yref='paper', xref='x',
+            text="🔓 تعويم مارس 2024 — 60-70% من الارتفاع بسبب انهيار الجنيه",
+            showarrow=False,
+            font=dict(size=8.5, color='#EF476F', family='Cairo'),
+            xanchor='center', bgcolor='rgba(3,6,15,0.75)', borderpad=3,
+        )
+
+        if show_events:
+            add_events(fig, data, rows=[1, 2, 3])
+
+        lyt = plot_layout(height=520)
+        lyt['margin'] = dict(l=8, r=8, t=80, b=8)
+        lyt['legend'] = dict(
+            orientation='h', y=1.09, x=0.5, xanchor='center',
+            bgcolor='rgba(0,0,0,0)', borderwidth=0,
+            font=dict(size=10, family='Cairo'),
+        )
+        for r in [1, 2, 3]:
+            fig.update_yaxes(
+                title_text='جنيه/جرام',
+                title_font=dict(size=8, color='#4A6A8A'),
+                tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
+                gridcolor='rgba(255,255,255,0.04)',
+                row=r, col=1,
+            )
+        fig.update_xaxes(tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
+                         gridcolor='rgba(255,255,255,0.04)')
         fig.update_layout(**lyt)
-        fig.update_xaxes(tickfont=dict(family="Cairo", size=10, color="#4A6A8A"),
-                        gridcolor="rgba(255,255,255,0.05)",
-                        range=["2020-01-01", data.index.max()])
-        event_labels = {v[0] for v in CRISIS_EVENTS.values()}
-        for ann in fig.layout.annotations:
-            if ann.text not in event_labels:
-                ann.update(x=0.98, xanchor='right', font=dict(color='#B8960C', size=10.5, family='Cairo'))
-        for r in [1,2,3]:
-            fig.update_yaxes(tickfont=dict(family="Cairo", size=11, color="#4A6A8A"),
-                            title_text="جنيه", title_font=dict(size=9), row=r, col=1)
-        st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        st.plotly_chart(fig, use_container_width=True,
+                        config=dict(displaylogo=False, responsive=True))
 
-    # Q2: فجوة السعر العادل (Fair Value Gap)
+    # ─────────────────────────────────────────────────────────────────────────
+    # Q2 — Fair Value Index (FVI)
+    # Answer: Is Egyptian gold overpriced or underpriced vs theoretical fair value?
+    # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q2":
-        fig2 = go.Figure()
-        for karat, color in KARAT_COLORS.items():
-            fig2.add_trace(go.Scatter(x=data.index, y=data[f'PremPct_{karat}'],
-                name=karat, line=dict(color=color, width=2),
-                hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
-        fig2.add_hline(y=0, line_dash="dot", line_color="#1E3A5F", opacity=0.8)
-        if show_events: add_events(fig2, data)
-        fig2.update_layout(**plot_layout(height=340, yaxis=dict(title_text="علاوة %")))
-        st.plotly_chart(fig2, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        # Compute FVI inline: FVI = Actual Price / Theoretical Price
+        # Theoretical_K = (Gold_USD_Ounce / 31.1035) * KARAT_FACTOR[K] * USD_EGP_Official
+        fvi_data = data.copy()
+        for karat, factor in KARAT_FACTOR.items():
+            theoretical = (
+                fvi_data['Gold_USD_Ounce'] / OUNCE_TO_GRAM
+            ) * factor * fvi_data['USD_EGP_Official']
+            fvi_data[f'FVI_{karat}'] = fvi_data[f'Price_{karat}'] / theoretical
 
-    # Q3: نسبة النوازل والعلاوة التاريخية (Premium % Timeline)
+        latest_fvi  = fvi_data[f'FVI_{k}'].dropna().iloc[-1]
+        max_fvi     = fvi_data[f'FVI_{k}'].dropna().max()
+        min_fvi     = fvi_data[f'FVI_{k}'].dropna().min()
+        avg_fvi     = fvi_data[f'FVI_{k}'].dropna().mean()
+
+        if latest_fvi > 1.05:
+            fvi_status   = "مُبالَغ فيه 🔴"
+            fvi_color    = "#EF476F"
+            fvi_status_e = "Overvalued"
+        elif latest_fvi < 0.97:
+            fvi_status   = "مُقيَّم بأقل ✅"
+            fvi_color    = "#06D6A0"
+            fvi_status_e = "Undervalued"
+        else:
+            fvi_status   = "سعر عادل 🟡"
+            fvi_color    = "#FFD700"
+            fvi_status_e = "Fair Value"
+
+        dev_pct = (latest_fvi - 1.0) * 100
+
+        st.markdown(
+            _kpi_strip(
+                _kpi_card(f"{latest_fvi:.3f}", f"مؤشر القيمة العادلة ({k})", fvi_color),
+                _kpi_card(fvi_status, "الحالة الراهنة", fvi_color),
+                _kpi_card(f"{dev_pct:+.1f}%", "الانحراف عن القيمة العادلة", fvi_color),
+                _kpi_card(f"{max_fvi:.3f}", "أعلى فقاعة مسجلة", "#EF476F"),
+                _kpi_card(f"{avg_fvi:.3f}", "متوسط الفترة", "#4CC9F0"),
+            ),
+            unsafe_allow_html=True,
+        )
+
+        fig2 = go.Figure()
+
+        # ── colored zone fills ──
+        xmin, xmax = fvi_data.index[0], fvi_data.index[-1]
+
+        # Overvalued zone (FVI > 1.05): red
+        fig2.add_hrect(y0=1.05, y1=2.5,
+                       fillcolor='rgba(239,71,111,0.07)', line_width=0)
+        # Fair zone (0.97–1.05): gold
+        fig2.add_hrect(y0=0.97, y1=1.05,
+                       fillcolor='rgba(255,215,0,0.06)', line_width=0)
+        # Undervalued zone (< 0.97): green
+        fig2.add_hrect(y0=0.0, y1=0.97,
+                       fillcolor='rgba(6,214,160,0.06)', line_width=0)
+
+        # ── FVI lines for all karats ──
+        fvi_colors = {'24K': '#FFF9C4', '21K': '#FFD700', '18K': '#CD7F32'}
+        for karat in ['24K', '21K', '18K']:
+            lw = 2.4 if karat == k else 1.0
+            opacity = 1.0 if karat == k else 0.35
+            fig2.add_trace(go.Scatter(
+                x=fvi_data.index, y=fvi_data[f'FVI_{karat}'],
+                name=karat,
+                line=dict(color=fvi_colors[karat], width=lw),
+                opacity=opacity,
+                hovertemplate=f"FVI {karat}: %{{y:.3f}}<extra></extra>",
+            ))
+
+        # ── FVI = 1.0 baseline ──
+        fig2.add_hline(
+            y=1.0,
+            line=dict(color='#FFD700', width=1.5, dash='dash'),
+            annotation_text='القيمة العادلة (FVI = 1.0)',
+            annotation_font=dict(size=9, color='#FFD700', family='Cairo'),
+            annotation_position='top left',
+        )
+        fig2.add_hline(y=1.05, line=dict(color='rgba(239,71,111,0.4)', width=0.8, dash='dot'))
+        fig2.add_hline(y=0.97, line=dict(color='rgba(6,214,160,0.4)',  width=0.8, dash='dot'))
+
+        # ── Zone labels ──
+        fig2.add_annotation(
+            x=fvi_data.index[-1], y=1.20, xanchor='right',
+            text="🔴 مُبالَغ فيه — فقاعة مضاربة", showarrow=False,
+            font=dict(size=8, color='#EF476F', family='Cairo'),
+            bgcolor='rgba(3,6,15,0.65)', borderpad=2,
+        )
+        fig2.add_annotation(
+            x=fvi_data.index[-1], y=1.01, xanchor='right',
+            text="🟡 سعر عادل — فرصة دخول مثالية", showarrow=False,
+            font=dict(size=8, color='#FFD700', family='Cairo'),
+            bgcolor='rgba(3,6,15,0.65)', borderpad=2,
+        )
+        fig2.add_annotation(
+            x=fvi_data.index[-1], y=0.93, xanchor='right',
+            text="🟢 مُقيَّم بأقل — نافذة شراء نادرة", showarrow=False,
+            font=dict(size=8, color='#06D6A0', family='Cairo'),
+            bgcolor='rgba(3,6,15,0.65)', borderpad=2,
+        )
+
+        # ── Current FVI callout arrow ──
+        last_date = fvi_data[f'FVI_{k}'].dropna().index[-1]
+        fig2.add_annotation(
+            x=last_date, y=latest_fvi,
+            text=f"  الآن: {latest_fvi:.3f} ({fvi_status_e})",
+            showarrow=True,
+            arrowhead=2, arrowcolor=fvi_color, arrowsize=1.2, arrowwidth=1.5,
+            ax=-60, ay=-30,
+            font=dict(size=9.5, color=fvi_color, family='Cairo'),
+            bgcolor='rgba(3,6,15,0.80)', borderpad=3,
+        )
+
+        if show_events:
+            add_events(fig2, data)
+
+        lyt2 = plot_layout(height=480, yaxis=dict(title_text='مؤشر القيمة العادلة (FVI)'))
+        lyt2['margin'] = dict(l=8, r=8, t=20, b=8)
+        fig2.update_layout(**lyt2)
+        fig2.update_yaxes(tickfont=dict(family='Cairo', size=10),
+                          gridcolor='rgba(255,255,255,0.04)')
+        fig2.update_xaxes(tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
+                          gridcolor='rgba(255,255,255,0.04)')
+        st.plotly_chart(fig2, use_container_width=True,
+                        config=dict(displaylogo=False, responsive=True))
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Q3 — Speculation / Panic Premium Bubbles
+    # Answer: Do Egyptian gold prices show measurable panic spikes during crises?
+    # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q3":
-        fig2 = go.Figure()
-        for karat, color in KARAT_COLORS.items():
-            fig2.add_trace(go.Scatter(x=data.index, y=data[f'PremPct_{karat}'],
-                name=karat, line=dict(color=color, width=2),
-                hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
-        fig2.add_hline(y=0, line_dash="dot", line_color="#1E3A5F", opacity=0.8)
-        if show_events: add_events(fig2, data)
-        fig2.update_layout(**plot_layout(height=340, yaxis=dict(title_text="علاوة %")))
-        st.plotly_chart(fig2, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        # Latest premium stats
+        latest_prem = {karat: data[f'PremPct_{karat}'].dropna().iloc[-1]
+                       for karat in ['24K', '21K', '18K']}
+        peak_prem   = {karat: data[f'PremPct_{karat}'].dropna().max()
+                       for karat in ['24K', '21K', '18K']}
+        max_k       = max(latest_prem, key=latest_prem.get)
+        peak_k      = max(peak_prem,   key=peak_prem.get)
 
-    # Q4: مصفوفة الارتباط العالمي (Global Correlation Matrix)
+        # Peak around March 2024
+        mar24_peak = data['2024-03-01':'2024-04-30'][f'PremPct_21K'].dropna()
+        mar24_max  = mar24_peak.max() if not mar24_peak.empty else 0
+
+        def _prem_status(pct):
+            if pct > 15:   return ("🔴 فقاعة", "#EF476F")
+            if pct > 8:    return ("🟠 مرتفع", "#FF9F43")
+            if pct > 3:    return ("🟡 معتدل", "#FFD700")
+            return ("🟢 طبيعي", "#06D6A0")
+
+        status_txt, status_clr = _prem_status(latest_prem['21K'])
+
+        st.markdown(
+            _kpi_strip(
+                _kpi_card(f"{latest_prem['21K']:.1f}%", "علاوة 21K الحالية", status_clr),
+                _kpi_card(status_txt, "مستوى الإشارة", status_clr),
+                _kpi_card(f"{mar24_max:.1f}%", "ذروة مارس 2024 (21K)", "#EF476F"),
+                _kpi_card(f"{peak_prem['24K']:.1f}%", "أعلى علاوة 24K تاريخياً", "#FFF9C4"),
+                _kpi_card(f"{peak_prem['21K']:.1f}%", "أعلى علاوة 21K تاريخياً", "#FFD700"),
+            ),
+            unsafe_allow_html=True,
+        )
+
+        fig3 = go.Figure()
+
+        # ── Color zones for premium levels ──
+        fig3.add_hrect(y0=15, y1=60,  fillcolor='rgba(239,71,111,0.10)', line_width=0)  # Bubble
+        fig3.add_hrect(y0=8,  y1=15,  fillcolor='rgba(255,159,67,0.08)', line_width=0)  # Elevated
+        fig3.add_hrect(y0=3,  y1=8,   fillcolor='rgba(255,215,0,0.05)',  line_width=0)  # Moderate
+        fig3.add_hrect(y0=-5, y1=3,   fillcolor='rgba(6,214,160,0.04)',  line_width=0)  # Normal
+
+        # ── Zone boundary lines ──
+        fig3.add_hline(y=15, line=dict(color='rgba(239,71,111,0.5)', width=1, dash='dot'),
+                       annotation_text='🔴 فقاعة (>15%)', annotation_position='top left',
+                       annotation_font=dict(size=8, color='#EF476F', family='Cairo'))
+        fig3.add_hline(y=8,  line=dict(color='rgba(255,159,67,0.5)', width=1, dash='dot'),
+                       annotation_text='🟠 علاوة مرتفعة (>8%)', annotation_position='top left',
+                       annotation_font=dict(size=8, color='#FF9F43', family='Cairo'))
+        fig3.add_hline(y=0,  line=dict(color='rgba(100,120,160,0.4)', width=1, dash='dot'))
+
+        # ── PremPct lines per karat ──
+        for karat, color in KARAT_COLORS.items():
+            lw = 2.2 if karat == k else 1.3
+            fig3.add_trace(go.Scatter(
+                x=data.index, y=data[f'PremPct_{karat}'],
+                name=karat, line=dict(color=color, width=lw),
+                hovertemplate=f"علاوة {karat}: %{{y:.1f}}%<extra></extra>",
+            ))
+
+        if show_events:
+            add_events(fig3, data)
+
+        lyt3 = plot_layout(height=460, yaxis=dict(title_text='علاوة التضخم (%)'))
+        lyt3['margin'] = dict(l=8, r=8, t=20, b=8)
+        fig3.update_layout(**lyt3)
+        fig3.update_yaxes(tickfont=dict(family='Cairo', size=10),
+                          gridcolor='rgba(255,255,255,0.04)')
+        fig3.update_xaxes(tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
+                          gridcolor='rgba(255,255,255,0.04)')
+        st.plotly_chart(fig3, use_container_width=True,
+                        config=dict(displaylogo=False, responsive=True))
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Q4 — Macroeconomic Correlation Matrix
+    # Answer: USD/EGP has the highest explanatory power — gold in Egypt = EGP bet
+    # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q4":
-        cols_  = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
-        names_ = ['ذهب عالمي', 'دولار/جنيه', 'نفط', 'سندات أمريكية', 'S&P 500']
-        cd     = data[cols_].dropna().corr()
-        cd.columns = names_; cd.index = names_
-        fc  = px.imshow(cd, text_auto=".2f",
-            color_continuous_scale=[[0,'#EF476F'],[0.5,'#060C18'],[1,'#06D6A0']],
-            zmin=-1, zmax=1)
-        cl  = plot_layout(height=420, show_legend=False)
-        cl['margin'] = dict(l=8, r=8, t=30, b=50)
-        cl['coloraxis_showscale'] = False
-        fc.update_layout(**cl)
-        fc.update_traces(textfont=dict(size=12, family="DM Mono"))
-        st.plotly_chart(fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        cols_   = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
+        labels_ = ['ذهب XAU', 'دولار/جنيه', 'نفط برنت', 'سندات 10Y', 'S&P 500']
+        cd      = data[cols_].dropna().corr()
+        cd.columns = labels_
+        cd.index   = labels_
 
-    # Q5: محاكاة المحفظة الاستثمارية (Portfolio Net Returns)
+        # Correlation of each var with the 21K gold price
+        gold_corr = {}
+        for col, lbl in zip(cols_, labels_):
+            _tmp = data[[f'Price_{k}', col]].dropna()
+            if len(_tmp) > 10:
+                gold_corr[lbl] = _tmp.corr().iloc[0, 1]
+
+        usd_corr  = gold_corr.get('دولار/جنيه', 0)
+        xau_corr  = gold_corr.get('ذهب XAU', 0)
+        oil_corr  = gold_corr.get('نفط برنت', 0)
+        sp_corr   = gold_corr.get('S&P 500', 0)
+
+        st.markdown(
+            _kpi_strip(
+                _kpi_card(f"{usd_corr:.3f}", "ارتباط USD/EGP بسعر الذهب", "#06D6A0"),
+                _kpi_card(f"{xau_corr:.3f}", "ارتباط XAU/USD بسعر الذهب", "#FFD700"),
+                _kpi_card(f"{oil_corr:.3f}", "ارتباط النفط بسعر الذهب", "#FF9F43"),
+                _kpi_card(f"{sp_corr:.3f}",  "ارتباط S&P 500 بسعر الذهب", "#4CC9F0"),
+                _kpi_card("USD/EGP", "الأعلى تأثيراً — الذهب يحمي من انهيار الجنيه", "#D4AF37"),
+            ),
+            unsafe_allow_html=True,
+        )
+
+        fc4 = px.imshow(
+            cd,
+            text_auto='.2f',
+            color_continuous_scale=[
+                [0.0, '#EF476F'],
+                [0.5, '#060C18'],
+                [1.0, '#06D6A0'],
+            ],
+            zmin=-1, zmax=1,
+            title=None,
+        )
+
+        # Highlight USD/EGP row/col with a border-like rectangle
+        usd_idx = labels_.index('دولار/جنيه')
+        fc4.add_shape(
+            type='rect',
+            x0=usd_idx - 0.5, x1=usd_idx + 0.5,
+            y0=-0.5, y1=len(labels_) - 0.5,
+            line=dict(color='#FFD700', width=2.5),
+            fillcolor='rgba(255,215,0,0.04)',
+            layer='above',
+        )
+        fc4.add_shape(
+            type='rect',
+            x0=-0.5, x1=len(labels_) - 0.5,
+            y0=usd_idx - 0.5, y1=usd_idx + 0.5,
+            line=dict(color='#FFD700', width=2.5),
+            fillcolor='rgba(255,215,0,0.04)',
+            layer='above',
+        )
+        fc4.add_annotation(
+            x=usd_idx, y=-0.75,
+            text="★ أعلى تأثير",
+            showarrow=False,
+            font=dict(size=9, color='#FFD700', family='Cairo'),
+            bgcolor='rgba(3,6,15,0.75)', borderpad=2,
+        )
+
+        cl4 = plot_layout(height=450, show_legend=False)
+        cl4['margin']                 = dict(l=8, r=8, t=20, b=40)
+        cl4['coloraxis_showscale']    = False
+        fc4.update_traces(textfont=dict(size=13, family='DM Mono', color='#E8EDF5'))
+        fc4.update_layout(**cl4)
+        fc4.update_xaxes(tickfont=dict(family='Cairo', size=11, color='#9090A8'))
+        fc4.update_yaxes(tickfont=dict(family='Cairo', size=11, color='#9090A8'))
+        st.plotly_chart(fc4, use_container_width=True,
+                        config=dict(displaylogo=False, responsive=True))
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Q5 — Net Return Comparison (Portfolio Simulation)
+    # Answer: 21K outperforms after real costs; EGP cash destroyed wealth
+    # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q5":
-        fig_inv = go.Figure()
-        for karat, color in KARAT_COLORS.items():
-            fig_inv.add_trace(go.Scatter(x=data.index, y=data[f'Port_{karat}'],
-                name=f'{karat} ذهب (صافي)', line=dict(color=color, width=2.2),
-                hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} جنيه<extra></extra>"))
-        fig_inv.add_trace(go.Scatter(x=data.index, y=data['Port_USD'],
-            name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
-            hovertemplate="دولار: %{y:,.0f}<extra></extra>"))
-        fig_inv.add_trace(go.Scatter(x=data.index, y=data['Port_Cash'],
-            name='كاش (جنيه)', line=dict(color='#1E3A5F', width=1.2, dash='dot'),
-            hovertemplate="كاش: %{y:,.0f}<extra></extra>"))
-        if show_events: add_events(fig_inv, data)
-        lyt_inv = plot_layout(height=440, yaxis=dict(title_text="القيمة الصافية (جنيه)"))
-        lyt_inv['title'] = dict(text="نمو الثروة الحقيقي (مخصوم منه تكاليف الدخول والخروج)",
-            font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
-        fig_inv.update_layout(**lyt_inv)
-        st.plotly_chart(fig_inv, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        INIT = 100_000
 
-    # Q6: التنبؤ المستقبلي (Prophet Forecasting Time Series)
+        # ── Portfolio metrics ──
+        def _portfolio_metrics(series):
+            if series.dropna().empty:
+                return dict(ret=0, sharpe=0, maxdd=0)
+            rets   = series.dropna().pct_change().dropna()
+            total  = (series.dropna().iloc[-1] / series.dropna().iloc[0] - 1) * 100
+            sharpe = (rets.mean() / rets.std() * np.sqrt(252)) if rets.std() > 0 else 0
+            roll   = series.dropna().cummax()
+            dd     = ((series.dropna() - roll) / roll).min() * 100
+            return dict(ret=total, sharpe=sharpe, maxdd=dd)
+
+        m24 = _portfolio_metrics(data['Port_24K'].dropna())
+        m21 = _portfolio_metrics(data['Port_21K'].dropna())
+        m18 = _portfolio_metrics(data['Port_18K'].dropna())
+        musd = _portfolio_metrics(data['Port_USD'].dropna())
+
+        best_ret   = max(m24['ret'], m21['ret'], m18['ret'])
+        best_label = '21K' if m21['ret'] >= max(m24['ret'], m18['ret']) else '24K'
+
+        st.markdown(
+            _kpi_strip(
+                _kpi_card(f"{m21['ret']:+.0f}%", "عائد 21K صافي (Jan 2020)", "#FFD700"),
+                _kpi_card(f"{m24['ret']:+.0f}%", "عائد 24K صافي", "#FFF9C4"),
+                _kpi_card(f"{musd['ret']:+.0f}%", "عائد الدولار", "#4CC9F0"),
+                _kpi_card(f"{m21['sharpe']:.2f}", "شارب راشيو (21K)", "#06D6A0"),
+                _kpi_card(f"{m21['maxdd']:.1f}%", "أقصى انخفاض (21K)", "#EF476F"),
+            ),
+            unsafe_allow_html=True,
+        )
+
+        fig5 = go.Figure()
+
+        karat_cfg = [
+            ('24K', '#FFF9C4', 2.0),
+            ('21K', '#FFD700', 2.8),
+            ('18K', '#CD7F32', 1.8),
+        ]
+        for karat, color, lw in karat_cfg:
+            fig5.add_trace(go.Scatter(
+                x=data.index, y=data[f'Port_{karat}'],
+                name=f'{karat} (صافي)',
+                line=dict(color=color, width=lw),
+                hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} ج<extra></extra>",
+            ))
+
+        fig5.add_trace(go.Scatter(
+            x=data.index, y=data['Port_USD'],
+            name='دولار 💵',
+            line=dict(color='#4CC9F0', width=1.8, dash='dot'),
+            hovertemplate="دولار: %{y:,.0f} ج<extra></extra>",
+        ))
+        fig5.add_trace(go.Scatter(
+            x=data.index, y=data['Port_Cash'],
+            name='كاش بالجنيه',
+            line=dict(color='rgba(100,120,160,0.5)', width=1.2, dash='dot'),
+            hovertemplate="كاش: %{y:,.0f} ج<extra></extra>",
+        ))
+
+        # ── Baseline 100K reference ──
+        fig5.add_hline(
+            y=INIT,
+            line=dict(color='rgba(255,255,255,0.15)', width=1, dash='dot'),
+            annotation_text='رأس المال الأصلي: 100,000 ج',
+            annotation_font=dict(size=8, color='#6a7a99', family='Cairo'),
+            annotation_position='bottom right',
+        )
+
+        # ── End-of-line value labels ──
+        for karat, color, _ in karat_cfg:
+            last_val = data[f'Port_{karat}'].dropna().iloc[-1]
+            last_dt  = data[f'Port_{karat}'].dropna().index[-1]
+            fig5.add_annotation(
+                x=last_dt, y=last_val,
+                text=f" {karat}: {last_val/1000:.0f}k",
+                showarrow=False, xanchor='left',
+                font=dict(size=8.5, color=color, family='Cairo'),
+            )
+
+        if show_events:
+            add_events(fig5, data)
+
+        lyt5 = plot_layout(height=480, yaxis=dict(title_text='قيمة المحفظة (جنيه)'))
+        lyt5['margin'] = dict(l=8, r=8, t=20, b=8)
+        fig5.update_layout(**lyt5)
+        fig5.update_yaxes(tickfont=dict(family='DM Mono', size=10),
+                          gridcolor='rgba(255,255,255,0.04)')
+        fig5.update_xaxes(tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
+                          gridcolor='rgba(255,255,255,0.04)')
+        st.plotly_chart(fig5, use_container_width=True,
+                        config=dict(displaylogo=False, responsive=True))
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Q6 — Prophet Multi-Stage Forecast
+    # Answer: Yes — with Historical Date Merge Strategy fixing calendar mismatch
+    # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q6":
-        st.markdown('<div class="fc-label">أفق التوقع (أيام)</div>', unsafe_allow_html=True)
-        forecast_days = st.slider("d", 30, 365, 180, 30, label_visibility="collapsed")
+        forecast_days = st.slider(
+            "أفق التوقع (أيام)", 30, 365, 180, 30,
+            key="embed_q6_slider",
+        )
 
-        with st.spinner("⏳ جاري تدريب نموذج Prophet..."):
+        with st.spinner("⏳ يتم تدريب نموذج Prophet …"):
             try:
                 from prophet import Prophet
 
-                k      = selected_karat
                 fv_col = f'Price_{k}'
-
-                # ── Step 1: Prepare main training frame ──
-                train = data.reset_index()[['Date', fv_col, 'USD_EGP_Official', 'Crude_Oil']].copy()
+                train  = data.reset_index()[['Date', fv_col, 'USD_EGP_Official', 'Crude_Oil']].copy()
                 train.columns = ['ds', 'y', 'USD', 'OIL']
-                train['ds'] = pd.to_datetime(train['ds'])
-                train['ds'] = pd.to_datetime(train['ds'])
-                
-                # Forward fill and backward fill regressors so we don't lose rows
-                train['USD'] = train['USD'].ffill().bfill()
-                train['OIL'] = train['OIL'].ffill().bfill()
-                
-                # Drop rows ONLY where the target 'y' (Gold Price) is missing
-                train = train.dropna(subset=['y'])
+                train['ds']   = pd.to_datetime(train['ds'])
+                train['USD']  = train['USD'].ffill().bfill()
+                train['OIL']  = train['OIL'].ffill().bfill()
+                train         = train.dropna(subset=['y'])
 
-                # ── Step 2: Train independent regressor models and project N days forward ──
-                def forecast_regressor(col_name: str, n_days: int) -> pd.DataFrame:
-                    """
-                    Train a lightweight Prophet model on a single regressor series and
-                    return a future DataFrame [ds, yhat] covering the next n_days.
-                    Changepoint scale is conservative (0.05) to avoid overfitting.
-                    """
-                    df_reg = data.reset_index()[['Date', col_name]].copy()
-                    df_reg.columns = ['ds', 'y']
-                    df_reg['ds'] = pd.to_datetime(df_reg['ds'])
-                    
-                    # Explicitly drop missing values in the target 'y' before fitting
-                    df_reg = df_reg.dropna(subset=['y'])
+                def _forecast_regressor(col_name, n_days):
+                    df_r = data.reset_index()[['Date', col_name]].copy()
+                    df_r.columns = ['ds', 'y']
+                    df_r['ds']   = pd.to_datetime(df_r['ds'])
+                    df_r         = df_r.dropna(subset=['y'])
                     mr = Prophet(
-                        yearly_seasonality=True,
-                        weekly_seasonality=False,    # FX and oil have no intra-week cycle
-                        daily_seasonality=False,
-                        changepoint_prior_scale=0.05, # conservative - macro series trend slowly
-                        interval_width=0.80
+                        yearly_seasonality=True, weekly_seasonality=False,
+                        daily_seasonality=False, changepoint_prior_scale=0.05,
+                        interval_width=0.80,
                     )
-                    mr.fit(df_reg)
-                    fut   = mr.make_future_dataframe(periods=n_days, freq='D')
-                    fc_r  = mr.predict(fut)[['ds', 'yhat']]
-                    # Return only the future (post-training) slice
-                    last_hist_date = df_reg['ds'].max()
-                    return fc_r[fc_r['ds'] > last_hist_date].reset_index(drop=True)
+                    mr.fit(df_r)
+                    fut  = mr.make_future_dataframe(periods=n_days, freq='D')
+                    fc_r = mr.predict(fut)[['ds', 'yhat']]
+                    return fc_r[fc_r['ds'] > df_r['ds'].max()].reset_index(drop=True)
 
-                usd_future_df = forecast_regressor('USD_EGP_Official', forecast_days)
-                oil_future_df = forecast_regressor('Crude_Oil',         forecast_days)
+                usd_fc = _forecast_regressor('USD_EGP_Official', forecast_days)
+                oil_fc = _forecast_regressor('Crude_Oil',         forecast_days)
 
-                # ── Step 3: Fit the main gold Prophet model with tuned parameters ──
-                # TASK 3 - Financial time-series best practices applied:
-                #   • changepoint_prior_scale=0.10  - moderate flexibility; prevents overfitting to
-                #     short-term spikes while still capturing structural breaks (devaluations).
-                #   • yearly_seasonality=True        - gold has an annual demand cycle (festive seasons).
-                #   • weekly_seasonality=False       - gold markets are 5-day (Mon–Fri) without a
-                #     meaningful intra-week price pattern in EGP terms.
-                #   • interval_width=0.90            - wider confidence band acknowledges high gold
-                #     price volatility; 95% was too wide and obscured the point forecast visually.
-                #   • n_changepoints=30 (default 25) - slightly more change-points for a 5-year series
-                #     that has experienced multiple structural regime shifts.
                 pm = Prophet(
-                    yearly_seasonality=True,
-                    weekly_seasonality=False,
+                    yearly_seasonality=True, weekly_seasonality=False,
                     daily_seasonality=False,
-                    changepoint_prior_scale=0.10,   # tuned: less aggressive than 0.15 to avoid overfitting
-                    seasonality_prior_scale=10.0,   # allow seasonal components to fit gold's amplitude
-                    interval_width=0.90,            # 90% CI - realistic for commodity price volatility
-                    n_changepoints=30,              # extra change-points for a regime-heavy series
+                    changepoint_prior_scale=0.10,
+                    seasonality_prior_scale=10.0,
+                    interval_width=0.90,
+                    n_changepoints=30,
                 )
-                pm.add_regressor('USD', standardize=True)  # standardize regressors for numerical stability
+                pm.add_regressor('USD', standardize=True)
                 pm.add_regressor('OIL', standardize=True)
                 pm.fit(train)
 
-                # ── Step 4: Build future dataframe using HISTORICAL DATE MERGE STRATEGY ──
-                # make_future_dataframe adds rows into the future (calendar days).
-                future_raw = pm.make_future_dataframe(periods=forecast_days, freq='D')
+                future_raw    = pm.make_future_dataframe(periods=forecast_days, freq='D')
                 future_raw['ds'] = pd.to_datetime(future_raw['ds'])
-
-                # 4a. Attach historical regressors via left-join on ds
-                hist_regs = train[['ds', 'USD', 'OIL']].copy()
+                hist_regs     = train[['ds', 'USD', 'OIL']].copy()
                 future_merged = future_raw.merge(hist_regs, on='ds', how='left')
-
-                # 4b. For days beyond historical range, merge forecasted regressor values
-                usd_future_df.columns = ['ds', 'USD_fc']
-                oil_future_df.columns = ['ds', 'OIL_fc']
-                future_merged = future_merged.merge(usd_future_df, on='ds', how='left')
-                future_merged = future_merged.merge(oil_future_df, on='ds', how='left')
-
-                # 4c. Fill missing historical USD/OIL with forecasted values (weekend/holiday gaps)
+                usd_fc.columns = ['ds', 'USD_fc']
+                oil_fc.columns = ['ds', 'OIL_fc']
+                future_merged  = future_merged.merge(usd_fc, on='ds', how='left')
+                future_merged  = future_merged.merge(oil_fc, on='ds', how='left')
                 future_merged['USD'] = future_merged['USD'].fillna(future_merged['USD_fc'])
                 future_merged['OIL'] = future_merged['OIL'].fillna(future_merged['OIL_fc'])
                 future_merged.drop(columns=['USD_fc', 'OIL_fc'], inplace=True)
-
-                # 4d. Safety: forward-fill then back-fill any remaining NaNs
                 future_merged['USD'] = future_merged['USD'].ffill().bfill()
                 future_merged['OIL'] = future_merged['OIL'].ffill().bfill()
+                future_final  = future_merged[['ds', 'USD', 'OIL']].copy()
 
-                future_final = future_merged[['ds', 'USD', 'OIL']].copy()
+                fc6     = pm.predict(future_final)
+                n6      = len(train)
+                y_true6 = train['y'].values
+                y_pred6 = fc6.iloc[:n6]['yhat'].values
+                mae6    = np.abs(y_true6 - y_pred6).mean()
+                rmse6   = np.sqrt(((y_true6 - y_pred6) ** 2).mean())
 
-                # ── Step 5: Generate predictions ──
-                fc = pm.predict(future_final)
+                last_hist6  = train['ds'].max()
+                fc_out6     = fc6[fc6['ds'] > last_hist6].head(forecast_days).copy()
+                act_last    = train['y'].iloc[-1]
+                pred_last_s = fc6[fc6['ds'] == last_hist6]['yhat']
+                pred_last   = pred_last_s.values[0] if len(pred_last_s) else fc6.iloc[:n6]['yhat'].iloc[-1]
+                offset6     = act_last - pred_last
+                fc_out6['yhat']       += offset6
+                fc_out6['yhat_upper'] += offset6
+                fc_out6['yhat_lower'] += offset6
 
-                # ── Step 6: In-sample evaluation on historical training data ──
-                n        = len(train)
-                y_true   = train['y'].values
-                y_pred   = fc.iloc[:n]['yhat'].values
-                mae      = np.abs(y_true - y_pred).mean()
-                rmse     = np.sqrt(((y_true - y_pred) ** 2).mean())
+                fc_target = fc_out6['yhat'].iloc[-1]
+                fc_change = (fc_target - act_last) / act_last * 100
 
-                # ── Step 7: Extract the forward forecast horizon ──
-                last_hist = train['ds'].max()
-                fc_out    = fc[fc['ds'] > last_hist].head(forecast_days).copy()
-                actual_last_price = train['y'].iloc[-1]
-                predicted_last_price = fc[fc['ds'] == last_hist]['yhat'].values[0] if len(fc[fc['ds'] == last_hist]) > 0 else fc.iloc[:n]['yhat'].iloc[-1]
-                continuity_offest = actual_last_price - predicted_last_price
-                fc_out['yhat'] = fc_out['yhat'] + continuity_offest  # adjust forecast to ensure smooth transition from historical to forecasted values
-                fc_out['yhat_upper'] = fc_out['yhat_upper'] + continuity_offest
-                fc_out['yhat_lower'] = fc_out['yhat_lower'] + continuity_offest 
+                st.markdown(
+                    _kpi_strip(
+                        _kpi_card(f"{act_last:,.0f} ج", f"سعر {k} الحالي", "#FFD700"),
+                        _kpi_card(f"{fc_target:,.0f} ج", f"التوقع بعد {forecast_days} يوم", "#4CC9F0"),
+                        _kpi_card(f"{fc_change:+.1f}%", "التغير المتوقع", "#06D6A0" if fc_change > 0 else "#EF476F"),
+                        _kpi_card(f"{mae6:,.0f} ج", "MAE (متوسط الخطأ)", "#FF9F43"),
+                        _kpi_card(f"{rmse6:,.0f} ج", "RMSE", "#A855F7"),
+                    ),
+                    unsafe_allow_html=True,
+                )
 
-                # ── Forecast chart ──
-                title_chart = f"توقعات ذهب \u2066{k}\u2069 · {forecast_days} يوم قادماً"
-                fig_fc = go.Figure()
+                fig6 = go.Figure()
 
-                # Weekly-downsampled actuals for cleaner display on long horizons
-                hw = data[fv_col].resample('W').last()
-                fig_fc.add_trace(go.Scatter(x=hw.index, y=hw, name='السعر الفعلي',
+                hw6 = data[fv_col].resample('W').last()
+                fig6.add_trace(go.Scatter(
+                    x=hw6.index, y=hw6, name='السعر الفعلي',
                     line=dict(color='#4A6A8A', width=1.5),
-                    hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} جنيه<extra></extra>"))
+                    hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} ج<extra></extra>",
+                ))
 
-                # 90% confidence band
-                fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_upper'],
-                    line=dict(width=0), showlegend=False))
-                fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
-                    fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
-                    line=dict(width=0), name='‫نطاق الثقة 90%‬'))
+                # 90% CI band
+                fig6.add_trace(go.Scatter(
+                    x=fc_out6['ds'], y=fc_out6['yhat_upper'],
+                    line=dict(width=0), showlegend=False,
+                ))
+                fig6.add_trace(go.Scatter(
+                    x=fc_out6['ds'], y=fc_out6['yhat_lower'],
+                    fill='tonexty', fillcolor='rgba(76,201,240,0.12)',
+                    line=dict(width=0), name='نطاق الثقة 90%',
+                ))
+                fig6.add_trace(go.Scatter(
+                    x=fc_out6['ds'], y=fc_out6['yhat'],
+                    name='توقع Prophet', line=dict(color='#4CC9F0', width=2.5),
+                    hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} ج</b><extra></extra>",
+                ))
 
-                # Point forecast line
-                fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
-                    name='‫توقع Prophet‬', line=dict(color='#4CC9F0', width=2.5),
-                    hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} جنيه</b><extra></extra>"))
-
-                # Today marker
-                fig_fc.add_vline(x=datetime.today().timestamp() * 1000,
-                    line_dash='dash', line_color='#FFD700', opacity=0.5,
+                fig6.add_vline(
+                    x=datetime.today().timestamp() * 1000,
+                    line_dash='dash', line_color='#FFD700', opacity=0.6,
                     annotation_text='اليوم',
-                    annotation_font=dict(color='#FFD700', size=9.5),
-                    annotation_position="top right")
+                    annotation_font=dict(color='#FFD700', size=9, family='Cairo'),
+                    annotation_position='top right',
+                )
 
-                if show_events: add_events(fig_fc, data)
+                if show_events:
+                    add_events(fig6, data)
 
-                lyt_fc = plot_layout(height=500, yaxis=dict(title_text="السعر (جنيه)"))
-                lyt_fc['title'] = dict(text=title_chart,
-                    font=dict(size=13, color="#FFD700", family="Cairo"),
-                    x=0.5, xanchor='center', y=0.97)
-                fig_fc.update_layout(**lyt_fc)
-                st.plotly_chart(fig_fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+                lyt6 = plot_layout(height=460, yaxis=dict(title_text='السعر (جنيه/جرام)'))
+                lyt6['margin'] = dict(l=8, r=8, t=20, b=8)
+                fig6.update_layout(**lyt6)
+                fig6.update_yaxes(tickfont=dict(family='DM Mono', size=10),
+                                  gridcolor='rgba(255,255,255,0.04)')
+                fig6.update_xaxes(tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
+                                  gridcolor='rgba(255,255,255,0.04)')
+                st.plotly_chart(fig6, use_container_width=True,
+                                config=dict(displaylogo=False, responsive=True))
+
             except (ModuleNotFoundError, ImportError):
-                st.error("لا يمكن استيراد Prophet. يرجى تثبيت الحزمة وتشغيل التطبيق مرة أخرى.")
-            except Exception as e:
-                st.error(f"حدث خطأ أثناء التنبؤ: {e}")
+                st.error("Prophet غير مثبت. يرجى تشغيل: pip install prophet")
+            except Exception as _exc:
+                st.error(f"خطأ في التنبؤ: {_exc}")
 
-    # Q7: المؤشرات الفنية للزخم (Technical Indicators: RSI & MACD)
+    # ─────────────────────────────────────────────────────────────────────────
+    # Q7 — Technical Signals (RSI + MACD + Bollinger Bands → BUY/HOLD/SELL)
+    # Answer: Composite signal beats single indicator — auto BUY/HOLD/SELL
+    # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q7":
-        fig_tech = make_subplots(rows=3, cols=1, shared_xaxes=True,
-            row_heights=[0.55, 0.25, 0.20], vertical_spacing=0.07,
+        last_row   = data.dropna(subset=[f'RSI_{k}', f'MACD_{k}', f'BB_up_{k}']).iloc[-1]
+        rsi_val    = last_row[f'RSI_{k}']
+        macd_val   = last_row[f'MACD_{k}']
+        macd_sig   = last_row[f'MACDSig_{k}']
+        price_val  = last_row[f'Price_{k}']
+        bb_up      = last_row[f'BB_up_{k}']
+        bb_dn      = last_row[f'BB_dn_{k}']
+        bb_mid     = last_row[f'BB_mid_{k}']
+
+        # ── Composite signal scoring ──
+        score = 0
+        if rsi_val < 30:    score += 1
+        elif rsi_val > 70:  score -= 1
+        if macd_val > macd_sig:  score += 1
+        elif macd_val < macd_sig: score -= 1
+        if price_val < bb_dn:  score += 1
+        elif price_val > bb_up: score -= 1
+
+        if score >= 2:
+            comp_signal, sig_cls, sig_color = "BUY 🟢",  "buy",  "#06D6A0"
+        elif score <= -2:
+            comp_signal, sig_cls, sig_color = "SELL 🔴", "sell", "#EF476F"
+        else:
+            comp_signal, sig_cls, sig_color = "HOLD 🟡", "hold", "#4CC9F0"
+
+        rsi_status  = "تشبع بيع" if rsi_val < 30 else ("تشبع شراء" if rsi_val > 70 else "محايد")
+        macd_status = "صاعد ▲" if macd_val > macd_sig else "هابط ▼"
+        bb_status   = "عند الحد الأدنى" if price_val < bb_dn else ("عند الحد الأقصى" if price_val > bb_up else "في النطاق")
+
+        st.markdown(
+            _kpi_strip(
+                _kpi_card(f"{rsi_val:.1f}", f"RSI-14 ({rsi_status})",
+                          "#06D6A0" if rsi_val < 30 else ("#EF476F" if rsi_val > 70 else "#FFD700")),
+                _kpi_card(macd_status, "MACD Crossover",
+                          "#06D6A0" if macd_val > macd_sig else "#EF476F"),
+                _kpi_card(bb_status, "Bollinger Bands",
+                          "#06D6A0" if price_val < bb_dn else ("#EF476F" if price_val > bb_up else "#4CC9F0")),
+                _kpi_card(f"{price_val:,.0f} ج", f"سعر {k} الحالي", "#FFD700"),
+                _kpi_card(f"Score: {score:+d}/3", "قوة الإشارة المركبة", sig_color),
+            ),
+            unsafe_allow_html=True,
+        )
+
+        # ── 3-panel technical chart ──
+        fig7 = make_subplots(
+            rows=3, cols=1,
+            shared_xaxes=True,
+            row_heights=[0.55, 0.25, 0.20],
+            vertical_spacing=0.06,
             subplot_titles=[
                 f"السعر + Bollinger Bands ({k})",
-                "MACD - زخم الاتجاه",
-                "RSI-14 - مستوى التشبع"
-            ])
+                "MACD — زخم الاتجاه",
+                "RSI-14 — مستوى التشبع",
+            ],
+        )
 
-        # Bollinger Bands
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'BB_up_{k}'],
-            line=dict(width=0), showlegend=False), row=1, col=1)
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'BB_dn_{k}'],
+        # ── Row 1: Price + Bollinger Bands ──
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'BB_up_{k}'],
+            line=dict(color='rgba(180,180,255,0.4)', width=1, dash='dot'),
+            name='BB Upper', showlegend=False,
+        ), row=1, col=1)
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'BB_dn_{k}'],
             fill='tonexty', fillcolor='rgba(180,180,255,0.04)',
-            line=dict(width=0), name='Bollinger Bands'), row=1, col=1)
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'Price_{k}'],
+            line=dict(color='rgba(180,180,255,0.4)', width=1, dash='dot'),
+            name='Bollinger Bands',
+        ), row=1, col=1)
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'BB_mid_{k}'],
+            line=dict(color='rgba(255,215,0,0.35)', width=1, dash='dash'),
+            name='SMA 20', showlegend=False,
+        ), row=1, col=1)
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'Price_{k}'],
             name='السعر', line=dict(color='#D8E4F0', width=1.8),
-            hovertemplate="%{x|%d %b %Y} - %{y:,.0f} جنيه<extra></extra>"), row=1, col=1)
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'SMA50_{k}'],
-            name='SMA 50', line=dict(color='#FF9F43', width=1.1, dash='dot')), row=1, col=1)
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'SMA200_{k}'],
-            name='SMA 200', line=dict(color='#A855F7', width=1.1, dash='dot')), row=1, col=1)
+            hovertemplate="%{x|%d %b %Y} — %{y:,.0f} ج<extra></extra>",
+        ), row=1, col=1)
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'SMA50_{k}'],
+            name='SMA 50', line=dict(color='#FF9F43', width=1.0, dash='dot'),
+        ), row=1, col=1)
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'SMA200_{k}'],
+            name='SMA 200', line=dict(color='#A855F7', width=1.0, dash='dot'),
+        ), row=1, col=1)
 
-        # BUY / SELL signal markers overlaid on price chart
         buys  = data[data[f'Signal_{k}'] == 'BUY']
         sells = data[data[f'Signal_{k}'] == 'SELL']
-        fig_tech.add_trace(go.Scatter(x=buys.index, y=buys[f'Price_{k}'], mode='markers',
-            name='BUY ▲', marker=dict(symbol='triangle-up', color='#06D6A0', size=7,
-                                    line=dict(width=1, color='white'))), row=1, col=1)
-        fig_tech.add_trace(go.Scatter(x=sells.index, y=sells[f'Price_{k}'], mode='markers',
-            name='SELL ▼', marker=dict(symbol='triangle-down', color='#EF476F', size=7,
-                                        line=dict(width=1, color='white'))), row=1, col=1)
+        fig7.add_trace(go.Scatter(
+            x=buys.index, y=buys[f'Price_{k}'], mode='markers',
+            name='BUY ▲',
+            marker=dict(symbol='triangle-up', color='#06D6A0', size=8,
+                        line=dict(width=1, color='white')),
+        ), row=1, col=1)
+        fig7.add_trace(go.Scatter(
+            x=sells.index, y=sells[f'Price_{k}'], mode='markers',
+            name='SELL ▼',
+            marker=dict(symbol='triangle-down', color='#EF476F', size=8,
+                        line=dict(width=1, color='white')),
+        ), row=1, col=1)
 
-        # MACD histogram and signal line
-        hc = ['#06D6A0' if v >= 0 else '#EF476F' for v in data[f'MACDHist_{k}']]
-        fig_tech.add_trace(go.Bar(x=data.index, y=data[f'MACDHist_{k}'],
-            name='Histogram', marker_color=hc, opacity=0.7), row=2, col=1)
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'MACD_{k}'],
-            name='MACD', line=dict(color='#4CC9F0', width=1.5)), row=2, col=1)
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'MACDSig_{k}'],
-            name='Signal Line', line=dict(color='#FF9F43', width=1.5)), row=2, col=1)
+        # ── Row 2: MACD ──
+        hc7 = ['#06D6A0' if v >= 0 else '#EF476F' for v in data[f'MACDHist_{k}']]
+        fig7.add_trace(go.Bar(
+            x=data.index, y=data[f'MACDHist_{k}'],
+            name='MACD Histogram', marker_color=hc7, opacity=0.75,
+        ), row=2, col=1)
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'MACD_{k}'],
+            name='MACD', line=dict(color='#4CC9F0', width=1.5),
+        ), row=2, col=1)
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'MACDSig_{k}'],
+            name='Signal', line=dict(color='#FF9F43', width=1.5),
+        ), row=2, col=1)
+        fig7.add_hline(y=0, line=dict(color='rgba(255,255,255,0.12)', width=0.8), row=2, col=1)
 
-        # RSI-14 with overbought/oversold reference bands
-        fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'RSI_{k}'],
-            name='RSI-14', line=dict(color='#A855F7', width=1.7)), row=3, col=1)
-        fig_tech.add_hline(y=70, line_dash='dot', line_color='#EF476F', opacity=0.4, row=3, col=1)
-        fig_tech.add_hline(y=30, line_dash='dot', line_color='#06D6A0', opacity=0.4, row=3, col=1)
-        fig_tech.add_hrect(y0=70, y1=100, fillcolor='rgba(239,71,111,0.04)', line_width=0, row=3, col=1)
-        fig_tech.add_hrect(y0=0,  y1=30,  fillcolor='rgba(6,214,160,0.04)',  line_width=0, row=3, col=1)
+        # ── Row 3: RSI ──
+        fig7.add_trace(go.Scatter(
+            x=data.index, y=data[f'RSI_{k}'],
+            name='RSI-14', line=dict(color='#A855F7', width=1.7),
+        ), row=3, col=1)
+        fig7.add_hline(y=70, line=dict(color='rgba(239,71,111,0.5)', width=1, dash='dot'),
+                       row=3, col=1)
+        fig7.add_hline(y=30, line=dict(color='rgba(6,214,160,0.5)',  width=1, dash='dot'),
+                       row=3, col=1)
+        fig7.add_hrect(y0=70, y1=100, fillcolor='rgba(239,71,111,0.05)', line_width=0, row=3, col=1)
+        fig7.add_hrect(y0=0,  y1=30,  fillcolor='rgba(6,214,160,0.05)',  line_width=0, row=3, col=1)
 
-        if show_events: add_events(fig_tech, data, rows=[1,2,3], y_ann=0.93)
+        if show_events:
+            add_events(fig7, data, rows=[1, 2, 3], y_ann=0.93)
 
-        lyt_tech = plot_layout(height=900)
-        lyt_tech['margin'] = dict(l=8, r=8, t=160, b=8)
-        lyt_tech['legend'] = dict(orientation="h", y=1.12, x=0.5, xanchor="center",
-            bgcolor="rgba(0,0,0,0)", borderwidth=0,
-            font=dict(size=9.5, family="Cairo"), itemsizing="constant", tracegroupgap=3)
-        lyt_tech['xaxis']['rangeselector']['y'] = 1.06
-        fig_tech.update_layout(**lyt_tech)
-        fig_tech.update_xaxes(tickfont=dict(family="Cairo", size=10, color="#3A4A65"),
-                            gridcolor="rgba(255,255,255,0.05)",
-                            range=["2020-01-01", data.index.max()])
-        event_labels = {v[0] for v in CRISIS_EVENTS.values()}
-        for ann in fig_tech.layout.annotations:
-            if ann.text not in event_labels:
-                ann.update(x=0.98, xanchor='right',
-                        font=dict(color='#FFD700', size=11, family='Cairo'))
-        fig_tech.update_yaxes(title_text="السعر (جنيه)", title_font=dict(size=9, color="#3A4A65"), row=1, col=1)
-        fig_tech.update_yaxes(title_text="MACD", tickfont=dict(family="Cairo", size=9, color="#3A4A65"),
-                            title_font=dict(size=9, color="#3A4A65"), row=2, col=1)
-        fig_tech.update_yaxes(title_text="RSI", range=[0, 100],
-                            tickfont=dict(family="Cairo", size=9, color="#3A4A65"),
-                            title_font=dict(size=9, color="#3A4A65"), row=3, col=1)
-        st.plotly_chart(fig_tech, use_container_width=True, config=dict(displaylogo=False, responsive=True))
+        lyt7 = plot_layout(height=580)
+        lyt7['margin'] = dict(l=8, r=8, t=60, b=8)
+        lyt7['legend'] = dict(
+            orientation='h', y=1.07, x=0.5, xanchor='center',
+            bgcolor='rgba(0,0,0,0)', borderwidth=0,
+            font=dict(size=9, family='Cairo'), itemsizing='constant',
+        )
+        fig7.update_layout(**lyt7)
+        fig7.update_yaxes(title_text='السعر (ج)',   title_font=dict(size=8), row=1, col=1,
+                          tickfont=dict(size=9), gridcolor='rgba(255,255,255,0.04)')
+        fig7.update_yaxes(title_text='MACD',        title_font=dict(size=8), row=2, col=1,
+                          tickfont=dict(size=9), gridcolor='rgba(255,255,255,0.04)')
+        fig7.update_yaxes(title_text='RSI',  range=[0, 100], title_font=dict(size=8), row=3, col=1,
+                          tickfont=dict(size=9), gridcolor='rgba(255,255,255,0.04)')
+        fig7.update_xaxes(tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
+                          gridcolor='rgba(255,255,255,0.04)')
+        st.plotly_chart(fig7, use_container_width=True,
+                        config=dict(displaylogo=False, responsive=True))
 
-    # إيقاف التنفيذ الفوري بعد رسم الشارت المطلوبة لمنع تحميل بقية الـ DOM
+        # ── Composite signal badge ──
+        today_str = datetime.today().strftime('%d %b %Y')
+        st.markdown(f"""
+        <div class="eq-signal-wrap">
+          <span class="eq-signal {sig_cls}">{comp_signal}</span>
+          <div class="eq-sig-meta">
+            إشارة مركبة (RSI + MACD + BB) · تحديث: {today_str}<br>
+            RSI = {rsi_val:.1f} &nbsp;|&nbsp; MACD = {macd_status} &nbsp;|&nbsp; BB = {bb_status}
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── EXIT — stop rendering the rest of the app ──────────────────────────
     st.stop()
 
 # ═════════════════════════════════════════════════════════════════════════════
