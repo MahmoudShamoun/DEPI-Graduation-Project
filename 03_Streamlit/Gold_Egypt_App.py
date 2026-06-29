@@ -2263,14 +2263,120 @@ if embed_q:
                          config=dict(displaylogo=False, responsive=True))
 
         # ── Composite signal badge ──
+# ── Composite signal badge (FINAL PREMIUM SaaS DESIGN) ──
         today_str = datetime.today().strftime('%d %b %Y')
+        
+        # تحويل لون الـ Hex إلى RGB ديناميكياً لتشغيل تأثيرات النيون والشفافية بدقة عالية
+        hex_color = sig_color.lstrip('#')
+        rgb_color = f"{int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}"
+        
         st.markdown(f"""
-        <div class="eq-signal-wrap">
-          <span class="eq-signal {sig_cls}">{comp_signal}</span>
-          <div class="eq-sig-meta">
-            إشارة مركبة (RSI + MACD + BB) · {agree_count}/3 مؤشرات متفقة · تحديث: {today_str}<br>
-            RSI = {rsi_val:.1f} &nbsp;|&nbsp; MACD = {macd_status} &nbsp;|&nbsp; BB = {bb_status}
-          </div>
+        <style>
+        .premium-signal-container {{
+            background: linear-gradient(135deg, rgba(10, 15, 30, 0.75) 0%, rgba(20, 30, 55, 0.55) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 4px solid {sig_color};
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-top: 25px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            direction: rtl;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }}
+        .premium-info-block {{
+            flex: 1;
+            min-width: 280px;
+        }}
+        .premium-headline {{
+            font-family: 'Cairo', sans-serif;
+            color: #E2E8F0;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        .premium-subtitle {{
+            font-family: 'Cairo', sans-serif;
+            color: #748BA7;
+            font-size: 11px;
+            font-weight: 400;
+        }}
+        .premium-badge-block {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }}
+        .premium-signal-badge {{
+            background: rgba({rgb_color}, 0.08);
+            border: 1px solid rgba({rgb_color}, 0.45);
+            color: {sig_color};
+            padding: 8px 22px;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 10px rgba({rgb_color}, 0.4);
+            box-shadow: 0 0 15px rgba({rgb_color}, 0.1);
+            display: inline-flex;
+            align-items: center;
+        }}
+        .technical-pills-grid {{
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            width: 100%;
+        }}
+        .tech-pill {{
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 5px 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 11.5px;
+            color: #94A3B8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }}
+        .tech-pill strong {{
+            color: #F8FAFC;
+        }}
+        </style>
+
+        <div class="premium-signal-container">
+            <div class="premium-info-block">
+                <div class="premium-headline">
+                    <span>إشارة مركبة ذكية (RSI + MACD + BB)</span>
+                </div>
+                <div class="premium-subtitle">
+                    تحديث اللحظة: {today_str} · بناءً على الإغلاق الأخير للسوق
+                </div>
+                
+                <div class="technical-pills-grid">
+                    <div class="tech-pill">RSI-14: <strong>{rsi_val:.1f} ({rsi_status})</strong></div>
+                    <div class="tech-pill">MACD: <strong>{macd_status}</strong></div>
+                    <div class="tech-pill">Bollinger Bands: <strong>{bb_status}</strong></div>
+                </div>
+            </div>
+            
+            <div class="premium-badge-block">
+                <div class="tech-pill" style="border-color: rgba(255,215,0,0.2); background: rgba(255,215,0,0.02);">
+                    اتفاق المؤشرات: <strong style="color: #FFD700;">{agree_count}/3</strong>
+                </div>
+                <div class="premium-signal-badge">
+                    {comp_signal}
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
