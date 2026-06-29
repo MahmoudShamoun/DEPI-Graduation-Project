@@ -1439,7 +1439,7 @@ if embed_q:
                 _kpi_card(f"{latest_fvi:.3f}", f"‫مؤشر القيمة العادلة ({k})‬", fvi_color),
                 _kpi_card(fvi_status, "الحالة الراهنة", fvi_color),
                 _kpi_card(f"{dev_pct:+.1f}%", "الانحراف عن القيمة العادلة", fvi_color),
-                _kpi_card(f"{max_fvi:.3f}", "أعلى فقاعة مسجلة", "#EF476F"),
+                _kpi_card(f"{max_fvi:.3f}", "أعلى الفجوة السعرية مسجلة", "#EF476F"),
                 _kpi_card(f"{avg_fvi:.3f}", "متوسط الفترة", "#4CC9F0"),
             ),
             unsafe_allow_html=True,
@@ -1487,7 +1487,7 @@ if embed_q:
         # ── Zone labels ──
         fig2.add_annotation(
             x=fvi_data.index[-1], y=1.20, xanchor='right',
-            text="🔴 مُبالَغ فيه — فقاعة مضاربة", showarrow=False,
+            text="🔴 مُبالَغ فيه — الفجوة السعرية مضاربة", showarrow=False,
             font=dict(size=8, color='#EF476F', family='Cairo'),
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
@@ -1573,7 +1573,7 @@ if embed_q:
 
         def _prem_status(pct):
             if pct > 15:
-                return ("🔴 فقاعة", "#EF476F")
+                return ("🔴 الفجوة السعرية", "#EF476F")
             if pct > 8:
                 return ("🟠 مرتفع", "#FF9F43")
             if pct > 3:
@@ -1584,7 +1584,7 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{latest_prem['21K']:.1f}%", "علاوة 21K الحالية", status_clr),
+                _kpi_card(f"{latest_prem['21K']:.1f}%", "‫علاوة 21K الحالية‬", status_clr),
                 _kpi_card(status_txt, "مستوى الإشارة", status_clr),
                 _kpi_card(f"{crisis_avg:.1f}%", "متوسط العلاوة وقت الأزمات", "#EF476F"),
                 _kpi_card(f"{baseline_avg:.1f}%", "متوسط العلاوة بالأوقات العادية", "#06D6A0"),
@@ -1603,7 +1603,7 @@ if embed_q:
 
         # ── Zone boundary lines ──
         fig3.add_hline(y=15, line=dict(color='rgba(239,71,111,0.5)', width=1, dash='dot'),
-                        annotation_text='‫🔴 فقاعة (&gt;15%)‬', annotation_position='top left',
+                        annotation_text='‫🔴 الفجوة السعرية (&gt;15%)‬', annotation_position='top left',
                         annotation_font=dict(size=8, color='#EF476F', family='Cairo'))
         fig3.add_hline(y=8, line=dict(color='rgba(255,159,67,0.5)', width=1, dash='dot'),
                         annotation_text='‫🟠 علاوة مرتفعة (&gt;8%)‬', annotation_position='top left',
@@ -1622,7 +1622,7 @@ if embed_q:
         if show_events:
             add_events(fig3, data)
 
-        lyt3 = plot_layout(height=460, yaxis=dict(title_text='علاوة الطلب/عدم الاسقرار (%)'))
+        lyt3 = plot_layout(height=460, yaxis=dict(title_text='‫علاوة الطلب/عدم الاسقرار (%)‬'))
         lyt3['margin'] = dict(l=8, r=8, t=20, b=8)
         fig3.update_layout(**lyt3)
         fig3.update_yaxes(tickfont=dict(family='Cairo', size=10),
