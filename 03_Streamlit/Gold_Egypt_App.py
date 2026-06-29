@@ -2264,18 +2264,17 @@ if embed_q:
 
         # ── Composite signal badge ──
         today_str = datetime.today().strftime('%d %b %Y')
-        
-        # تحويل لون الـ Hex إلى RGB ديناميكياً
         hex_color = sig_color.lstrip('#')
-        rgb_color = f"{int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}"
-        
-        # ⚠️ تم ضغط الـ HTML وإزالة الأسطر الفارغة لمنع Streamlit من كسر التصميم
+        rgb_color = f"{int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}" 
         st.markdown(f"""
         <style>
         .premium-signal-container {{ background: linear-gradient(135deg, rgba(10, 15, 30, 0.75) 0%, rgba(20, 30, 55, 0.55) 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-right: 4px solid {sig_color}; border-radius: 12px; padding: 18px 22px; margin-top: 25px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); direction: rtl; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; }}
         .premium-info-block {{ flex: 1; min-width: 280px; }}
         .premium-headline {{ font-family: 'Cairo', sans-serif; color: #E2E8F0; font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }}
-        .premium-subtitle {{ font-family: 'Cairo', sans-serif; color: #748BA7; font-size: 11px; font-weight: 400; }}
+        
+        /* التعديل هنا: إضافة text-align و width لضمان المحاذاة */
+        .premium-subtitle {{ font-family: 'Cairo', sans-serif; color: #748BA7; font-size: 11px; font-weight: 400; text-align: right; width: 100%; margin-bottom: 10px; }}
+        
         .premium-badge-block {{ display: flex; align-items: center; gap: 12px; }}
         .premium-signal-badge {{ background: rgba({rgb_color}, 0.08); border: 1px solid rgba({rgb_color}, 0.45); color: {sig_color}; padding: 8px 22px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba({rgb_color}, 0.4); box-shadow: 0 0 15px rgba({rgb_color}, 0.1); display: inline-flex; align-items: center; }}
         .technical-pills-grid {{ display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; width: 100%; }}
