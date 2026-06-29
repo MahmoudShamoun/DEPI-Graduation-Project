@@ -2282,9 +2282,11 @@ if embed_q:
         .tech-pill strong {{ color: #F8FAFC; }}
         </style>
         <div class="premium-signal-container">
-            <div class="premium-info-block">
-                <div class="premium-headline"><span>إشارة مركبة ذكية (RSI + MACD + BB)</span></div>
-                <div class="premium-subtitle">‫تحديث اللحظة: {today_str} · بناءً على الإغلاق الأخير للسوق‬</div>
+            <div class="header-wrapper">
+                <div class="premium-headline">إشارة مركبة ذكية (RSI + MACD + BB)</div>
+                <div class="date-subtitle">{today_str}</div>
+            </div>
+            <div class="bottom-note">بناءً على الإغلاق الأخير للسوق</div>
                 <div class="technical-pills-grid">
                     <div class="tech-pill">RSI-14: <strong>{rsi_val:.1f} ({rsi_status})</strong></div>
                     <div class="tech-pill">MACD: <strong>{macd_status}</strong></div>
