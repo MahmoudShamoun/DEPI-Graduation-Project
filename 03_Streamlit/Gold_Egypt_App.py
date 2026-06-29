@@ -1324,7 +1324,10 @@ if embed_q:
             vertical_spacing=0.08,
             subplot_titles=["24 قيراط", "21 قيراط", "18 قيراط"],
         )
-
+        for anno in fig['layout']['annotations']:
+            if anno['text'] in ["24 قيراط", "21 قيراط", "18 قيراط"]:
+                anno['yshift'] = -15  
+                anno['font'] = dict(size=11, family='Cairo', color='#4A6A8A')
         KFILL = {
             '24K': 'rgba(255,249,196,0.70)',
             '21K': 'rgba(255,215,0,0.65)',
@@ -1367,22 +1370,17 @@ if embed_q:
             font=dict(size=8.5, color='#EF476F', family='Cairo'),
             xanchor='center', bgcolor='rgba(3,6,15,0.75)', borderpad=3,
         )
-
         if show_events:
             add_events(fig, data, rows=[1, 2, 3])
-
         l=plot_layout(height=520) if 'plot_layout' in locals() else dict(height=520)
         lyt = plot_layout(height=520)
-        
-        # ── التعديل هنا: زيادة الهامش العلوي (t) من 80 إلى 100 لإعطاء مساحة للـ Legend ──
         lyt['margin'] = dict(l=8, r=8, t=100, b=8)
-        
         lyt['legend'] = dict(
             orientation='h', 
-            y=1.15,            # ── التعديل هنا: رفع الـ y من 1.09 إلى 1.15 ليتجاوز العناوين الفرعية ──
+            y=1.15,            
             x=0.5, 
             xanchor='center',
-            yanchor='bottom',  # تحديد نقطة الارتكاز من الأسفل لضمان الثبات عند تغير الشاشات
+            yanchor='bottom',  
             bgcolor='rgba(0,0,0,0)', 
             borderwidth=0,
             font=dict(size=10, family='Cairo'),
