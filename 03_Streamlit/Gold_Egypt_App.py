@@ -2235,7 +2235,7 @@ if embed_q:
         lyt7['margin'] = dict(l=8, r=8, t=100, b=8)
         lyt7['legend'] = dict(
             orientation='h', 
-            y=1.14,            
+            y=1.09,            
             x=0.5, 
             xanchor='center',
             yanchor='bottom', 
