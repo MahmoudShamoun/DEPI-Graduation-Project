@@ -589,15 +589,19 @@ def _scrape_gold_usd():
         return None
 
 def _scrape_gold_usd_yf():
-    """Fallback: fetch gold spot price from Yahoo Finance (GC=F futures)."""
-    try:
-        df = yf.download("GC=F", period="5d", progress=False, auto_adjust=False)
-        if df.empty: return None
-        if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.droplevel(1)
-        col = "Adj Close" if "Adj Close" in df.columns else "Close"
-        return float(df[col].dropna().iloc[-1])
-    except Exception:
-        return None
+    """Fallback: fetch gold price from Yahoo Finance (XAUUSD=X or GC=F)."""
+    for ticker in ("XAUUSD=X", "GC=F"):
+        try:
+            df = yf.download(ticker, period="5d", progress=False, auto_adjust=False)
+            if df.empty:
+                continue
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.droplevel(1)
+            col = "Adj Close" if "Adj Close" in df.columns else "Close"
+            return float(df[col].dropna().iloc[-1])
+        except Exception:
+            continue
+    return None
 
 def _scrape_usd_egp():
     """Fetch USD/EGP exchange rate from exchangerate-api (primary)."""
@@ -643,32 +647,37 @@ def _scrape_others():
     return result
 
 def _load_historical(start="2020-01-01"):
-    """
-    Pull historical OHLC data from Yahoo Finance for all required tickers.
-    Returns a forward-filled, aligned DataFrame indexed by date.
-    """
-    tickers = {
-        "Gold_USD_Ounce":   "GC=F",
-        "USD_EGP_Official": "EGP=X",
-        "Crude_Oil":        "CL=F",
-        "US_10Y_Treasury":  "^TNX",
-        "SP500":            "^GSPC",
+    TICKER_CANDIDATES = {
+        "Gold_USD_Ounce":   ["XAUUSD=X", "GC=F"],   # spot first, futures fallback
+        "USD_EGP_Official": ["EGP=X"],
+        "Crude_Oil":        ["CL=F"],
+        "US_10Y_Treasury":  ["^TNX"],
+        "SP500":            ["^GSPC"],
     }
     frames = []
     yesterday = (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
-    for name, ticker in tickers.items():
-        for attempt in range(3):
-            try:
-                df = yf.download(ticker, start=start, end=yesterday,
-                                 progress=False, auto_adjust=False)
-                if df.empty: break
-                if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.droplevel(1)
-                col = "Adj Close" if "Adj Close" in df.columns else "Close"
-                frames.append(df[[col]].rename(columns={col: name}))
-                break
-            except Exception:
-                if attempt < 2: time.sleep(2)
-    if not frames: return pd.DataFrame()
+    for name, candidates in TICKER_CANDIDATES.items():
+        fetched = False
+        for ticker in candidates:
+            for attempt in range(3):
+                try:
+                    df = yf.download(ticker, start=start, end=yesterday,
+                                     progress=False, auto_adjust=False)
+                    if df.empty:
+                        break
+                    if isinstance(df.columns, pd.MultiIndex):
+                        df.columns = df.columns.droplevel(1)
+                    col = "Adj Close" if "Adj Close" in df.columns else "Close"
+                    frames.append(df[[col]].rename(columns={col: name}))
+                    fetched = True
+                    break
+                except Exception:
+                    if attempt < 2:
+                        time.sleep(2)
+            if fetched:
+                break   # this column is satisfied, no need to try next candidate ticker
+    if not frames:
+        return pd.DataFrame()
     data = pd.concat(frames, axis=1, sort=True)
     data.index = pd.to_datetime(data.index)
     data.ffill(inplace=True)
@@ -823,24 +832,30 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
         data[f'MACDSig_{karat}']     = data[f'MACD_{karat}'].ewm(span=9, adjust=False).mean()
         data[f'MACDHist_{karat}']    = data[f'MACD_{karat}'] - data[f'MACDSig_{karat}']
 
-        delta = p.diff()
-        gain  = delta.where(delta > 0, 0).rolling(14).mean()
-        loss  = (-delta.where(delta < 0, 0)).rolling(14).mean()
-        rs    = gain / loss.replace(0, np.nan)
-        data[f'RSI_{karat}']    = 100 - (100 / (1 + rs))
-
-        data[f'BB_mid_{karat}'] = p.rolling(20).mean()
-        bb_std = p.rolling(20).std()
+        # ── Technical indicators ──
+        delta    = p.diff()
+        gain     = delta.where(delta > 0, 0.0)
+        loss     = (-delta.where(delta < 0, 0.0))
+        avg_gain = gain.ewm(span=14, adjust=False).mean()
+        avg_loss = loss.ewm(span=14, adjust=False).mean()
+        rs       = avg_gain / avg_loss.replace(0, np.nan)
+        data[f'RSI_{karat}'] = 100 - (100 / (1 + rs))
+        
+        data[f'BB_mid_{karat}'] = p.rolling(20, min_periods=1).mean()
+        bb_std = p.rolling(20, min_periods=1).std()
         data[f'BB_up_{karat}']  = data[f'BB_mid_{karat}'] + 2 * bb_std
         data[f'BB_dn_{karat}']  = data[f'BB_mid_{karat}'] - 2 * bb_std
 
-        # ── Automated trading signals ──
-        buy  = (data[f'RSI_{karat}'] < 30) | (
-                    (data[f'MACD_{karat}'] > data[f'MACDSig_{karat}']) &
-                    (data[f'MACD_{karat}'].shift(1) <= data[f'MACDSig_{karat}'].shift(1)))
-        sell = (data[f'RSI_{karat}'] > 70) | (
-                    (data[f'MACD_{karat}'] < data[f'MACDSig_{karat}']) &
-                    (data[f'MACD_{karat}'].shift(1) >= data[f'MACDSig_{karat}'].shift(1)))
+        # ── Automated trading signals (collision-safe) ──
+        buy_raw  = (data[f'RSI_{karat}'] < 30) | (
+                        (data[f'MACD_{karat}'] > data[f'MACDSig_{karat}']) &
+                        (data[f'MACD_{karat}'].shift(1) <= data[f'MACDSig_{karat}'].shift(1)))
+        sell_raw = (data[f'RSI_{karat}'] > 70) | (
+                        (data[f'MACD_{karat}'] < data[f'MACDSig_{karat}']) &
+                        (data[f'MACD_{karat}'].shift(1) >= data[f'MACDSig_{karat}'].shift(1)))
+        conflict = buy_raw & sell_raw
+        buy  = buy_raw & ~conflict
+        sell = sell_raw & ~conflict
         data[f'Signal_{karat}'] = np.select([buy, sell], ['BUY', 'SELL'], default='HOLD')
 
         # ── Realistic portfolio simulation ──
@@ -1985,7 +2000,7 @@ if embed_q:
                     unsafe_allow_html=True,
                 )
                 st.markdown(
-                    f'<div class="eq-footnote">📊 دقة النموذج محسوبة على بيانات لم يرها النموذج أثناء التدريب '
+                    f'<div class="eq-footnote">📊 دقة النموذج محسوبة على بيانات لم يرها النموذج أثناء التدريب ‏ '
                     f'(آخر {BACKTEST_DAYS} يوم) — RMSE: {rmse_bt:,.0f} ج</div>',
                     unsafe_allow_html=True,
                 )
@@ -2737,9 +2752,7 @@ elif page == "🔮  التوقعات":
             # ── Step 1: Prepare main training frame ──
             train = data.reset_index()[['Date', fv_col, 'USD_EGP_Official', 'Crude_Oil']].copy()
             train.columns = ['ds', 'y', 'USD', 'OIL']
-            train['ds'] = pd.to_datetime(train['ds'])
-            train['ds'] = pd.to_datetime(train['ds'])
-            
+            train['ds'] = pd.to_datetime(train['ds'])            
             # Forward fill and backward fill regressors so we don't lose rows
             train['USD'] = train['USD'].ffill().bfill()
             train['OIL'] = train['OIL'].ffill().bfill()
@@ -2831,21 +2844,48 @@ elif page == "🔮  التوقعات":
             fc = pm.predict(future_final)
 
             # ── Step 6: In-sample evaluation on historical training data ──
-            n        = len(train)
-            y_true   = train['y'].values
-            y_pred   = fc.iloc[:n]['yhat'].values
-            mae      = np.abs(y_true - y_pred).mean()
-            rmse     = np.sqrt(((y_true - y_pred) ** 2).mean())
+            from prophet.diagnostics import cross_validation, performance_metrics
+
+            total_days = (train['ds'].max() - train['ds'].min()).days
+
+            cv_horizon_days = int(max(30, min(90, total_days * 0.25)))
+
+            cv_initial_days = int(max(total_days * 0.5,
+                                       total_days - 6 * cv_horizon_days))
+            cv_period_days  = cv_horizon_days  # non-overlapping folds → faster, independent cutoffs
+
+            try:
+                df_cv = cross_validation(
+                    pm,
+                    initial=f'{cv_initial_days} days',
+                    period=f'{cv_period_days} days',
+                    horizon=f'{cv_horizon_days} days',
+                    parallel=None,
+                )
+                cv_metrics = performance_metrics(df_cv, rolling_window=1)
+                mae  = cv_metrics['mae'].mean()
+                rmse = cv_metrics['rmse'].mean()
+            except Exception:
+                split_idx = max(int(len(train) * 0.85), len(train) - cv_horizon_days)
+                y_true_oos = train['y'].values[split_idx:]
+                y_pred_oos = fc.iloc[split_idx:len(train)]['yhat'].values
+                mae  = np.abs(y_true_oos - y_pred_oos).mean()
+                rmse = np.sqrt(((y_true_oos - y_pred_oos) ** 2).mean())
 
             # ── Step 7: Extract the forward forecast horizon ──
             last_hist = train['ds'].max()
             fc_out    = fc[fc['ds'] > last_hist].head(forecast_days).copy()
             actual_last_price = train['y'].iloc[-1]
-            predicted_last_price = fc[fc['ds'] == last_hist]['yhat'].values[0] if len(fc[fc['ds'] == last_hist]) > 0 else fc.iloc[:n]['yhat'].iloc[-1]
-            continuity_offest = actual_last_price - predicted_last_price
-            fc_out['yhat'] = fc_out['yhat'] + continuity_offest  # adjust forecast to ensure smooth transition from historical to forecasted values
-            fc_out['yhat_upper'] = fc_out['yhat_upper'] + continuity_offest
-            fc_out['yhat_lower'] = fc_out['yhat_lower'] + continuity_offest 
+            n = len(train)   # row count used as the in-sample slice fallback below
+            predicted_last_price = (
+                fc[fc['ds'] == last_hist]['yhat'].values[0]
+                if len(fc[fc['ds'] == last_hist]) > 0
+                else fc.iloc[:n]['yhat'].iloc[-1]
+            )
+            continuity_offset = actual_last_price - predicted_last_price
+            fc_out['yhat']       = fc_out['yhat']       + continuity_offset
+            fc_out['yhat_upper'] = fc_out['yhat_upper'] + continuity_offset
+            fc_out['yhat_lower'] = fc_out['yhat_lower'] + continuity_offset
 
             # ── Forecast chart ──
             title_chart = f"توقعات ذهب \u2066{k}\u2069 · {forecast_days} يوم قادماً"
@@ -2965,20 +3005,36 @@ elif page == "🔮  التوقعات":
             # ── ROI computation logic ──
             # Current (entry) price for the chosen karat
             current_price_roi = data[f'Price_{roi_karat}'].iloc[-1]
+            # forecasted yhat by a simple purity ratio
+            # (KARAT_FACTORS[roi_karat] / KARAT_FACTORS[k]). This is NOT
+            # algebraically exact, because:
+            #     Price_{karat} = Theoretical_24K * KaratFactor_{karat} + MakingCharge_{karat}
+            #
+            # MakingCharge is an ADDITIVE constant that differs per karat
+            # (60 / 150 / 220 EGP) — it does not scale with the karat
+            # factor, so multiplying the whole yhat (which already bakes
+            # in the model karat's making charge) by a purity ratio
+            # distorts the result.
+            #
+            # The correct approach: invert the model's forecast back to
+            # the pure Theoretical_24K series (removing the MODEL karat's
+            # making charge and purity factor), then rebuild the exact
+            # retail price for whichever karat the user picked in the ROI
+            # calculator, using THAT karat's own making charge.
+            theoretical_24k_fc       = (fc_out['yhat']       - MAKING_CHARGES[k]) / KARAT_FACTORS[k]
+            theoretical_24k_fc_upper = (fc_out['yhat_upper'] - MAKING_CHARGES[k]) / KARAT_FACTORS[k]
+            theoretical_24k_fc_lower = (fc_out['yhat_lower'] - MAKING_CHARGES[k]) / KARAT_FACTORS[k]
 
-            # If the selected ROI karat differs from the model karat (k), we must
-            # derive the forecasted price by applying the karat factor ratio.
-            # This avoids re-training Prophet and is algebraically exact because all
-            # karat prices share the same underlying USD/oz × EGP/USD driver.
-            if roi_karat == k:
-                # Use the already-trained model's forecast directly
-                roi_fc_series = fc_out.copy()
-            else:
-                # Scale the existing forecast using the ratio of karat purity factors
-                scale = KARAT_FACTORS[roi_karat] / KARAT_FACTORS[k]
-                roi_fc_series = fc_out.copy()
-                for col_fc in ['yhat', 'yhat_upper', 'yhat_lower']:
-                    roi_fc_series[col_fc] = roi_fc_series[col_fc] * scale
+            roi_fc_series = fc_out[['ds']].copy()
+            roi_fc_series['yhat'] = (
+                theoretical_24k_fc * KARAT_FACTORS[roi_karat] + MAKING_CHARGES[roi_karat]
+            )
+            roi_fc_series['yhat_upper'] = (
+                theoretical_24k_fc_upper * KARAT_FACTORS[roi_karat] + MAKING_CHARGES[roi_karat]
+            )
+            roi_fc_series['yhat_lower'] = (
+                theoretical_24k_fc_lower * KARAT_FACTORS[roi_karat] + MAKING_CHARGES[roi_karat]
+            )
 
             # Clip roi_days to available forecast rows to prevent index errors
             roi_days_clipped = min(roi_days, len(roi_fc_series))
