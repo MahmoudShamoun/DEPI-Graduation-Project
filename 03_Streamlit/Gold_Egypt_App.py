@@ -1268,9 +1268,9 @@ if embed_q:
     OUNCE_TO_GRAM = 31.1035
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Q1 — Price Decomposition
+    # Q1 - Price Decomposition
     # Answer: What % of Egyptian gold price movement is global XAU value vs
-    #         currency/demand premium? (Note: this premium is NOT purely FX —
+    #         currency/demand premium? (Note: this premium is NOT purely FX -
     #         it overlaps with the panic premium quantified separately in Q3.
     #         See the footnote below the KPI strip for the explicit handoff.)
     # ─────────────────────────────────────────────────────────────────────────
@@ -1297,7 +1297,7 @@ if embed_q:
 
         # ── Cross-reference footnote: makes the Q1/Q3 shared-lineage explicit ──
         st.markdown(
-            '<div class="eq-q-header" style="direction:rtl; text-align:right;">س1 — تفكيك السعر: قيمة عالمية ثابتة مقابل علاوة العملة والطلب</div>',
+            '<div class="eq-q-header" style="direction:rtl; text-align:right;">س1 - تفكيك السعر: قيمة عالمية ثابتة مقابل علاوة العملة والطلب</div>',
             unsafe_allow_html=True,
         )
 
@@ -1312,11 +1312,11 @@ if embed_q:
             unsafe_allow_html=True,
         )
         st.markdown(
-            '<div class="eq-footnote">⚠️ تشمل هذه العلاوة أثر عدم الاسقرار والمضاربة — لتفصيل عدم الاسقرار تحديداً راجع س3</div>',
+            '<div class="eq-footnote">⚠️ تشمل هذه العلاوة أثر عدم الاسقرار والمضاربة - لتفصيل عدم الاسقرار تحديداً راجع س3</div>',
             unsafe_allow_html=True,
         )
 
-        # ── Stacked Area — 3-panel (24K / 21K / 18K) ──
+        # ── Stacked Area - 3-panel (24K / 21K / 18K) ──
         fig = make_subplots(
             rows=3, cols=1,
             shared_xaxes=True,
@@ -1360,12 +1360,12 @@ if embed_q:
                 fillcolor='rgba(239,71,111,0.12)', line_width=0,
                 layer='below', row=r, col=1,
             )
-        # FIX (audit Q1): softened causal claim — was an unverified "60-70% due
+        # FIX (audit Q1): softened causal claim - was an unverified "60-70% due
         # to currency collapse"; InflPrem_{k} is a mixed residual (currency +
         # demand/panic), so the annotation no longer asserts a precise % cause.
         fig.add_annotation(
             x='2024-03-15', y=1.04, yref='paper', xref='x',
-            text="🔓 تعويم مارس 2024 — قفزة في علاوة العملة والطلب (انظر س3 لتفصيل عدم الاسقرار)",
+            text="🔓 تعويم مارس 2024 - قفزة في علاوة العملة والطلب (انظر س3 لتفصيل عدم الاسقرار)",
             showarrow=False,
             font=dict(size=8.5, color='#EF476F', family='Cairo'),
             xanchor='center', bgcolor='rgba(3,6,15,0.75)', borderpad=3,
@@ -1400,9 +1400,9 @@ if embed_q:
                          config=dict(displaylogo=False, responsive=True))
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Q2 — Fair Value Index (FVI)
+    # Q2 - Fair Value Index (FVI)
     # Answer: Is Egyptian gold overpriced or underpriced vs theoretical fair value?
-    # (Audit verdict: FULLY ALIGNED — no logic changes needed, kept as-is.)
+    # (Audit verdict: FULLY ALIGNED - no logic changes needed, kept as-is.)
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q2":
         # Compute FVI inline: FVI = Actual Price / Theoretical Price
@@ -1487,19 +1487,19 @@ if embed_q:
         # ── Zone labels ──
         fig2.add_annotation(
             x=fvi_data.index[-1], y=1.20, xanchor='right',
-            text="🔴 مُبالَغ فيه — الفجوة السعرية مضاربة", showarrow=False,
+            text="🔴 مُبالَغ فيه - الفجوة السعرية مضاربة", showarrow=False,
             font=dict(size=8, color='#EF476F', family='Cairo'),
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
         fig2.add_annotation(
             x=fvi_data.index[-1], y=1.01, xanchor='right',
-            text="🟡 سعر عادل — فرصة دخول مثالية", showarrow=False,
+            text="🟡 سعر عادل - فرصة دخول مثالية", showarrow=False,
             font=dict(size=8, color='#FFD700', family='Cairo'),
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
         fig2.add_annotation(
             x=fvi_data.index[-1], y=0.93, xanchor='right',
-            text="🟢 مُقيَّم بأقل — نافذة شراء نادرة", showarrow=False,
+            text="🟢 مُقيَّم بأقل - نافذة شراء نادرة", showarrow=False,
             font=dict(size=8, color='#06D6A0', family='Cairo'),
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
@@ -1530,7 +1530,7 @@ if embed_q:
                          config=dict(displaylogo=False, responsive=True))
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Q3 — Speculation / Panic Premium Bubbles
+    # Q3 - Speculation / Panic Premium Bubbles
     # Answer: Do Egyptian gold prices show measurable panic spikes during crises?
     # FIX (audit Q3): added a crisis-window vs baseline premium comparison KPI,
     # turning the visual "spikes near crisis markers" impression into a single
@@ -1549,7 +1549,7 @@ if embed_q:
         mar24_peak = data['2024-03-01':'2024-04-30'][f'PremPct_21K'].dropna()
         mar24_max = mar24_peak.max() if not mar24_peak.empty else 0
 
-        # ── NEW: Crisis-window vs baseline comparison — hard stat backing the
+        # ── NEW: Crisis-window vs baseline comparison - hard stat backing the
         # "measurable panic spikes" claim, computed directly from CRISIS_EVENTS
         # and the real PremPct_21K series (no hardcoded numbers). ──
         crisis_avg, baseline_avg = 0.0, 0.0
@@ -1567,7 +1567,7 @@ if embed_q:
                 if (~crisis_mask).any():
                     baseline_avg = prem_series[~crisis_mask].mean()
         except (NameError, TypeError):
-            # CRISIS_EVENTS not available in this scope — comparison stays at 0
+            # CRISIS_EVENTS not available in this scope - comparison stays at 0
             # rather than breaking the page.
             pass
 
@@ -1633,24 +1633,24 @@ if embed_q:
                          config=dict(displaylogo=False, responsive=True))
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Q4 — Macroeconomic Correlation Matrix
+    # Q4 - Macroeconomic Correlation Matrix
     # Answer: Which macro driver explains Egyptian gold price moves the most?
-    # FIX (audit Q4 — CRITICAL): Price_{k} (the actual local gold price, i.e.
+    # FIX (audit Q4 - CRITICAL): Price_{k} (the actual local gold price, i.e.
     # the dependent variable the question is about) is now INCLUDED in the
     # correlation matrix itself. The "highest impact" highlight is computed
-    # dynamically from the real correlation values — never hardcoded to
-    # USD/EGP — so the visual highlight always matches the KPI numbers and
+    # dynamically from the real correlation values - never hardcoded to
+    # USD/EGP - so the visual highlight always matches the KPI numbers and
     # the underlying data, however the data evolves.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q4":
-        # Price_{k} goes FIRST in the matrix — it is the dependent variable.
+        # Price_{k} goes FIRST in the matrix - it is the dependent variable.
         cols_ = [f'Price_{k}', 'Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
         labels_ = [f'‫سعر الذهب ({k})‬', '‫ذهب XAU‬', 'دولار/جنيه', 'نفط برنت', '‫سندات 10Y‬', 'S&P 500']
         cd = data[cols_].dropna().corr()
         cd.columns = labels_
         cd.index = labels_
 
-        # Correlation of each macro driver with the LOCAL gold price — read
+        # Correlation of each macro driver with the LOCAL gold price - read
         # directly off the matrix row above. This guarantees the KPI numbers
         # always match exactly what is drawn on the heatmap (single source
         # of truth, no separate/duplicate computation that could drift).
@@ -1664,7 +1664,7 @@ if embed_q:
         sp_corr = gold_corr.get('S&P 500', 0)
 
         # ── Dynamically determine the TRUE highest-impact driver. No hardcoded
-        # assumption about which variable "wins" — it's whichever variable has
+        # assumption about which variable "wins" - it's whichever variable has
         # the largest absolute correlation with Price_{k} in the actual data. ──
         best_driver_lbl = max(gold_corr, key=lambda lbl: abs(gold_corr[lbl]))
         best_driver_val = gold_corr[best_driver_lbl]
@@ -1740,7 +1740,7 @@ if embed_q:
                          config=dict(displaylogo=False, responsive=True))
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Q5 — Net Return Comparison (Portfolio Simulation)
+    # Q5 - Net Return Comparison (Portfolio Simulation)
     # Answer: Which asset outperforms after real costs; did EGP cash lose
     #         purchasing power?
     # FIX (audit Q5): added a real (inflation-adjusted) cash-return KPI, and
@@ -1776,7 +1776,7 @@ if embed_q:
 
         # ── Real (inflation-adjusted) cash loss. EST_CUM_INFLATION_PCT should
         # be replaced with the actual cumulative CPI figure for the analysis
-        # window (e.g. from CAPMAS data) before presenting — flagged clearly
+        # window (e.g. from CAPMAS data) before presenting - flagged clearly
         # so it is never silently left as a guess. ──
         EST_CUM_INFLATION_PCT = 180  # TODO: replace with real cumulative CPI % for the period
         cash_real_loss = mcash['ret'] - EST_CUM_INFLATION_PCT
@@ -1792,7 +1792,7 @@ if embed_q:
             unsafe_allow_html=True,
         )
         st.markdown(
-            '<div class="eq-footnote">‫العائد الحقيقي للكاش يفترض تضخم تراكمي تقديري — يُستحسن استبداله برقم CAPMAS الفعلي قبل العرض‬</div>',
+            '<div class="eq-footnote">‫العائد الحقيقي للكاش يفترض تضخم تراكمي تقديري - يُستحسن استبداله برقم CAPMAS الفعلي قبل العرض‬</div>',
             unsafe_allow_html=True,
         )
 
@@ -1858,13 +1858,13 @@ if embed_q:
                          config=dict(displaylogo=False, responsive=True))
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Q6 — Prophet Multi-Stage Forecast
+    # Q6 - Prophet Multi-Stage Forecast
     # Answer: Can we forecast forward reliably, with the calendar/date-merge
     #         mismatch fixed?
     # FIX (audit Q6): MAE/RMSE/MAPE are now computed on a genuine HELD-OUT
     # backtest window (train/test split), not on in-sample fitted values.
     # The production forecast itself still uses the FULL history (so the
-    # actual forward-looking forecast benefits from all available data) —
+    # actual forward-looking forecast benefits from all available data) -
     # only the *reported accuracy metrics* come from the backtest model.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q6":
@@ -1911,7 +1911,7 @@ if embed_q:
                     fc_r = mr.predict(fut)[['ds', 'yhat']]
                     return fc_r[fc_r['ds'] > df_r['ds'].max()].reset_index(drop=True)
 
-                # ── PRODUCTION MODEL — uses FULL history, this is the actual
+                # ── PRODUCTION MODEL - uses FULL history, this is the actual
                 # forward-looking forecast shown to the jury. ──
                 usd_fc = _forecast_regressor('USD_EGP_Official', forecast_days)
                 oil_fc = _forecast_regressor('Crude_Oil', forecast_days)
@@ -1959,7 +1959,7 @@ if embed_q:
                 fc_target = fc_out6['yhat'].iloc[-1]
                 fc_change = (fc_target - act_last) / act_last * 100
 
-                # ── BACKTEST MODEL — held-out test window for REPORTED ACCURACY.
+                # ── BACKTEST MODEL - held-out test window for REPORTED ACCURACY.
                 # This model is trained on everything EXCEPT the last
                 # BACKTEST_DAYS, then evaluated on that held-out window. This
                 # is genuine out-of-sample error, not in-sample fit error. ──
@@ -2013,7 +2013,7 @@ if embed_q:
                 )
                 st.markdown(
                     f'<div class="eq-footnote">دقة النموذج محسوبة على بيانات لم يرها النموذج أثناء التدريب'
-                    f'‫(آخر {BACKTEST_DAYS} يوم) — RMSE: {rmse_bt:,.0f} ج‬</div>',
+                    f'‫(آخر {BACKTEST_DAYS} يوم) - RMSE: {rmse_bt:,.0f} ج‬</div>',
                     unsafe_allow_html=True,
                 )
 
@@ -2069,7 +2069,7 @@ if embed_q:
                 st.error(f"‫خطأ في التنبؤ: {_exc}‬")
 
     # ─────────────────────────────────────────────────────────────────────────
-    # Q7 — Technical Signals (RSI + MACD + Bollinger Bands → BUY/HOLD/SELL)
+    # Q7 - Technical Signals (RSI + MACD + Bollinger Bands → BUY/HOLD/SELL)
     # Answer: A composite signal combining three indicators into one
     #         actionable call.
     # FIX (audit Q7): added an explicit indicator-agreement count so the
@@ -2109,7 +2109,7 @@ if embed_q:
         else:
             comp_signal, sig_cls, sig_color = "HOLD 🟡", "hold", "#4CC9F0"
 
-        # ── NEW: agreement count — how many of the 3 indicators individually
+        # ── NEW: agreement count - how many of the 3 indicators individually
         # point the same direction as the final composite call. Gives the
         # jury a concrete "2 of 3 indicators agree" style number. ──
         votes = [
@@ -2146,13 +2146,19 @@ if embed_q:
             vertical_spacing=0.06,
             subplot_titles=[
                 f"السعر + Bollinger Bands ({k})",
-                "MACD — زخم الاتجاه",
-                "RSI-14 — مستوى التشبع",
+                "MACD - زخم الاتجاه",
+                "RSI-14 - مستوى التشبع",
             ],
         )
         for anno in fig7['layout']['annotations']:
-            anno['yshift'] = -15  
             anno['font'] = dict(size=15, family='Cairo', color='#4A6A8A')
+            
+            if "RSI-14" in anno['text']:
+                anno['yshift'] = 12 
+            elif "MACD" in anno['text']:
+                anno['yshift'] = -10
+            else:
+                anno['yshift'] = -10 
 
         # ── Row 1: Price + Bollinger Bands ──
         fig7.add_trace(go.Scatter(
@@ -2174,7 +2180,7 @@ if embed_q:
         fig7.add_trace(go.Scatter(
             x=data.index, y=data[f'Price_{k}'],
             name='السعر', line=dict(color='#D8E4F0', width=1.8),
-            hovertemplate="%{x|%d %b %Y} — %{y:,.0f} ج<extra></extra>",
+            hovertemplate="%{x|%d %b %Y} - %{y:,.0f} ج<extra></extra>",
         ), row=1, col=1)
         fig7.add_trace(go.Scatter(
             x=data.index, y=data[f'SMA50_{k}'],
@@ -2268,7 +2274,7 @@ if embed_q:
         </div>
         """, unsafe_allow_html=True)
 
-    # ── EXIT — stop rendering the rest of the app ──────────────────────────
+    # ── EXIT - stop rendering the rest of the app ──────────────────────────
     st.stop()
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -3032,7 +3038,7 @@ elif page == "🔮  التوقعات":
             #     Price_{karat} = Theoretical_24K * KaratFactor_{karat} + MakingCharge_{karat}
             #
             # MakingCharge is an ADDITIVE constant that differs per karat
-            # (60 / 150 / 220 EGP) — it does not scale with the karat
+            # (60 / 150 / 220 EGP) - it does not scale with the karat
             # factor, so multiplying the whole yhat (which already bakes
             # in the model karat's making charge) by a purity ratio
             # distorts the result.
