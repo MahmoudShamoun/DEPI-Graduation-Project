@@ -2006,7 +2006,7 @@ if embed_q:
                         _kpi_card(f"{fc_target:,.0f} ج", f"‫التوقع بعد {forecast_days} يوم‬", "#4CC9F0"),
                         _kpi_card(f"{fc_change:+.1f}%", "‫التغير المتوقع‬",
                                   "#06D6A0" if fc_change > 0 else "#EF476F"),
-                        _kpi_card(f"{mae_bt:,.0f} ج", f"‫MAE (Backtest {BACKTEST_DAYS} يوم)‬", "#FF9F43"),
+                        _kpi_card(f"{mae_bt:,.0f} ج", f"MAE (Backtest {BACKTEST_DAYS} يوم)", "#FF9F43"),
                         _kpi_card(f"{mape_bt:.1f}%", "‫MAPE (Backtest)‬", "#A855F7"),
                     ),
                     unsafe_allow_html=True,
@@ -2034,11 +2034,11 @@ if embed_q:
                 fig6.add_trace(go.Scatter(
                     x=fc_out6['ds'], y=fc_out6['yhat_lower'],
                     fill='tonexty', fillcolor='rgba(76,201,240,0.12)',
-                    line=dict(width=0), name='نطاق الثقة 90%',
+                    line=dict(width=0), name='‫نطاق الثقة 90%‬',
                 ))
                 fig6.add_trace(go.Scatter(
                     x=fc_out6['ds'], y=fc_out6['yhat'],
-                    name='توقع Prophet', line=dict(color='#4CC9F0', width=2.5),
+                    name='‫توقع Prophet‬', line=dict(color='#4CC9F0', width=2.5),
                     hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} ج</b><extra></extra>",
                 ))
 
@@ -2064,9 +2064,9 @@ if embed_q:
                                  config=dict(displaylogo=False, responsive=True))
 
             except (ModuleNotFoundError, ImportError):
-                st.error("Prophet غير مثبت. يرجى تشغيل: pip install prophet")
+                st.error("‫Prophet غير مثبت. يرجى تشغيل: pip install prophet‬")
             except Exception as _exc:
-                st.error(f"خطأ في التنبؤ: {_exc}")
+                st.error(f"‫خطأ في التنبؤ: {_exc}‬")
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q7 — Technical Signals (RSI + MACD + Bollinger Bands → BUY/HOLD/SELL)
@@ -2126,13 +2126,13 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{rsi_val:.1f}", f"RSI-14 ({rsi_status})",
+                _kpi_card(f"{rsi_val:.1f}", f"‫RSI-14 ({rsi_status})‬",
                           "#06D6A0" if rsi_val < 30 else ("#EF476F" if rsi_val > 70 else "#FFD700")),
                 _kpi_card(macd_status, "MACD Crossover",
                           "#06D6A0" if macd_val > macd_sig else "#EF476F"),
                 _kpi_card(bb_status, "Bollinger Bands",
                           "#06D6A0" if price_val < bb_dn else ("#EF476F" if price_val > bb_up else "#4CC9F0")),
-                _kpi_card(f"{price_val:,.0f} ج", f"سعر {k} الحالي", "#FFD700"),
+                _kpi_card(f"‫{price_val:,.0f} ج‬", f"‫سعر {k} الحالي‬", "#FFD700"),
                 _kpi_card(f"{agree_count}/3", "مؤشرات متفقة مع الإشارة المركبة", sig_color),
             ),
             unsafe_allow_html=True,
@@ -2150,6 +2150,9 @@ if embed_q:
                 "RSI-14 — مستوى التشبع",
             ],
         )
+        for anno in fig7['layout']['annotations']:
+            anno['yshift'] = -15  
+            anno['font'] = dict(size=15, family='Cairo', color='#4A6A8A')
 
         # ── Row 1: Price + Bollinger Bands ──
         fig7.add_trace(go.Scatter(
@@ -2229,11 +2232,17 @@ if embed_q:
             add_events(fig7, data, rows=[1, 2, 3], y_ann=0.93)
 
         lyt7 = plot_layout(height=580)
-        lyt7['margin'] = dict(l=8, r=8, t=60, b=8)
+        lyt7['margin'] = dict(l=8, r=8, t=100, b=8)
         lyt7['legend'] = dict(
-            orientation='h', y=1.07, x=0.5, xanchor='center',
-            bgcolor='rgba(0,0,0,0)', borderwidth=0,
-            font=dict(size=9, family='Cairo'), itemsizing='constant',
+            orientation='h', 
+            y=1.14,            
+            x=0.5, 
+            xanchor='center',
+            yanchor='bottom', 
+            bgcolor='rgba(0,0,0,0)', 
+            borderwidth=0,
+            font=dict(size=9, family='Cairo'), 
+            itemsizing='constant',
         )
         fig7.update_layout(**lyt7)
         fig7.update_yaxes(title_text='السعر (ج)', title_font=dict(size=8), row=1, col=1,
