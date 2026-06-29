@@ -1297,7 +1297,7 @@ if embed_q:
 
         # ── Cross-reference footnote: makes the Q1/Q3 shared-lineage explicit ──
         st.markdown(
-            '<div class="eq-q-header">س1 — تفكيك السعر: قيمة عالمية ثابتة مقابل علاوة العملة والطلب</div>',
+            '<div class="eq-q-header"style="direction:rtl">س1 — تفكيك السعر: قيمة عالمية ثابتة مقابل علاوة العملة والطلب</div>',
             unsafe_allow_html=True,
         )
 
