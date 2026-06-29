@@ -1436,7 +1436,7 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{latest_fvi:.3f}", f"مؤشر القيمة العادلة ({k})", fvi_color),
+                _kpi_card(f"{latest_fvi:.3f}", f"‫مؤشر القيمة العادلة ({k})‬", fvi_color),
                 _kpi_card(fvi_status, "الحالة الراهنة", fvi_color),
                 _kpi_card(f"{dev_pct:+.1f}%", "الانحراف عن القيمة العادلة", fvi_color),
                 _kpi_card(f"{max_fvi:.3f}", "أعلى فقاعة مسجلة", "#EF476F"),
@@ -1477,7 +1477,7 @@ if embed_q:
         fig2.add_hline(
             y=1.0,
             line=dict(color='#FFD700', width=1.5, dash='dash'),
-            annotation_text='القيمة العادلة (FVI = 1.0)',
+            annotation_text='‫القيمة العادلة (FVI = 1.0)‬',
             annotation_font=dict(size=9, color='#FFD700', family='Cairo'),
             annotation_position='top left',
         )
