@@ -1645,7 +1645,7 @@ if embed_q:
     elif embed_q == "q4":
         # Price_{k} goes FIRST in the matrix — it is the dependent variable.
         cols_ = [f'Price_{k}', 'Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
-        labels_ = [f'سعر الذهب ({k})', 'ذهب XAU', 'دولار/جنيه', 'نفط برنت', 'سندات 10Y', 'S&P 500']
+        labels_ = [f'‫سعر الذهب ({k})‬', '‫ذهب XAU‬', 'دولار/جنيه', 'نفط برنت', '‫سندات 10Y‬', 'S&P 500']
         cd = data[cols_].dropna().corr()
         cd.columns = labels_
         cd.index = labels_
@@ -1659,7 +1659,7 @@ if embed_q:
         gold_corr = {lbl: cd.loc[price_lbl, lbl] for lbl in driver_labels}
 
         usd_corr = gold_corr.get('دولار/جنيه', 0)
-        xau_corr = gold_corr.get('ذهب XAU', 0)
+        xau_corr = gold_corr.get('‫ذهب XAU‬', 0)
         oil_corr = gold_corr.get('نفط برنت', 0)
         sp_corr = gold_corr.get('S&P 500', 0)
 
@@ -1671,11 +1671,11 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{usd_corr:.3f}", "ارتباط USD/EGP بسعر الذهب", "#06D6A0"),
-                _kpi_card(f"{xau_corr:.3f}", "ارتباط XAU/USD بسعر الذهب", "#FFD700"),
+                _kpi_card(f"{usd_corr:.3f}", "‫ارتباط USD/EGP بسعر الذهب‬", "#06D6A0"),
+                _kpi_card(f"{xau_corr:.3f}", "‫ارتباط XAU/USD بسعر الذهب‬", "#FFD700"),
                 _kpi_card(f"{oil_corr:.3f}", "ارتباط النفط بسعر الذهب", "#FF9F43"),
-                _kpi_card(f"{sp_corr:.3f}", "ارتباط S&P 500 بسعر الذهب", "#4CC9F0"),
-                _kpi_card(best_driver_lbl, f"الأعلى تأثيراً (r={best_driver_val:.3f})", "#D4AF37"),
+                _kpi_card(f"{sp_corr:.3f}", "‫ارتباط S&amp;P 500 بسعر الذهب‬", "#4CC9F0"),
+                _kpi_card(best_driver_lbl, f"‫الأعلى تأثيراً (r={best_driver_val:.3f}‬)", "#D4AF37"),
             ),
             unsafe_allow_html=True,
         )
@@ -1783,16 +1783,16 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"🏆 {best_label}", "الأفضل أداءً (صافي)", "#FFD700"),
-                _kpi_card(f"{best_ret:+.0f}%", f"عائد {best_label} صافي (Jan 2020)", "#FFD700"),
-                _kpi_card(f"{musd['ret']:+.0f}%", "عائد الدولار", "#4CC9F0"),
-                _kpi_card(f"{mcash['ret']:+.0f}%", "عائد الكاش بالجنيه (اسمي)", "#6a7a99"),
-                _kpi_card(f"{cash_real_loss:+.0f}%", "عائد الكاش الحقيقي (بعد التضخم)", "#EF476F"),
+                _kpi_card(f"{best_label}", "الأفضل أداءً (صافي)", "#FFD700"),
+                _kpi_card(f"{best_ret:+.0f}%", f"‫عائد {best_label} صافي (Jan 2020)‬", "#FFD700"),
+                _kpi_card(f"{musd['ret']:+.0f}%", "‫عائد الدولار‬", "#4CC9F0"),
+                _kpi_card(f"{mcash['ret']:+.0f}%", "‫عائد الكاش بالجنيه (اسمي)‬", "#6a7a99"),
+                _kpi_card(f"{cash_real_loss:+.0f}%", "‫عائد الكاش الحقيقي (بعد التضخم)‬", "#EF476F"),
             ),
             unsafe_allow_html=True,
         )
         st.markdown(
-            '<div class="eq-footnote">📌 العائد الحقيقي للكاش يفترض تضخم تراكمي تقديري — يُستحسن استبداله برقم CAPMAS الفعلي قبل العرض</div>',
+            '<div class="eq-footnote">‫العائد الحقيقي للكاش يفترض تضخم تراكمي تقديري — يُستحسن استبداله برقم CAPMAS الفعلي قبل العرض‬</div>',
             unsafe_allow_html=True,
         )
 
@@ -1806,14 +1806,14 @@ if embed_q:
         for karat, color, lw in karat_cfg:
             fig5.add_trace(go.Scatter(
                 x=data.index, y=data[f'Port_{karat}'],
-                name=f'{karat} (صافي)',
+                name=f'‫{karat} (صافي)‬',
                 line=dict(color=color, width=lw),
                 hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} ج<extra></extra>",
             ))
 
         fig5.add_trace(go.Scatter(
             x=data.index, y=data['Port_USD'],
-            name='دولار 💵',
+            name='دولار',
             line=dict(color='#4CC9F0', width=1.8, dash='dot'),
             hovertemplate="دولار: %{y:,.0f} ج<extra></extra>",
         ))
@@ -1868,12 +1868,17 @@ if embed_q:
     # only the *reported accuracy metrics* come from the backtest model.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q6":
+        st.markdown(
+            '<div style="direction:rtl; text-align:right; font-family:Cairo; font-size:14px; margin-bottom:-15px;">أفق التوقع (أيام)</div>', 
+            unsafe_allow_html=True
+        )
         forecast_days = st.slider(
             "أفق التوقع (أيام)", 30, 365, 180, 30,
             key="embed_q6_slider",
+            label_visibility="collapsed" 
         )
 
-        with st.spinner("⏳ يتم تدريب نموذج Prophet …"):
+        with st.spinner("‫⏳ يتم تدريب نموذج Prophet …‬"):
             try:
                 from prophet import Prophet
 
@@ -1997,18 +2002,18 @@ if embed_q:
 
                 st.markdown(
                     _kpi_strip(
-                        _kpi_card(f"{act_last:,.0f} ج", f"سعر {k} الحالي", "#FFD700"),
-                        _kpi_card(f"{fc_target:,.0f} ج", f"التوقع بعد {forecast_days} يوم", "#4CC9F0"),
-                        _kpi_card(f"{fc_change:+.1f}%", "التغير المتوقع",
+                        _kpi_card(f"{act_last:,.0f} ج", f"‫سعر {k} الحالي‬", "#FFD700"),
+                        _kpi_card(f"{fc_target:,.0f} ج", f"‫التوقع بعد {forecast_days} يوم‬", "#4CC9F0"),
+                        _kpi_card(f"{fc_change:+.1f}%", "‫التغير المتوقع‬",
                                   "#06D6A0" if fc_change > 0 else "#EF476F"),
-                        _kpi_card(f"{mae_bt:,.0f} ج", f"MAE (Backtest {BACKTEST_DAYS} يوم)", "#FF9F43"),
-                        _kpi_card(f"{mape_bt:.1f}%", "MAPE (Backtest)", "#A855F7"),
+                        _kpi_card(f"{mae_bt:,.0f} ج", f"‫MAE (Backtest {BACKTEST_DAYS} يوم)‬", "#FF9F43"),
+                        _kpi_card(f"{mape_bt:.1f}%", "‫MAPE (Backtest)‬", "#A855F7"),
                     ),
                     unsafe_allow_html=True,
                 )
                 st.markdown(
-                    f'<div class="eq-footnote">📊 دقة النموذج محسوبة على بيانات لم يرها النموذج أثناء التدريب ‏ '
-                    f'(آخر {BACKTEST_DAYS} يوم) — RMSE: {rmse_bt:,.0f} ج</div>',
+                    f'<div class="eq-footnote">دقة النموذج محسوبة على بيانات لم يرها النموذج أثناء التدريب'
+                    f'‫(آخر {BACKTEST_DAYS} يوم) — RMSE: {rmse_bt:,.0f} ج‬</div>',
                     unsafe_allow_html=True,
                 )
 
