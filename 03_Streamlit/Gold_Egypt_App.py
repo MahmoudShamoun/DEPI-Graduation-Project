@@ -1303,7 +1303,7 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(current_price, f"الحالي {k} سعر", "#FFD700"),
+                _kpi_card(current_price, f"‫سعر {k} الحالي‬", "#FFD700"),
                 _kpi_card(f"{val_pct:.0f}%", "قيمة عالمية (الآن)", "#FFF9C4"),
                 _kpi_card(f"{prem_pct:.0f}%", "علاوة عملة + طلب (الآن)", "#EF476F"),
                 _kpi_card(mar24_prem_s, "علاوة مارس 2024 (ذروة)", "#FF6B6B"),
