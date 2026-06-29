@@ -1371,11 +1371,20 @@ if embed_q:
         if show_events:
             add_events(fig, data, rows=[1, 2, 3])
 
+        l=plot_layout(height=520) if 'plot_layout' in locals() else dict(height=520)
         lyt = plot_layout(height=520)
-        lyt['margin'] = dict(l=8, r=8, t=80, b=8)
+        
+        # ── التعديل هنا: زيادة الهامش العلوي (t) من 80 إلى 100 لإعطاء مساحة للـ Legend ──
+        lyt['margin'] = dict(l=8, r=8, t=100, b=8)
+        
         lyt['legend'] = dict(
-            orientation='h', y=1.09, x=0.5, xanchor='center',
-            bgcolor='rgba(0,0,0,0)', borderwidth=0,
+            orientation='h', 
+            y=1.15,            # ── التعديل هنا: رفع الـ y من 1.09 إلى 1.15 ليتجاوز العناوين الفرعية ──
+            x=0.5, 
+            xanchor='center',
+            yanchor='bottom',  # تحديد نقطة الارتكاز من الأسفل لضمان الثبات عند تغير الشاشات
+            bgcolor='rgba(0,0,0,0)', 
+            borderwidth=0,
             font=dict(size=10, family='Cairo'),
         )
         for r in [1, 2, 3]:
