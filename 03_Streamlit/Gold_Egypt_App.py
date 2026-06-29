@@ -1312,7 +1312,7 @@ if embed_q:
             unsafe_allow_html=True,
         )
         st.markdown(
-            '<div class="eq-footnote">⚠️ تشمل هذه العلاوة أثر الذعر والمضاربة — لتفصيل الذعر تحديداً راجع س3</div>',
+            '<div class="eq-footnote">⚠️ تشمل هذه العلاوة أثر عدم الاسقرار والمضاربة — لتفصيل عدم الاسقرار تحديداً راجع س3</div>',
             unsafe_allow_html=True,
         )
 
@@ -1365,7 +1365,7 @@ if embed_q:
         # demand/panic), so the annotation no longer asserts a precise % cause.
         fig.add_annotation(
             x='2024-03-15', y=1.04, yref='paper', xref='x',
-            text="🔓 تعويم مارس 2024 — قفزة في علاوة العملة والطلب (انظر س3 لتفصيل الذعر)",
+            text="🔓 تعويم مارس 2024 — قفزة في علاوة العملة والطلب (انظر س3 لتفصيل عدم الاسقرار)",
             showarrow=False,
             font=dict(size=8.5, color='#EF476F', family='Cairo'),
             xanchor='center', bgcolor='rgba(3,6,15,0.75)', borderpad=3,
@@ -1508,7 +1508,7 @@ if embed_q:
         last_date = fvi_data[f'FVI_{k}'].dropna().index[-1]
         fig2.add_annotation(
             x=last_date, y=latest_fvi,
-            text=f"  الآن: {latest_fvi:.3f} ({fvi_status_e})",
+            text=f"‫الآن: {latest_fvi:.3f} ({fvi_status_e})‬",
             showarrow=True,
             arrowhead=2, arrowcolor=fvi_color, arrowsize=1.2, arrowwidth=1.5,
             ax=-60, ay=-30,
@@ -1519,7 +1519,7 @@ if embed_q:
         if show_events:
             add_events(fig2, data)
 
-        lyt2 = plot_layout(height=480, yaxis=dict(title_text='مؤشر القيمة العادلة (FVI)'))
+        lyt2 = plot_layout(height=480, yaxis=dict(title_text='‫مؤشر القيمة العادلة (FVI)‬'))
         lyt2['margin'] = dict(l=8, r=8, t=20, b=8)
         fig2.update_layout(**lyt2)
         fig2.update_yaxes(tickfont=dict(family='Cairo', size=10),
@@ -1588,7 +1588,7 @@ if embed_q:
                 _kpi_card(status_txt, "مستوى الإشارة", status_clr),
                 _kpi_card(f"{crisis_avg:.1f}%", "متوسط العلاوة وقت الأزمات", "#EF476F"),
                 _kpi_card(f"{baseline_avg:.1f}%", "متوسط العلاوة بالأوقات العادية", "#06D6A0"),
-                _kpi_card(f"{(crisis_avg - baseline_avg):+.1f}pt", "فرق الذعر (دليل قاطع)", "#FF9F43"),
+                _kpi_card(f"{(crisis_avg - baseline_avg):+.1f}pt", "فرق عدم الاسقرار (دليل قاطع)", "#FF9F43"),
             ),
             unsafe_allow_html=True,
         )
@@ -1603,10 +1603,10 @@ if embed_q:
 
         # ── Zone boundary lines ──
         fig3.add_hline(y=15, line=dict(color='rgba(239,71,111,0.5)', width=1, dash='dot'),
-                        annotation_text='🔴 فقاعة (>15%)', annotation_position='top left',
+                        annotation_text='‫🔴 فقاعة (&gt;15%)‬', annotation_position='top left',
                         annotation_font=dict(size=8, color='#EF476F', family='Cairo'))
         fig3.add_hline(y=8, line=dict(color='rgba(255,159,67,0.5)', width=1, dash='dot'),
-                        annotation_text='🟠 علاوة مرتفعة (>8%)', annotation_position='top left',
+                        annotation_text='‫🟠 علاوة مرتفعة (&gt;8%)‬', annotation_position='top left',
                         annotation_font=dict(size=8, color='#FF9F43', family='Cairo'))
         fig3.add_hline(y=0, line=dict(color='rgba(100,120,160,0.4)', width=1, dash='dot'))
 
@@ -1622,7 +1622,7 @@ if embed_q:
         if show_events:
             add_events(fig3, data)
 
-        lyt3 = plot_layout(height=460, yaxis=dict(title_text='علاوة الطلب/الذعر (%)'))
+        lyt3 = plot_layout(height=460, yaxis=dict(title_text='علاوة الطلب/عدم الاسقرار (%)'))
         lyt3['margin'] = dict(l=8, r=8, t=20, b=8)
         fig3.update_layout(**lyt3)
         fig3.update_yaxes(tickfont=dict(family='Cairo', size=10),
