@@ -2121,7 +2121,7 @@ if embed_q:
         agree_count = sum(1 for v in votes if comp_direction != 0 and v == comp_direction)
 
         rsi_status = "تشبع بيع" if rsi_val < 30 else ("تشبع شراء" if rsi_val > 70 else "محايد")
-        macd_status = "صاعد ▲" if macd_val > macd_sig else "هابط ▼"
+        macd_status = "‫صاعد ▲‬" if macd_val > macd_sig else "‫هابط ▼‬"
         bb_status = "عند الحد الأدنى" if price_val < bb_dn else ("عند الحد الأقصى" if price_val > bb_up else "في النطاق")
 
         st.markdown(
@@ -2145,9 +2145,9 @@ if embed_q:
             row_heights=[0.55, 0.25, 0.20],
             vertical_spacing=0.06,
             subplot_titles=[
-                f"السعر + Bollinger Bands ({k})",
-                "MACD - زخم الاتجاه",
-                "RSI-14 - مستوى التشبع",
+                f"‫السعر + Bollinger Bands ({k})‬",
+                "‫MACD - زخم الاتجاه‬",
+                "‫RSI-14 - مستوى التشبع‬",
             ],
         )
         for anno in fig7['layout']['annotations']:
