@@ -1327,7 +1327,7 @@ if embed_q:
         for anno in fig['layout']['annotations']:
             if anno['text'] in ["24 قيراط", "21 قيراط", "18 قيراط"]:
                 anno['yshift'] = -15  
-                anno['font'] = dict(size=11, family='Cairo', color='#4A6A8A')
+                anno['font'] = dict(size=20, family='Cairo', color='#4A6A8A')
         KFILL = {
             '24K': 'rgba(255,249,196,0.70)',
             '21K': 'rgba(255,215,0,0.65)',
