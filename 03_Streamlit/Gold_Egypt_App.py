@@ -27,6 +27,305 @@ img_base64 = get_img_as_base64(image_path)
 IMAGE_HTML_SRC = f"data:image/png;base64,{img_base64}"
 
 # ─────────────────────────────────────────────────────────────────────────────
+# I18N / BILINGUAL SYSTEM (Arabic / English)
+# Centralized TRANSLATIONS dict + t(key) helper. Default language = English.
+# Mixed Arabic-English financial/technical terms (Prophet, RSI, MACD, karat
+# labels like 18K/21K/24K, ticker symbols, etc.) are intentionally NOT
+# translated per project convention.
+# ─────────────────────────────────────────────────────────────────────────────
+
+if "lang" not in st.session_state:
+    st.session_state.lang = "en"   # default language MUST be English
+
+def set_lang(lang_code: str):
+    st.session_state.lang = lang_code
+
+LANG  = st.session_state.lang
+DIR   = "rtl" if LANG == "ar" else "ltr"
+ALIGN = "right" if LANG == "ar" else "left"
+
+TRANSLATIONS = {
+    # ── App / Sidebar ──
+    "app_tagline":         {"en": "Financial Analytics Tool · Since 2020",      "ar": "أداة التحليل المالي · منذ 2020"},
+    "nav_home":             {"en": "🏠  Home",                                   "ar": "🏠  الرئيسية"},
+    "nav_analysis":         {"en": "📊  Price Analysis",                        "ar": "📊  تحليل الأسعار"},
+    "nav_investment":       {"en": "💼  Investment Simulator",                  "ar": "💼  محاكاة الاستثمار"},
+    "nav_technical":        {"en": "📡  Technical Indicators",                  "ar": "📡  المؤشرات التقنية"},
+    "nav_forecast":         {"en": "🔮  Forecast",                              "ar": "🔮  التوقعات"},
+    "main_karat_label":     {"en": "Primary Karat",                             "ar": "العيار الرئيسي"},
+    "crisis_events_toggle": {"en": "Crisis Events",                             "ar": "أحداث الأزمات"},
+    "crisis_legend": {
+        "en": ('<span style="color:#FF6B6B">●</span> COVID · Gaza &nbsp;'
+               '<span style="color:#FF9F43">●</span> Ukraine · Trump<br>'
+               '<span style="color:#EF476F">●</span> EGP Float &nbsp;'
+               '<span style="color:#4CC9F0">●</span> Fed · Rates<br>'
+               '<span style="color:#06D6A0">●</span> 2024 Float · Ceasefire &nbsp;'
+               '<span style="color:#FFD700">●</span> Gold Records'),
+        "ar": ('<span style="color:#FF6B6B">●</span> كوفيد · غزة &nbsp;'
+               '<span style="color:#FF9F43">●</span> أوكرانيا · ترامب<br>'
+               '<span style="color:#EF476F">●</span> تعويم الجنيه &nbsp;'
+               '<span style="color:#4CC9F0">●</span> الفيد · فائدة<br>'
+               '<span style="color:#06D6A0">●</span> تعويم 2024 · وقف نار &nbsp;'
+               '<span style="color:#FFD700">●</span> قياسيات ذهب'),
+    },
+    "update_now_btn":      {"en": "🔄 Update Data Now",                         "ar": "🔄 تحديث البيانات الآن"},
+    "updating_spinner":    {"en": "⏳ Updating...",                             "ar": "‫⏳ جاري التحديث...‬"},
+    "fetching_spinner":    {"en": "⏳ Fetching gold data... (one-time)",        "ar": "‫⏳ جاري جلب بيانات الذهب... (مرة واحدة فقط)‬"},
+    "last_update_prefix":  {"en": "‫✅ Last update:‬",                          "ar": "‫✅ آخر تحديث:‬"},
+    "initializing_data":   {"en": "⏳ Initializing data...",                    "ar": "⏳ جاري تهيئة البيانات..."},
+    "data_sources_head":   {"en": "Data Sources",                               "ar": "مصادر البيانات"},
+    "grant_head":          {"en": "Digital Egypt Pioneers Initiative",          "ar": "منحة رواد مصر الرقمية"},
+    "analyst_role":        {"en": "DATA ANALYST",                               "ar": "DATA ANALYST"},
+    "analyst_name":        {"en": "Mahmoud Shamoun",                            "ar": "محمود شمعون"},
+    "analyst_desc": {
+        "en": "Specialized Data Analyst<br>Graduation Project · DEPI",
+        "ar": "محلل بيانات متخصص<br>مشروع تخرج · DEPI",
+    },
+    "data_load_fail":      {"en": "❌ Failed to load data - check your internet connection", "ar": "❌ فشل تحميل البيانات - تحقق من الاتصال بالإنترنت"},
+    "data_read_fail":      {"en": "❌ Failed to read data",                     "ar": "❌ فشل قراءة البيانات"},
+    "lang_toggle_label":   {"en": "🌐 Language",                                "ar": "🌐 اللغة"},
+
+    # ── Home Page ──
+    "home_hero_title":     {"en": "Gold as a Financial Instrument in Egypt",    "ar": "الذهب كأداة مالية في مصر"},
+    "home_hero_sub": {
+        "en": "A comprehensive look at gold performance by karat "
+              "kept as-is (18K · 21K · 24K) "
+              "as a store of value against inflation and EGP devaluation - a realistic simulation including making charges and sell spreads",
+        "ar": "تحليل شامل لأداء الذهب بالعيارات "
+              "كأداة للحفاظ على القيمة في مواجهة التضخم وانخفاض الجنيه - محاكاة واقعية تشمل المصنعية وفرق أسعار البيع",
+    },
+    "home_badge_grant":    {"en": "Digital Egypt Pioneers Initiative",          "ar": "منحة رواد مصر الرقمية"},
+    "kpi_price_per_gram":  {"en": "EGP/gram {k}",                               "ar": "جنيه/جرام {k}"},
+    "kpi_egp_usd":         {"en": "EGP / USD",                                  "ar": "جنيه / دولار"},
+    "kpi_ounce_global":    {"en": "Global Ounce",                               "ar": "أونصة عالمياً"},
+    "kpi_gold_return":     {"en": "Gold {k} Return since 2020",                 "ar": "عائد الذهب {k} من 2020"},
+    "sec_price_path":      {"en": "Gold Price Path",                           "ar": "مسار سعر الذهب"},
+    "price_per_gram_sub":  {"en": "Price per gram {k} in EGP",                  "ar": "سعر جرام {k} بالجنيه المصري"},
+    "insight_overall_perf": {
+        "en": "📌 <b>Overall Performance:</b> Gold {k} rose <span class='num'>{price_chg:.0f}%</span> since January 2020, compared to the USD which rose only <span class='num'>{usd_chg:.0f}%</span> over the same period.",
+        "ar": "‫📌 <b>الأداء الإجمالي:</b> ارتفع الذهب {k} بنسبة <span class='num'>{price_chg:.0f}%</span> منذ يناير 2020، مقارنةً بالدولار الذي ارتفع <span class='num'>{usd_chg:.0f}%</span> فقط خلال نفس الفترة.",
+    },
+    "insight_historic_peak": {
+        "en": "🏔️ <b>Historic Peak:</b> <span class='num'>{peak_p:,.0f} EGP</span> per gram {k} in <b>{peak_d}</b> - driven by EGP weakness and rising global prices.",
+        "ar": "🏔️ <b>القمة التاريخية:</b> <span class='num'>{peak_p:,.0f} جنيه</span> لجرام {k} في <b>{peak_d}</b> - مدفوعاً بتراجع الجنيه وارتفاع الأسعار العالمية.",
+    },
+    "sec_key_events":       {"en": "Key Events Affecting the Gold Price",       "ar": "أبرز الأحداث المؤثرة على سعر الذهب"},
+    "sec_correlation":      {"en": "Correlation Matrix",                       "ar": "مصفوفة الارتباط"},
+    "correlation_sub":      {"en": "Strength of the relationship between gold and macroeconomic variables", "ar": "قوة العلاقة بين الذهب والمتغيرات الاقتصادية الكلية"},
+    "sec_usd_path":         {"en": "USD Path",                                 "ar": "مسار الدولار"},
+    "usd_path_sub":         {"en": "A rising dollar means a direct rise in gold prices", "ar": "صعود الدولار يعني ارتفاعاً مباشراً في الذهب"},
+    "corr_name_gold":       {"en": "Global Gold",                              "ar": "ذهب عالمي"},
+    "corr_name_usd":        {"en": "USD/EGP",                                  "ar": "دولار/جنيه"},
+    "corr_name_oil":        {"en": "Oil",                                      "ar": "نفط"},
+    "corr_name_bonds":      {"en": "US Treasuries",                            "ar": "سندات أمريكية"},
+    "corr_name_sp500":      {"en": "S&P 500",                                  "ar": "S&P 500"},
+    "event_covid_title":    {"en": "COVID-19",                                 "ar": "COVID-19"},
+    "event_covid_date":     {"en": "March 2020",                               "ar": "مارس 2020"},
+    "event_covid_desc":     {"en": "Global markets collapse - gold rises as a safe haven", "ar": "انهيار الأسواق العالمية - الذهب يرتفع كملاذ آمن"},
+    "event_ukraine_title":  {"en": "Russia-Ukraine",                           "ar": "روسيا-أوكرانيا"},
+    "event_ukraine_date":   {"en": "February 2022",                            "ar": "فبراير 2022"},
+    "event_ukraine_desc":   {"en": "Russian invasion drives up energy and gold prices globally", "ar": "الغزو الروسي وارتفاع الطاقة والذهب عالمياً"},
+    "event_float1_title":   {"en": "Float 1",                                  "ar": "تعويم 1"},
+    "event_float1_date":    {"en": "March 2022",                               "ar": "مارس 2022"},
+    "event_float1_desc":    {"en": "First EGP float sharply raises local gold prices", "ar": "أول تعويم للجنيه يرفع الذهب المحلي بشكل حاد"},
+    "event_gaza_title":     {"en": "Gaza War",                                 "ar": "حرب غزة"},
+    "event_gaza_date":      {"en": "October 2023",                             "ar": "أكتوبر 2023"},
+    "event_gaza_desc":      {"en": "Outbreak of conflict boosts demand for gold as a haven", "ar": "اندلاع المواجهة يرفع الطلب على الذهب كملاذ"},
+    "event_float2024_title":{"en": "2024 Float",                               "ar": "تعويم 2024"},
+    "event_float2024_date": {"en": "March 2024",                               "ar": "مارس 2024"},
+    "event_float2024_desc": {"en": "Full EGP float: the dollar jumps from 30 to 50 EGP", "ar": "تعويم شامل للجنيه: الدولار يقفز من 30 إلى 50 جنيهاً"},
+    "event_ratecut_title":  {"en": "Rate Cut",                                 "ar": "خفض الفائدة"},
+    "event_ratecut_date":   {"en": "September 2024",                           "ar": "سبتمبر 2024"},
+    "event_ratecut_desc":   {"en": "The Fed begins a rate-cutting cycle - strong support for gold", "ar": "الفيدرالي يبدأ دورة خفض الفائدة - دعم قوي للذهب"},
+    "event_ceasefire_title":{"en": "Ceasefire",                                "ar": "وقف إطلاق النار"},
+    "event_ceasefire_date": {"en": "January 2025",                             "ar": "يناير 2025"},
+    "event_ceasefire_desc": {"en": "Gaza deal temporarily calms markets - gold pulls back slightly", "ar": "اتفاق غزة يُهدئ مؤقتاً - الذهب يتراجع طفيفاً"},
+    "event_tariffs_title":  {"en": "Trump Tariffs",                            "ar": "رسوم ترامب"},
+    "event_tariffs_date":   {"en": "April 2025",                               "ar": "أبريل 2025"},
+    "event_tariffs_desc":   {"en": "Sweeping tariff announcement pushes gold to $3500", "ar": "إعلان الرسوم الجمركية الشاملة يدفع الذهب لـ 3500$"},
+    "event_record_title":   {"en": "$3500 Record",                             "ar": "قياسي 3500$"},
+    "event_record_date":    {"en": "April 2025",                               "ar": "أبريل 2025"},
+    "event_record_desc":    {"en": "Gold breaks $3500 for the first time in history", "ar": "الذهب يكسر 3500$ لأول مرة في التاريخ"},
+    "event_iran_title":     {"en": "Iran Strike",                              "ar": "ضربة إيران"},
+    "event_iran_date":      {"en": "June 2025",                                "ar": "يونيو 2025"},
+    "event_iran_desc":      {"en": "The Israeli-American strike on Iran immediately lifts gold", "ar": "الضربة الإسرائيلية-الأمريكية على إيران ترفع الذهب فوراً"},
+
+    # ── Analysis Page ──
+    "sec_price_anatomy":    {"en": "Price Anatomy - Real Value or Inflation?",  "ar": "تشريح السعر - قيمة حقيقية أم تضخم؟"},
+    "price_anatomy_sub":    {"en": "How much of the price reflects the rise in global gold, and how much reflects the collapse of the EGP? (baseline: Jan 2020 exchange rate)", "ar": "كم من السعر يعكس ارتفاع الذهب عالمياً، وكم يعكس انهيار قيمة الجنيه؟ (قاعدة الحساب: سعر الصرف في يناير 2020)"},
+    "legend_global_value":  {"en": "Global Value",                             "ar": "قيمة عالمية"},
+    "legend_inflation_prem":{"en": "Inflation Premium",                        "ar": "علاوة تضخم"},
+    "chart_title_anatomy":  {"en": "Price Anatomy: Real Value vs. Inflation & Currency Premium", "ar": "تشريح السعر: القيمة الحقيقية مقابل علاوة التضخم والعملة"},
+    "axis_egp":              {"en": "EGP",                                      "ar": "جنيه"},
+    "sec_inflation_pct":    {"en": "Inflation Premium %",                       "ar": "نسبة علاوة التضخم %"},
+    "inflation_pct_sub":    {"en": "The percentage of the price driven by EGP weakness - the higher it is, the greater gold's protective value", "ar": "النسبة المئوية من السعر ناتجة عن ضعف الجنيه - كلما ارتفعت، كلما كان الذهب وقاية أكبر"},
+    "axis_premium_pct":     {"en": "Premium %",                                 "ar": "علاوة %"},
+    "insight_avg_premium":  {"en": "Average Premium:",                          "ar": "متوسط العلاوة:"},
+    "insight_peak_premium": {"en": "Historic Peak:",                            "ar": "الذروة التاريخية:"},
+
+    # ── Investment Page ──
+    "inv_section_title":   {"en": "Realistic Investment Simulation",            "ar": "محاكاة الاستثمار الواقعية"},
+    "inv_sub_p1":           {"en": "If we invested 100,000 EGP in January 2020 - net value after deducting making charges", "ar": "لو استثمرنا 100,000 جنيه في يناير 2020 - القيمة الصافية بعد خصم المصنعية"},
+    "inv_sub_p2":           {"en": "and sell spreads",                          "ar": "وفروق البيع"},
+    "inv_trace_gold_net":   {"en": "{k} Gold (net)",                            "ar": "{k} ذهب (صافي)"},
+    "lbl_usd":              {"en": "USD",                                       "ar": "دولار"},
+    "lbl_cash_egp":         {"en": "Cash (EGP)",                                "ar": "كاش (جنيه)"},
+    "axis_net_value_egp":   {"en": "Net Value (EGP)",                           "ar": "القيمة الصافية (جنيه)"},
+    "inv_chart_title":      {"en": "Real Wealth Growth (net of entry/exit costs)", "ar": "نمو الثروة الحقيقي (مخصوم منه تكاليف الدخول والخروج)"},
+    "inv_card_title_gold":  {"en": "{k} Gold",                                  "ar": "{k} ذهب"},
+    "lbl_net_qty":          {"en": "Net Quantity",                              "ar": "الكمية الصافية"},
+    "lbl_price_2020_making":{"en": "2020 Price (+making)",                      "ar": "سعر 2020 (+مصنعية)"},
+    "lbl_net_value":        {"en": "Net Value",                                 "ar": "القيمة الصافية"},
+    "lbl_actual_return":    {"en": "Actual Return",                             "ar": "العائد الفعلي"},
+    "lbl_usd_card_title":   {"en": "USD",                                       "ar": "الدولار USD"},
+    "lbl_qty_bought":       {"en": "Quantity Bought",                           "ar": "الكمية المشتراة"},
+    "lbl_price_2020":       {"en": "2020 Price",                                "ar": "سعر 2020"},
+    "lbl_current_value":    {"en": "Current Value",                             "ar": "القيمة الحالية"},
+    "lbl_total_return":     {"en": "Total Return",                              "ar": "العائد الكلي"},
+    "dd_sub":               {"en": "Decline from the peak - measures losses during the worst periods", "ar": "الانخفاض عن القمة - يقيس الخسارة في أسوأ الأوقات"},
+    "inv_insight_title":    {"en": "Comparison Summary:",                       "ar": "ملخص المقارنة:"},
+    "inv_insight_body": {
+        "en": ("The best real-world performer (after costs) was <b style=\"color:{c}\">{best_k}</b> "
+               "with a net return of <span class='num'>{ret:+.1f}%</span> versus "
+               "USD <span class='num'>{usd:+.1f}%</span> and cash in EGP "
+               "<span class='num-red'>0%</span> (accounting for real inflation). "
+               "Making charges and sell spreads reduce returns but don't erase gold's historical edge."),
+        "ar": ("أفضل أداء واقعي (بعد خصم التكاليف) كان <b style=\"color:{c}\">{best_k}</b> "
+               "بعائد صافٍ <span class='num'>{ret:+.1f}%</span> مقابل "
+               "الدولار <span class='num'>{usd:+.1f}%</span> والكاش بالجنيه "
+               "<span class='num-red'>0%</span> (مع التضخم الحقيقي). "
+               "المصنعية وفروق البيع تُقلل العوائد لكن لا تمحو التفوق التاريخي للذهب."),
+    },
+
+    # ── Technical Page ──
+    "tech_title":           {"en": "Technical Analysis - {k}",                  "ar": "التحليل التقني - {k}"},
+    "tech_sub":              {"en": "Automated buy/sell signals",                "ar": "إشارات الشراء والبيع الآلية"},
+    "tech_subplot_price_bb":{"en": "Price + Bollinger Bands ({k})",              "ar": "السعر + Bollinger Bands ({k})"},
+    "tech_subplot_macd":    {"en": "MACD - Trend Momentum",                      "ar": "MACD - زخم الاتجاه"},
+    "tech_subplot_rsi":     {"en": "RSI-14 - Overbought/Oversold Level",         "ar": "RSI-14 - مستوى التشبع"},
+    "lbl_price":            {"en": "Price",                                      "ar": "السعر"},
+    "axis_price_egp":       {"en": "Price (EGP)",                                "ar": "السعر (جنيه)"},
+    "sig_buy":              {"en": "Buy 📈",                                     "ar": "شراء 📈"},
+    "sig_sell":             {"en": "Sell 📉",                                    "ar": "بيع 📉"},
+    "sig_hold":              {"en": "Hold ⏸",                                    "ar": "انتظار ⏸"},
+    "tech_signal_label":    {"en": "Signal ({k}):",                              "ar": "الإشارة ({k}):"},
+    "tech_overbought":      {"en": "Overbought",                                 "ar": "تشبع شراء"},
+    "tech_oversold":        {"en": "Oversold",                                   "ar": "تشبع بيع"},
+    "tech_bb_upper":        {"en": "At upper band ⚠️",                          "ar": "عند الحد الأعلى ⚠️"},
+    "tech_bb_lower":        {"en": "At lower band ✅",                          "ar": "عند الحد الأدنى ✅"},
+    "tech_bb_within":       {"en": "Within range",                               "ar": "داخل النطاق"},
+
+    # ── Forecast Page ──
+    "fc_title":              {"en": "Price Forecast - {k}",                     "ar": "توقعات الأسعار - {k}"},
+    "fc_sub":                {"en": "Forecasting model with USD and oil regressors - historical merge strategy", "ar": "نموذج التنبؤ مع متغيرات الدولار والنفط - استراتيجية الدمج التاريخي"},
+    "fc_horizon_label":     {"en": "Forecast Horizon (days)",                    "ar": "أفق التوقع (أيام)"},
+    "fc_spinner_training":  {"en": "⏳ Training Prophet model...",               "ar": "⏳ جاري تدريب نموذج Prophet..."},
+    "fc_chart_title":       {"en": "Gold {k} Forecast · Next {days} days",       "ar": "توقعات ذهب {k} · {days} يوم قادماً"},
+    "lbl_actual_price":     {"en": "Actual Price",                               "ar": "السعر الفعلي"},
+    "fc_confidence_band":   {"en": "90% Confidence Band",                        "ar": "نطاق الثقة 90%"},
+    "fc_prophet_forecast":  {"en": "Prophet Forecast",                           "ar": "توقع Prophet"},
+    "lbl_today":            {"en": "Today",                                      "ar": "اليوم"},
+    "kpi_current_price_egp":{"en": "Current Price (EGP)",                        "ar": "السعر الحالي (جنيه)"},
+    "kpi_forecast_days":    {"en": "Forecast ({days}d)",                         "ar": "التوقع ({days}ي)"},
+    "kpi_expected_change":  {"en": "Expected Change",                            "ar": "التغيير المتوقع"},
+    "kpi_model_rmse":       {"en": "Model RMSE",                                 "ar": "RMSE النموذج"},
+    "fc_insight_summary": {
+        "en": ("🤖 <b>Forecast Summary:</b> the Prophet model expects gold {k} price per gram to reach "
+               "<span class=\"{cls}\">{fe:,.0f} EGP</span> "
+               "within the next {days} days - a change of "
+               "<span class=\"{cls}\">{cp:+.1f}%</span> from the current price.<br>"
+               "<span style=\"display:block; margin-top:6px;\">"
+               "Model accuracy - "
+               "<span style=\"font-family:'DM Mono',monospace; display:inline-block;\">MAE = {mae:,.0f} EGP</span>"
+               "&nbsp;|&nbsp;"
+               "<span style=\"font-family:'DM Mono',monospace; display:inline-block;\">RMSE = {rmse:,.0f} EGP</span>"
+               " - the lower the number, the more accurate the model."
+               "</span>"
+               "<span style=\"display:block;margin-top:6px;font-size:0.75rem;color:#3A4A65;\">"
+               "* Strategy: Historical Date Merge - independent regressor models "
+               "prevent mismatches between the official calendar and trading days."
+               "</span>"),
+        "ar": ("🤖 <b>ملخص التوقع:</b> يتوقع نموذج Prophet أن يصل سعر جرام {k} إلى "
+               "<span class=\"{cls}\">{fe:,.0f} جنيه</span> "
+               "خلال {days} يوم القادمة - تغيير "
+               "<span class=\"{cls}\">{cp:+.1f}%</span> عن السعر الحالي.<br>"
+               "<span style=\"direction:rtl; display:block; margin-top:6px;\">"
+               "دقة النموذج - "
+               "<span style=\"font-family:'DM Mono',monospace; direction:ltr; display:inline-block;\">MAE = {mae:,.0f} جنيه</span>"
+               "&nbsp;|&nbsp;"
+               "<span style=\"font-family:'DM Mono',monospace; direction:ltr; display:inline-block;\">RMSE = {rmse:,.0f} جنيه</span>"
+               " - كلما قل الرقم كلما كان النموذج أدق."
+               "</span>"
+               "<span style=\"display:block;margin-top:6px;font-size:0.75rem;color:#3A4A65;\">"
+               "* الاستراتيجية: دمج تاريخي (Historical Date Merge) - نماذج مستقلة للمتغيرات الخارجية "
+               "تمنع أخطاء عدم التوافق بين التقويم الرسمي وأيام التداول."
+               "</span>"),
+    },
+    "roi_section_title":    {"en": "Investment ROI Calculator",                 "ar": "حاسبة العائد على الاستثمار"},
+    "roi_sub":               {"en": "Enter your investment amount and choose the karat and duration - we'll compute the expected return based on Prophet's forecast", "ar": "أدخل مبلغ استثمارك واختر العيار والمدة - سنحسب العائد المتوقع بناءً على توقعات Prophet"},
+    "roi_amount_label":     {"en": "Investment Amount (EGP)",                    "ar": "مبلغ الاستثمار (جنيه مصري)"},
+    "roi_amount_help":      {"en": "Enter the amount you want to invest in EGP", "ar": "أدخل المبلغ الذي تريد استثماره بالجنيه المصري"},
+    "roi_karat_label":      {"en": "Karat",                                      "ar": "العيار"},
+    "roi_duration_label":   {"en": "Duration (days)",                            "ar": "المدة (أيام)"},
+    "roi_duration_help":    {"en": "Choose the number of days you plan to hold the gold", "ar": "اختر عدد الأيام التي تنوي الاحتفاظ بالذهب خلالها"},
+    "roi_metric_expected_value": {"en": "💰 Expected Value",                     "ar": "💰 القيمة المتوقعة"},
+    "roi_metric_expected_value_help": {"en": "Net value after {days} days, on {date}", "ar": "القيمة الصافية بعد {days} يوم بتاريخ {date}"},
+    "roi_metric_net_return":{"en": "{icon} Net Return",                          "ar": "{icon} العائد الصافي"},
+    "roi_annualized":       {"en": "{pct}% annually",                            "ar": "{pct}% سنوياً"},
+    "roi_net_return_help":  {"en": "Total return on invested capital, and the annualized return", "ar": "العائد الإجمالي على رأس المال المستثمر، والعائد السنوي المُقنَّن"},
+    "roi_metric_grams_bought": {"en": "⚖️ Quantity Bought",                      "ar": "⚖️ الكمية المشتراة"},
+    "roi_grams_value":      {"en": "{grams:.2f} g",                              "ar": "{grams:.2f} جم"},
+    "roi_grams_delta":      {"en": "{k} · {price:,.0f} EGP/g",                   "ar": "{k} · {price:,.0f} ج/جم"},
+    "roi_grams_help":       {"en": "Number of grams after deducting making charges from the total amount", "ar": "عدد الجرامات بعد خصم المصنعية من المبلغ الإجمالي"},
+    "roi_metric_target_price": {"en": "🎯 Target Price",                         "ar": "🎯 سعر الهدف"},
+    "roi_target_value":     {"en": "{price:,.0f} EGP/g",                         "ar": "{price:,.0f} ج/جم"},
+    "roi_vs_current":       {"en": "{pct:+.1f}% vs current",                     "ar": "{pct:+.1f}% عن الحالي"},
+    "roi_target_help":      {"en": "Expected price per gram {k} on {date}",       "ar": "سعر جرام {k} المتوقع في {date}"},
+    "roi_insight_summary": {
+        "en": ("💡 <b>ROI Calculator Summary:</b> "
+               "Investing <span class='num'>{amt:,.0f} EGP</span> in {k} gold "
+               "today at <span class='num'>{price:,.0f} EGP/g</span> (including a making charge of <span class='num'>{mc:,} EGP</span>) "
+               "gets you <span class='num'>{grams:.2f} grams</span>. Based on Prophet's forecast over "
+               "<span class='num'>{days}</span> days, this could be worth "
+               "<span class=\"{cls}\">{exit_val:,.0f} EGP</span> "
+               "- a profit of <span class=\"{cls}\">{profit:+,.0f} EGP</span> "
+               "(<span class=\"{cls2}\">{pct:+.2f}%</span>).<br>"
+               "<span style=\"display:block;margin-top:6px;font-size:0.75rem;color:#3A4A65;\">"
+               "* Calculations include the making charge on purchase and the sell spread ({spread:.1f}%) on sale. "
+               "Forecasts are for guidance only and are not investment advice."
+               "</span>"),
+        "ar": ("💡 <b>ملخص حاسبة العائد:</b> "
+               "استثمار <span class='num'>{amt:,.0f} جنيه</span> في ذهب <b>{k}</b> "
+               "اليوم بسعر <span class='num'>{price:,.0f} جنيه/جم</span> (شامل مصنعية <span class='num'>{mc:,} جنيه</span>) "
+               "يمنحك <span class='num'>{grams:.2f} جرام</span>. بناءً على توقعات Prophet خلال "
+               "<span class='num'>{days}</span> يوم، قد تبلغ قيمتها "
+               "<span class=\"{cls}\">{exit_val:,.0f} جنيه</span> "
+               "- ربح <span class=\"{cls}\">{profit:+,.0f} جنيه</span> "
+               "(<span class=\"{cls2}\">{pct:+.2f}%</span>).<br>"
+               "<span style=\"display:block;margin-top:6px;font-size:0.75rem;color:#3A4A65;\">"
+               "* الحسابات تشمل المصنعية عند الشراء وفرق السعر ({spread:.1f}%) عند البيع. "
+               "التوقعات للأغراض التوجيهية فقط وليست نصيحة استثمارية."
+               "</span>"),
+    },
+    "roi_insufficient_data":{"en": "⚠️ Not enough forecast data for the selected duration. Try extending the forecast horizon.", "ar": "⚠️ لا تتوفر بيانات توقع كافية للمدة المحددة. حاول تمديد أفق التوقع."},
+    "fc_prophet_missing":   {"en": "⚠️ The Prophet library is not installed - run: pip install prophet", "ar": "⚠️ مكتبة Prophet غير مثبتة - قم بتشغيل: pip install prophet"},
+    "fc_model_error":       {"en": "Forecast model error: {err}",                "ar": "خطأ في نموذج التنبؤ: {err}"},
+}
+
+def t(key: str, **kwargs) -> str:
+    """Fetch a translated string for the current session language.
+    Falls back to the key itself if missing (never crashes).
+    Supports str.format(**kwargs) for dynamic values, e.g. t('kpi_egp_usd', k='21K')."""
+    entry = TRANSLATIONS.get(key)
+    raw = key if entry is None else entry.get(LANG, entry.get("en", key))
+    if kwargs:
+        try:
+            return raw.format(**kwargs)
+        except Exception:
+            return raw
+    return raw
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PATHS & CONSTANTS
 # ─────────────────────────────────────────────────────────────────────────────
 CSV_PATH           = os.path.abspath(os.path.join(base_path, "..", "02_Dataset", "Gold_Egypt.csv"))
@@ -85,6 +384,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Dynamic base direction for the whole app main-content area. This flips
+# automatically whenever LANG changes (Arabic → RTL, English → LTR). Element-
+# level RTL/LTR overrides for intentionally-mixed content stay as-is.
+st.markdown(f"""
+<style>
+.main .block-container {{ direction: {DIR}; text-align: {ALIGN}; }}
+[data-testid="stSidebar"] * {{ text-align: {ALIGN}; }}
+</style>
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PREMIUM CSS - CYBERPUNK / LUXURY DARK THEME
@@ -967,7 +1276,7 @@ else:
         _need_scrape = True
 
 if _need_scrape:
-    with st.spinner("‫⏳ جاري جلب بيانات الذهب... (مرة واحدة فقط)‬"):
+    with st.spinner(t("fetching_spinner")):
         run_scraper()
         st.cache_data.clear()
 
@@ -976,19 +1285,60 @@ if _need_scrape:
 # ─────────────────────────────────────────────────────────────────────────────
 
 with st.sidebar:
+    st.markdown("""
+    <style>
+    .sb-logo {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .sb-logo-text {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 8px;
+    }
+    .sb-logo-sub {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     st.markdown(f"""
     <div class="sb-logo">
-      <div class="sb-logo-icon"><img src="{IMAGE_HTML_SRC}" width="80" style="border-radius:8px;"></div>
+      <div class="sb-logo-icon">
+        <img src="{IMAGE_HTML_SRC}" width="80" style="border-radius:8px;">
+      </div>
       <div class="sb-logo-text">GOLD EGYPT</div>
-      <div class="sb-logo-sub">أداة التحليل المالي · منذ 2020</div>
-    </div>""", unsafe_allow_html=True)
+      <div class="sb-logo-sub">{t('app_tagline')}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── Language toggle (AR / EN) — default is English ──
+    _lang_cols = st.columns(2)
+    with _lang_cols[0]:
+        if st.button("EN", use_container_width=True,
+                      type="primary" if LANG == "en" else "secondary",
+                      key="lang_btn_en"):
+            set_lang("en")
+            st.rerun()
+    with _lang_cols[1]:
+        if st.button("AR", use_container_width=True,
+                      type="primary" if LANG == "ar" else "secondary",
+                      key="lang_btn_ar"):
+            set_lang("ar")
+            st.rerun()
+
+    st.markdown('<div class="gold-divider"></div>', unsafe_allow_html=True)
 
     pages = {
-        "home":       "🏠  الرئيسية",
-        "analysis":   "📊  تحليل الأسعار",
-        "investment": "💼  محاكاة الاستثمار",
-        "technical":  "📡  المؤشرات التقنية",
-        "forecast":   "🔮  التوقعات",
+        "home":       t("nav_home"),
+        "analysis":   t("nav_analysis"),
+        "investment": t("nav_investment"),
+        "technical":  t("nav_technical"),
+        "forecast":   t("nav_forecast"),
     }
     query         = st.query_params
     default_key   = query.get("page", "home")
@@ -1004,28 +1354,23 @@ with st.sidebar:
 
     st.markdown('<div class="gold-divider"></div>', unsafe_allow_html=True)
 
-    st.markdown('<div style="color:#8D99AE;font-size:0.78rem;direction:rtl;text-align:right;margin-bottom:4px;">العيار الرئيسي</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="color:#8D99AE;font-size:0.78rem;direction:{DIR};text-align:{ALIGN};margin-bottom:4px;">{t("main_karat_label")}</div>', unsafe_allow_html=True)
     selected_karat = st.selectbox("k", ["18K", "21K", "24K"], index=1, label_visibility="collapsed")
 
     spacer(6)
-    show_events = st.toggle("أحداث الأزمات", value=True)
+    show_events = st.toggle(t("crisis_events_toggle"), value=True)
 
     if show_events:
-        st.markdown("""
-        <div style="font-size:0.6rem;color:#3A4A65;direction:rtl;text-align:right;
+        st.markdown(f"""
+        <div style="font-size:0.6rem;color:#3A4A65;direction:{DIR};text-align:{ALIGN};
                     line-height:2;padding:4px 0;margin-top:2px;">
-          <span style="color:#FF6B6B">●</span> كوفيد · غزة &nbsp;
-          <span style="color:#FF9F43">●</span> أوكرانيا · ترامب<br>
-          <span style="color:#EF476F">●</span> تعويم الجنيه &nbsp;
-          <span style="color:#4CC9F0">●</span> الفيد · فائدة<br>
-          <span style="color:#06D6A0">●</span> تعويم 2024 · وقف نار &nbsp;
-          <span style="color:#FFD700">●</span> قياسيات ذهب
+          {t("crisis_legend")}
         </div>""", unsafe_allow_html=True)
 
     st.markdown('<div class="gold-divider"></div>', unsafe_allow_html=True)
 
-    if st.button("🔄 تحديث البيانات الآن", use_container_width=True):
-        with st.spinner("‫⏳ جاري التحديث...‬"):
+    if st.button(t("update_now_btn"), use_container_width=True):
+        with st.spinner(t("updating_spinner")):
             run_scraper()
         st.cache_data.clear()
         st.rerun()
@@ -1039,11 +1384,11 @@ with st.sidebar:
         ).strftime("%Y-%m-%d %H:%M")
 
         _sc  = "#06D6A0"
-        _stx = f"‫✅ آخر تحديث:‬<br>{_mt}"
+        _stx = f"{t('last_update_prefix')}<br>{_mt}"
 
     else:
         _sc  = "#EF476F"
-        _stx = "⏳ جاري تهيئة البيانات..."
+        _stx = t("initializing_data")
 
     st.markdown(
         f'<div style="text-align:center;font-size:0.62rem;color:{_sc};'
@@ -1052,29 +1397,29 @@ with st.sidebar:
 
     st.markdown('<div class="gold-divider"></div>', unsafe_allow_html=True)
 
-    st.markdown("""
+    st.markdown(f"""
     <div class="sb-src">
-      <div class="sb-src-head">مصادر البيانات</div>
+      <div class="sb-src-head">{t('data_sources_head')}</div>
       <div class="sb-src-val">goldprice.org · exchangerate-api · yfinance</div>
       <div class="sb-src-val">GC=F · EGP=X · CL=F · ^TNX · ^GSPC</div>
     </div>
     <div style="height:10px"></div>
     <div class="sb-src">
-      <div class="sb-src-head">منحة رواد مصر الرقمية</div>
+      <div class="sb-src-head">{t('grant_head')}</div>
       <div class="sb-src-val">DEPI Final Project · 2026</div>
     </div>
     <div style="height:14px"></div>
     <div style="background:linear-gradient(135deg,rgba(255,215,0,0.06),rgba(76,201,240,0.04));
                 border:1px solid rgba(255,215,0,0.15);border-radius:10px;padding:12px 14px;">
       <div style="color:var(--gold);font-size:0.64rem;font-weight:700;text-align:center;
-                  letter-spacing:1px;margin-bottom:6px;">DATA ANALYST</div>
+                  letter-spacing:1px;margin-bottom:6px;">{t('analyst_role')}</div>
       <div style="color:#E8EDF5;font-size:0.72rem;font-weight:700;text-align:center;
                   font-family:'Cairo',sans-serif;margin-bottom:3px;">محمود شمعون</div>
       <div style="color:#8D99AE;font-size:0.6rem;text-align:center;
-                  font-family:'DM Mono',monospace;direction:ltr;">Mahmoud Shamoun</div>
+                  font-family:'DM Mono',monospace;direction:ltr;">{t('analyst_name')}</div>
       <div style="color:#3A4A65;font-size:0.58rem;text-align:center;margin-top:4px;
-                  direction:rtl;line-height:1.7;">
-        محلل بيانات متخصص<br>مشروع تخرج · DEPI
+                  direction:{DIR};line-height:1.7;">
+        {t('analyst_desc')}
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -1084,7 +1429,7 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────────────
 
 if not os.path.exists(CSV_PATH):
-    st.error("❌ فشل تحميل البيانات - تحقق من الاتصال بالإنترنت")
+    st.error(t("data_load_fail"))
     st.stop()
 
 _mtime_key = os.path.getmtime(CSV_PATH)
@@ -1092,7 +1437,7 @@ with st.spinner(""):
     data = load_data(CSV_PATH, _mtime_key)
 
 if data.empty:
-    st.error("❌ فشل قراءة البيانات"); st.stop()
+    st.error(t("data_read_fail")); st.stop()
 
 # Export the fully processed DataFrame (all engineered columns) to CSV.
 # Includes fair values, technical indicators, signals, and portfolio metrics
@@ -2307,7 +2652,7 @@ if embed_q:
 # PAGE 1: Home - Executive Summary & Live Stream
 # ═════════════════════════════════════════════════════════════════════════════
 
-if page == "🏠  الرئيسية":
+if selected_key == "home":
 
     m = compute_metrics(data, selected_karat)
 
@@ -2315,12 +2660,10 @@ if page == "🏠  الرئيسية":
     <div class="hero-wrap">
       <div class="hero-eyebrow">GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM</div>
       <div class="hero-title">
-        <img src="{IMAGE_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px; position: relative; top: -5px;"> الذهب كأداة مالية في مصر
+        <img src="{IMAGE_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px; position: relative; top: -5px;"> {t('home_hero_title')}
       </div>
       <div class="hero-sub">
-        تحليل شامل لأداء الذهب بالعيارات
-        <span style="font-family:'DM Mono',monospace; direction:ltr; display:inline;"> 18K · 21K · 24K </span>
-        كأداة للحفاظ على القيمة في مواجهة التضخم وانخفاض الجنيه - محاكاة واقعية تشمل المصنعية وفرق أسعار البيع
+        {t('home_hero_sub')}
       </div>
       <div class="hero-date">
         <span class="dot"></span>
@@ -2328,26 +2671,26 @@ if page == "🏠  الرئيسية":
       </div>
       <div class="hero-badges">
         <span class="hero-badge">DEPI 2026</span>
-        <span class="hero-badge">منحة رواد مصر الرقمية</span>
+        <span class="hero-badge">{t('home_badge_grant')}</span>
         <span class="hero-badge">Mahmoud Shamoun</span>
       </div>
     </div>""", unsafe_allow_html=True)
 
     clr = '#06D6A0' if m['total'] > 0 else '#EF476F'
     cards_html = (
-        kpi_html(f"{last_price:,.0f}",    f"جنيه/جرام {selected_karat}",         "#FFD700", "0.05s") +
-        kpi_html(f"{last_usd:.2f}",        "جنيه / دولار",                         "#4CC9F0", "0.10s") +
-        kpi_html(f"${last_gold:,.0f}",     "أونصة عالمياً",                        "#06D6A0", "0.15s") +
-        kpi_html(f"{m['total']:+.0f}%",    f"عائد الذهب {selected_karat} من 2020", clr,       "0.20s") +
-        kpi_html(f"{m['sharpe']:.2f}",     "Sharpe Ratio",                         "#A855F7", "0.25s")
+        kpi_html(f"{last_price:,.0f}",    t('kpi_price_per_gram', k=selected_karat),         "#FFD700", "0.05s") +
+        kpi_html(f"{last_usd:.2f}",        t('kpi_egp_usd'),                                   "#4CC9F0", "0.10s") +
+        kpi_html(f"${last_gold:,.0f}",     t('kpi_ounce_global'),                              "#06D6A0", "0.15s") +
+        kpi_html(f"{m['total']:+.0f}%",    t('kpi_gold_return', k=selected_karat),             clr,       "0.20s") +
+        kpi_html(f"{m['sharpe']:.2f}",     "Sharpe Ratio",                                      "#A855F7", "0.25s")
     )
     st.markdown(f'<div class="kpi-grid">{cards_html}</div>', unsafe_allow_html=True)
 
     spacer(24)
-    section("📈", "مسار سعر الذهب", "")
+    section("📈", t('sec_price_path'), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">سعر جرام {selected_karat} بالجنيه المصري</div>
+    <div style="direction:{DIR}">{t('price_per_gram_sub', k=selected_karat)}</div>
     <div style="direction:ltr">Jan 2020 - {last_date_f}</div>
     </div>""", unsafe_allow_html=True)
 
@@ -2355,9 +2698,11 @@ if page == "🏠  الرئيسية":
     clr  = KARAT_COLORS[selected_karat]
     fill_map = {'24K': 'rgba(255,249,196,0.07)', '21K': 'rgba(255,215,0,0.07)', '18K': 'rgba(205,127,50,0.07)'}
     fig  = go.Figure()
-    fig.add_trace(go.Scatter(x=data.index, y=data[pc], name=f'{selected_karat} سعر جرام',
+    _price_trace_lbl = f'{selected_karat} price/g' if LANG == 'en' else f'{selected_karat} سعر جرام'
+    _egp_word = 'EGP' if LANG == 'en' else 'جنيه'
+    fig.add_trace(go.Scatter(x=data.index, y=data[pc], name=_price_trace_lbl,
         line=dict(color=clr, width=2), fill='tozeroy', fillcolor=fill_map[selected_karat],
-        hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:,.0f} جنيه<extra></extra>"))
+        hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:,.0f} " + _egp_word + "<extra></extra>"))
     fig.add_trace(go.Scatter(x=data.index, y=data[f'SMA50_{selected_karat}'],
         name='SMA 50', line=dict(color='#FF9F43', width=1.2, dash='dot'),
         hovertemplate="SMA50: %{y:,.0f}<extra></extra>"))
@@ -2375,23 +2720,23 @@ if page == "🏠  الرئيسية":
     usd_chg   = (data['USD_EGP_Official'].iloc[-1] / data['USD_EGP_Official'].iloc[0] - 1) * 100
     c1, c2    = st.columns(2)
     with c1:
-        insight(f"‫📌 <b>الأداء الإجمالي:</b> ارتفع الذهب {selected_karat} بنسبة <span class='num'>{price_chg:.0f}%</span> منذ يناير 2020، مقارنةً بالدولار الذي ارتفع <span class='num'>{usd_chg:.0f}%</span> فقط خلال نفس الفترة.")
+        insight(t('insight_overall_perf', k=selected_karat, price_chg=price_chg, usd_chg=usd_chg))
     with c2:
-        insight(f"🏔️ <b>القمة التاريخية:</b> <span class='num'>{peak_p:,.0f} جنيه</span> لجرام {selected_karat} في <b>{peak_d}</b> - مدفوعاً بتراجع الجنيه وارتفاع الأسعار العالمية.")
+        insight(t('insight_historic_peak', k=selected_karat, peak_p=peak_p, peak_d=peak_d))
 
     spacer(24)
-    section("🗓️", "أبرز الأحداث المؤثرة على سعر الذهب", "2020 – 2025")
+    section("🗓️", t('sec_key_events'), "2020 – 2025")
     events_cards = {
-        "2020-03-15": ("🦠", "COVID-19",       "مارس 2020",    "انهيار الأسواق العالمية - الذهب يرتفع كملاذ آمن",            "#FF6B6B"),
-        "2022-02-24": ("🇺🇦","روسيا-أوكرانيا","فبراير 2022",  "الغزو الروسي وارتفاع الطاقة والذهب عالمياً",                "#FF9F43"),
-        "2022-03-21": ("📉", "تعويم 1",         "مارس 2022",    "أول تعويم للجنيه يرفع الذهب المحلي بشكل حاد",              "#EF476F"),
-        "2023-10-07": ("⚔️","حرب غزة",          "أكتوبر 2023",  "اندلاع المواجهة يرفع الطلب على الذهب كملاذ",               "#FF6B6B"),
-        "2024-03-06": ("🔓","تعويم 2024",        "مارس 2024",    "تعويم شامل للجنيه: الدولار يقفز من 30 إلى 50 جنيهاً",      "#06D6A0"),
-        "2024-09-18": ("✂️","خفض الفائدة",       "سبتمبر 2024",  "الفيدرالي يبدأ دورة خفض الفائدة - دعم قوي للذهب",          "#4CC9F0"),
-        "2025-01-19": ("🕊️","وقف إطلاق النار",  "يناير 2025",   "اتفاق غزة يُهدئ مؤقتاً - الذهب يتراجع طفيفاً",             "#06D6A0"),
-        "2025-04-02": ("🔥","رسوم ترامب",        "أبريل 2025",   "إعلان الرسوم الجمركية الشاملة يدفع الذهب لـ 3500$",         "#FF9F43"),
-        "2025-04-22": ("🏆","قياسي 3500$",        "أبريل 2025",   "الذهب يكسر 3500$ لأول مرة في التاريخ",                     "#FFD700"),
-        "2025-06-13": ("💥","ضربة إيران",         "يونيو 2025",   "الضربة الإسرائيلية-الأمريكية على إيران ترفع الذهب فوراً", "#EF476F"),
+        "2020-03-15": ("🦠", t("event_covid_title"),     t("event_covid_date"),     t("event_covid_desc"),     "#FF6B6B"),
+        "2022-02-24": ("🇺🇦", t("event_ukraine_title"),  t("event_ukraine_date"),   t("event_ukraine_desc"),   "#FF9F43"),
+        "2022-03-21": ("📉", t("event_float1_title"),    t("event_float1_date"),    t("event_float1_desc"),    "#EF476F"),
+        "2023-10-07": ("⚔️", t("event_gaza_title"),      t("event_gaza_date"),      t("event_gaza_desc"),      "#FF6B6B"),
+        "2024-03-06": ("🔓", t("event_float2024_title"), t("event_float2024_date"), t("event_float2024_desc"), "#06D6A0"),
+        "2024-09-18": ("✂️", t("event_ratecut_title"),   t("event_ratecut_date"),   t("event_ratecut_desc"),   "#4CC9F0"),
+        "2025-01-19": ("🕊️", t("event_ceasefire_title"), t("event_ceasefire_date"), t("event_ceasefire_desc"), "#06D6A0"),
+        "2025-04-02": ("🔥", t("event_tariffs_title"),   t("event_tariffs_date"),   t("event_tariffs_desc"),   "#FF9F43"),
+        "2025-04-22": ("🏆", t("event_record_title"),    t("event_record_date"),    t("event_record_desc"),    "#FFD700"),
+        "2025-06-13": ("💥", t("event_iran_title"),      t("event_iran_date"),      t("event_iran_desc"),      "#EF476F"),
     }
     cols_ev = st.columns(3)
     for idx, (date_str, (icon, title_ev, date_lbl, desc, color)) in enumerate(events_cards.items()):
@@ -2404,21 +2749,21 @@ if page == "🏠  الرئيسية":
                 <span style="font-size:1.3rem">{icon}</span>
                 <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:#3A4A65">{date_lbl}</span>
               </div>
-              <div style="color:{color};font-weight:700;font-size:0.82rem;direction:rtl;margin-bottom:4px">{title_ev}</div>
-              <div style="color:#6B7A99;font-size:0.72rem;direction:rtl;line-height:1.6">{desc}</div>
+              <div style="color:{color};font-weight:700;font-size:0.82rem;direction:{DIR};margin-bottom:4px">{title_ev}</div>
+              <div style="color:#6B7A99;font-size:0.72rem;direction:{DIR};line-height:1.6">{desc}</div>
             </div>""", unsafe_allow_html=True)
 
     spacer(24)
     c1, c2 = st.columns([1.2, 1])
     with c1:
-        section("🔗", "مصفوفة الارتباط", "")
-        st.markdown("""
+        section("🔗", t('sec_correlation'), "")
+        st.markdown(f"""
         <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="direction:rtl">قوة العلاقة بين الذهب والمتغيرات الاقتصادية الكلية</div>
+        <div style="direction:{DIR}">{t('correlation_sub')}</div>
         <div style="direction:ltr">Correlation Matrix · Heatmap</div>
         </div>""", unsafe_allow_html=True)
         cols_  = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
-        names_ = ['ذهب عالمي', 'دولار/جنيه', 'نفط', 'سندات أمريكية', 'S&P 500']
+        names_ = [t('corr_name_gold'), t('corr_name_usd'), t('corr_name_oil'), t('corr_name_bonds'), t('corr_name_sp500')]
         cd     = data[cols_].dropna().corr()
         cd.columns = names_; cd.index = names_
         fc  = px.imshow(cd, text_auto=".2f",
@@ -2432,17 +2777,17 @@ if page == "🏠  الرئيسية":
         st.plotly_chart(fc, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     with c2:
-        section("💱", "مسار الدولار", "")
-        st.markdown("""
+        section("💱", t('sec_usd_path'), "")
+        st.markdown(f"""
         <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="direction:rtl">صعود الدولار يعني ارتفاعاً مباشراً في الذهب</div>
+        <div style="direction:{DIR}">{t('usd_path_sub')}</div>
         <div style="direction:ltr">USD / EGP</div>
         </div>""", unsafe_allow_html=True)
         fu = go.Figure()
         fu.add_trace(go.Scatter(x=data.index, y=data['USD_EGP_Official'],
             line=dict(color='#4CC9F0', width=2), fill='tozeroy',
             fillcolor='rgba(76,201,240,0.06)',
-            hovertemplate="%{x|%d %b %Y}<br><b>%{y:.2f} جنيه</b><extra></extra>"))
+            hovertemplate="%{x|%d %b %Y}<br><b>%{y:.2f} " + ('EGP' if LANG == 'en' else 'جنيه') + "</b><extra></extra>"))
         if show_events: add_events(fu, data)
         fu.update_layout(**plot_layout(height=420, show_legend=False))
         st.plotly_chart(fu, use_container_width=True, config=dict(displaylogo=False, responsive=True))
@@ -2452,12 +2797,12 @@ if page == "🏠  الرئيسية":
 # PAGE 2: Price Structure Analysis - Premium Price Anatomy
 # ═════════════════════════════════════════════════════════════════════════════
 
-elif page == "📊  تحليل الأسعار":
+elif selected_key == "analysis":
 
-    section("📊", "تشريح السعر - قيمة حقيقية أم تضخم؟", "")
-    st.markdown("""
+    section("📊", t('sec_price_anatomy'), "")
+    st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">كم من السعر يعكس ارتفاع الذهب عالمياً، وكم يعكس انهيار قيمة الجنيه؟ (قاعدة الحساب: سعر الصرف في يناير 2020)</div>
+    <div style="direction:{DIR}">{t('price_anatomy_sub')}</div>
     <div style="direction:ltr">Stacked Area · 24K · 21K · 18K</div>
     </div>""", unsafe_allow_html=True)
 
@@ -2468,18 +2813,20 @@ elif page == "📊  تحليل الأسعار":
     KFILL = {'24K': 'rgba(255,249,196,0.65)', '21K': 'rgba(255,215,0,0.65)', '18K': 'rgba(205,127,50,0.65)'}
     KROW  = {'24K': 1, '21K': 2, '18K': 3}
 
+    _lbl_value = t('legend_global_value')
+    _lbl_prem  = t('legend_inflation_prem')
     for karat in ['24K', '21K', '18K']:
         row = KROW[karat]
         fig.add_trace(go.Scatter(x=data.index, y=data[f'ValueDriven_{karat}'],
-            name='قيمة عالمية', stackgroup=f'g{row}', mode='lines',
+            name=_lbl_value, stackgroup=f'g{row}', mode='lines',
             line=dict(width=0), fillcolor=KFILL[karat],
             showlegend=(row==1), legendgroup='gv',
-            hovertemplate=f"{karat} - قيمة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
+            hovertemplate=f"{karat} - {_lbl_value}: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
         fig.add_trace(go.Scatter(x=data.index, y=data[f'InflPrem_{karat}'],
-            name='علاوة تضخم', stackgroup=f'g{row}', mode='lines',
+            name=_lbl_prem, stackgroup=f'g{row}', mode='lines',
             line=dict(width=0), fillcolor='rgba(239,71,111,0.50)',
             showlegend=(row==1), legendgroup='gi',
-            hovertemplate=f"{karat} - علاوة: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
+            hovertemplate=f"{karat} - {_lbl_prem}: %{{y:,.0f}}<extra></extra>"), row=row, col=1)
 
     if show_events: add_events(fig, data, rows=[1,2,3])
     lyt = plot_layout(height=800)
@@ -2488,7 +2835,7 @@ elif page == "📊  تحليل الأسعار":
         bgcolor="rgba(0,0,0,0)", borderwidth=0,
         font=dict(size=10, family="Cairo"), itemsizing="constant")
     lyt['xaxis']['rangeselector']['y'] = 1.20
-    lyt['title'] = dict(text="تشريح السعر: القيمة الحقيقية مقابل علاوة التضخم والعملة",
+    lyt['title'] = dict(text=t('chart_title_anatomy'),
         font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.98)
     fig.update_layout(**lyt)
     fig.update_xaxes(tickfont=dict(family="Cairo", size=10, color="#4A6A8A"),
@@ -2500,14 +2847,14 @@ elif page == "📊  تحليل الأسعار":
             ann.update(x=0.98, xanchor='right', font=dict(color='#B8960C', size=10.5, family='Cairo'))
     for r in [1,2,3]:
         fig.update_yaxes(tickfont=dict(family="Cairo", size=11, color="#4A6A8A"),
-                         title_text="جنيه", title_font=dict(size=9), row=r, col=1)
+                         title_text=t('axis_egp'), title_font=dict(size=9), row=r, col=1)
     st.plotly_chart(fig, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     spacer(24)
-    section("📐", "نسبة علاوة التضخم %", "")
-    st.markdown("""
+    section("📐", t('sec_inflation_pct'), "")
+    st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">النسبة المئوية من السعر ناتجة عن ضعف الجنيه - كلما ارتفعت، كلما كان الذهب وقاية أكبر</div>
+    <div style="direction:{DIR}">{t('inflation_pct_sub')}</div>
     <div style="direction:ltr">Inflation Premium %</div>
     </div>""", unsafe_allow_html=True)
 
@@ -2518,7 +2865,7 @@ elif page == "📊  تحليل الأسعار":
             hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
     fig2.add_hline(y=0, line_dash="dot", line_color="#1E3A5F", opacity=0.8)
     if show_events: add_events(fig2, data)
-    fig2.update_layout(**plot_layout(height=340, yaxis=dict(title_text="علاوة %")))
+    fig2.update_layout(**plot_layout(height=340, yaxis=dict(title_text=t('axis_premium_pct'))))
     st.plotly_chart(fig2, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     spacer()
@@ -2528,47 +2875,51 @@ elif page == "📊  تحليل الأسعار":
         mx = data[f'PremPct_{karat}'].max()
         with col3:
             insight(f"<b style='color:{KARAT_COLORS[karat]}'>{karat}</b><br>"
-                    f"متوسط العلاوة: <span class='num'>{ap:.1f}%</span><br>"
-                    f"الذروة التاريخية: <span class='num-red'>{mx:.1f}%</span>")
+                    f"{t('insight_avg_premium')} <span class='num'>{ap:.1f}%</span><br>"
+                    f"{t('insight_peak_premium')} <span class='num-red'>{mx:.1f}%</span>")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # PAGE 3: Investment Portfolio Simulation - Net Cost Simulation
 # ═════════════════════════════════════════════════════════════════════════════
 
-elif page == "💼  محاكاة الاستثمار":
+elif selected_key == "investment":
 
-    section("💼", "محاكاة الاستثمار الواقعية", "")
+    _cur = 'ج' if LANG == 'ar' else ' EGP'
+    section("💼", t('inv_section_title'), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">
-      لو استثمرنا 100,000 جنيه في يناير 2020 - القيمة الصافية بعد خصم المصنعية
-      <span style="font-family:'DM Mono';direction:ltr;display:inline;">(24K +{MAKING_CHARGES['24K']}ج · 21K +{MAKING_CHARGES['21K']}ج · 18K +{MAKING_CHARGES['18K']}ج)</span>
-      وفروق البيع
+    <div style="direction:{DIR}">
+      {t('inv_sub_p1')}
+      <span style="font-family:'DM Mono';direction:ltr;display:inline;">(24K +{MAKING_CHARGES['24K']}{_cur} · 21K +{MAKING_CHARGES['21K']}{_cur} · 18K +{MAKING_CHARGES['18K']}{_cur})</span>
+      {t('inv_sub_p2')}
       <span style="font-family:'DM Mono';direction:ltr;display:inline;">(24K {SELL_SPREAD['24K']*100:.1f}% · 21K {SELL_SPREAD['21K']*100:.1f}% · 18K {SELL_SPREAD['18K']*100:.1f}%)</span>
     </div>
     <div style="direction:ltr">Net Portfolio Simulation · 100,000 EGP Start</div>
     </div>""", unsafe_allow_html=True)
 
+    _egp_word = 'EGP' if LANG == 'en' else 'جنيه'
     fig_inv = go.Figure()
     for karat, color in KARAT_COLORS.items():
         fig_inv.add_trace(go.Scatter(x=data.index, y=data[f'Port_{karat}'],
-            name=f'{karat} ذهب (صافي)', line=dict(color=color, width=2.2),
-            hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} جنيه<extra></extra>"))
+            name=t('inv_trace_gold_net', k=karat), line=dict(color=color, width=2.2),
+            hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} {_egp_word}<extra></extra>"))
     fig_inv.add_trace(go.Scatter(x=data.index, y=data['Port_USD'],
-        name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
-        hovertemplate="دولار: %{y:,.0f}<extra></extra>"))
+        name=t('lbl_usd'), line=dict(color='#4CC9F0', width=1.6, dash='dot'),
+        hovertemplate=f"{t('lbl_usd')}: %{{y:,.0f}}<extra></extra>"))
     fig_inv.add_trace(go.Scatter(x=data.index, y=data['Port_Cash'],
-        name='كاش (جنيه)', line=dict(color='#1E3A5F', width=1.2, dash='dot'),
-        hovertemplate="كاش: %{y:,.0f}<extra></extra>"))
+        name=t('lbl_cash_egp'), line=dict(color='#1E3A5F', width=1.2, dash='dot'),
+        hovertemplate=f"{t('lbl_cash_egp')}: %{{y:,.0f}}<extra></extra>"))
     if show_events: add_events(fig_inv, data)
-    lyt_inv = plot_layout(height=440, yaxis=dict(title_text="القيمة الصافية (جنيه)"))
-    lyt_inv['title'] = dict(text="نمو الثروة الحقيقي (مخصوم منه تكاليف الدخول والخروج)",
+    lyt_inv = plot_layout(height=440, yaxis=dict(title_text=t('axis_net_value_egp')))
+    lyt_inv['title'] = dict(text=t('inv_chart_title'),
         font=dict(size=13, color="#FFD700", family="Cairo"), x=0.5, xanchor='center', y=0.97)
     fig_inv.update_layout(**lyt_inv)
     st.plotly_chart(fig_inv, use_container_width=True, config=dict(displaylogo=False, responsive=True))
 
     spacer()
+    _egp_sym = 'EGP' if LANG == 'en' else 'ج'
+    _g_sym   = 'g'   if LANG == 'en' else 'جم'
     cols4 = st.columns(4)
     for col4, karat in zip(cols4[:3], KARAT_FACTORS):
         m = compute_metrics(data, karat)
@@ -2578,14 +2929,14 @@ elif page == "💼  محاكاة الاستثمار":
         with col4:
             st.markdown(f"""
             <div class="metric-card" style="padding:15px 10px;">
-              <div class="metric-card-title" style="color:{KARAT_COLORS[karat]}">{karat} ذهب</div>
-              <div class="metric-row"><span class="metric-label">الكمية الصافية</span>
-                <span class="metric-val" style="color:#E8EDF5">{grams:,.1f} جم</span></div>
-              <div class="metric-row"><span class="metric-label">سعر 2020 (+مصنعية)</span>
-                <span class="metric-val" style="color:#8D99AE">{entry:,.0f} ج</span></div>
-              <div class="metric-row"><span class="metric-label">القيمة الصافية</span>
-                <span class="metric-val" style="color:#FFD700">{m['final']:,.0f} ج</span></div>
-              <div class="metric-row"><span class="metric-label">العائد الفعلي</span>
+              <div class="metric-card-title" style="color:{KARAT_COLORS[karat]}">{t('inv_card_title_gold', k=karat)}</div>
+              <div class="metric-row"><span class="metric-label">{t('lbl_net_qty')}</span>
+                <span class="metric-val" style="color:#E8EDF5">{grams:,.1f} {_g_sym}</span></div>
+              <div class="metric-row"><span class="metric-label">{t('lbl_price_2020_making')}</span>
+                <span class="metric-val" style="color:#8D99AE">{entry:,.0f} {_egp_sym}</span></div>
+              <div class="metric-row"><span class="metric-label">{t('lbl_net_value')}</span>
+                <span class="metric-val" style="color:#FFD700">{m['final']:,.0f} {_egp_sym}</span></div>
+              <div class="metric-row"><span class="metric-label">{t('lbl_actual_return')}</span>
                 <span class="metric-val" style="color:{tc}">{m['total']:+.1f}%</span></div>
               <div class="metric-row"><span class="metric-label">Sharpe Ratio</span>
                 <span class="metric-val" style="color:#4CC9F0">{m['sharpe']:.2f}</span></div>
@@ -2611,14 +2962,14 @@ elif page == "💼  محاكاة الاستثمار":
     with cols4[3]:
         st.markdown(f"""
         <div class="metric-card" style="padding:15px 10px;">
-          <div class="metric-card-title" style="color:#4CC9F0">الدولار USD</div>
-          <div class="metric-row"><span class="metric-label">الكمية المشتراة</span>
+          <div class="metric-card-title" style="color:#4CC9F0">{t('lbl_usd_card_title')}</div>
+          <div class="metric-row"><span class="metric-label">{t('lbl_qty_bought')}</span>
             <span class="metric-val" style="color:#E8EDF5">${usd_bought:,.0f}</span></div>
-          <div class="metric-row"><span class="metric-label">سعر 2020</span>
-            <span class="metric-val" style="color:#8D99AE">{usd0:,.2f} ج</span></div>
-          <div class="metric-row"><span class="metric-label">القيمة الحالية</span>
-            <span class="metric-val" style="color:#FFD700">{usd_final:,.0f} ج</span></div>
-          <div class="metric-row"><span class="metric-label">العائد الكلي</span>
+          <div class="metric-row"><span class="metric-label">{t('lbl_price_2020')}</span>
+            <span class="metric-val" style="color:#8D99AE">{usd0:,.2f} {_egp_sym}</span></div>
+          <div class="metric-row"><span class="metric-label">{t('lbl_current_value')}</span>
+            <span class="metric-val" style="color:#FFD700">{usd_final:,.0f} {_egp_sym}</span></div>
+          <div class="metric-row"><span class="metric-label">{t('lbl_total_return')}</span>
             <span class="metric-val" style="color:{usd_tc}">{usd_ret:+.1f}%</span></div>
           <div class="metric-row"><span class="metric-label">Sharpe Ratio</span>
             <span class="metric-val" style="color:#4CC9F0">{usd_sharpe:.2f}</span></div>
@@ -2628,9 +2979,9 @@ elif page == "💼  محاكاة الاستثمار":
 
     spacer(24)
     section("📉", "Max Drawdown", "")
-    st.markdown("""
+    st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">الانخفاض عن القمة - يقيس الخسارة في أسوأ الأوقات</div>
+    <div style="direction:{DIR}">{t('dd_sub')}</div>
     <div style="direction:ltr">Peak-to-Trough Drawdown %</div>
     </div>""", unsafe_allow_html=True)
 
@@ -2642,8 +2993,8 @@ elif page == "💼  محاكاة الاستثمار":
             fill='tozeroy', fillcolor=fc_map.get(karat,'rgba(255,255,255,0.1)'),
             hovertemplate=f"{karat}: %{{y:.1f}}%<extra></extra>"))
     fdd.add_trace(go.Scatter(x=data.index, y=usd_dd_s,
-        name='دولار', line=dict(color='#4CC9F0', width=1.6, dash='dot'),
-        hovertemplate="دولار: %{y:.1f}%<extra></extra>"))
+        name=t('lbl_usd'), line=dict(color='#4CC9F0', width=1.6, dash='dot'),
+        hovertemplate=f"{t('lbl_usd')}: %{{y:.1f}}%<extra></extra>"))
     for date_str, (label, color, fill) in CRISIS_EVENTS.items():
         dt = pd.to_datetime(date_str)
         if dt < data.index[0]: continue
@@ -2658,35 +3009,31 @@ elif page == "💼  محاكاة الاستثمار":
     spacer()
     best_k  = max(KARAT_FACTORS.keys(), key=lambda k: compute_metrics(data,k)['total'])
     best_m  = compute_metrics(data, best_k)
-    insight(f"""💡 <b>ملخص المقارنة:</b>
-    أفضل أداء واقعي (بعد خصم التكاليف) كان <b style="color:{KARAT_COLORS[best_k]}">{best_k}</b>
-    بعائد صافٍ <span class="num">{best_m['total']:+.1f}%</span> مقابل
-    الدولار <span class="num">{usd_ret:+.1f}%</span> والكاش بالجنيه
-    <span class="num-red">0%</span> (مع التضخم الحقيقي).
-    المصنعية وفروق البيع تُقلل العوائد لكن لا تمحو التفوق التاريخي للذهب.
-    """)
+    insight(f"💡 <b>{t('inv_insight_title')}</b> " + t('inv_insight_body', c=KARAT_COLORS[best_k], best_k=best_k,
+                                              ret=best_m['total'], usd=usd_ret))
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # PAGE 4: Radar & Technical Indicators - Technical Analysis
 # ═════════════════════════════════════════════════════════════════════════════
 
-elif page == "📡  المؤشرات التقنية":
+elif selected_key == "technical":
 
     k = selected_karat
-    section("📡", f"التحليل التقني - {k}", "")
-    st.markdown("""
+    section("📡", t('tech_title', k=k), "")
+    st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">إشارات الشراء والبيع الآلية</div>
+    <div style="direction:{DIR}">{t('tech_sub')}</div>
     <div style="direction:ltr">Bollinger Bands · RSI-14 · MACD</div>
     </div>""", unsafe_allow_html=True)
 
+    _egp_word = 'EGP' if LANG == 'en' else 'جنيه'
     fig_tech = make_subplots(rows=3, cols=1, shared_xaxes=True,
         row_heights=[0.55, 0.25, 0.20], vertical_spacing=0.07,
         subplot_titles=[
-            f"السعر + Bollinger Bands ({k})",
-            "MACD - زخم الاتجاه",
-            "RSI-14 - مستوى التشبع"
+            t('tech_subplot_price_bb', k=k),
+            t('tech_subplot_macd'),
+            t('tech_subplot_rsi')
         ])
 
     # Bollinger Bands
@@ -2696,8 +3043,8 @@ elif page == "📡  المؤشرات التقنية":
         fill='tonexty', fillcolor='rgba(180,180,255,0.04)',
         line=dict(width=0), name='Bollinger Bands'), row=1, col=1)
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'Price_{k}'],
-        name='السعر', line=dict(color='#D8E4F0', width=1.8),
-        hovertemplate="%{x|%d %b %Y} - %{y:,.0f} جنيه<extra></extra>"), row=1, col=1)
+        name=t('lbl_price'), line=dict(color='#D8E4F0', width=1.8),
+        hovertemplate="%{x|%d %b %Y} - %{y:,.0f} " + _egp_word + "<extra></extra>"), row=1, col=1)
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'SMA50_{k}'],
         name='SMA 50', line=dict(color='#FF9F43', width=1.1, dash='dot')), row=1, col=1)
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'SMA200_{k}'],
@@ -2747,7 +3094,7 @@ elif page == "📡  المؤشرات التقنية":
         if ann.text not in event_labels:
             ann.update(x=0.98, xanchor='right',
                        font=dict(color='#FFD700', size=11, family='Cairo'))
-    fig_tech.update_yaxes(title_text="السعر (جنيه)", title_font=dict(size=9, color="#3A4A65"), row=1, col=1)
+    fig_tech.update_yaxes(title_text=t('axis_price_egp'), title_font=dict(size=9, color="#3A4A65"), row=1, col=1)
     fig_tech.update_yaxes(title_text="MACD", tickfont=dict(family="Cairo", size=9, color="#3A4A65"),
                           title_font=dict(size=9, color="#3A4A65"), row=2, col=1)
     fig_tech.update_yaxes(title_text="RSI", range=[0, 100],
@@ -2760,18 +3107,20 @@ elif page == "📡  المؤشرات التقنية":
     rsi  = data[f'RSI_{k}'].iloc[-1]
     macd = data[f'MACD_{k}'].iloc[-1]
     sc   = {'BUY': 'sig-buy', 'SELL': 'sig-sell', 'HOLD': 'sig-hold'}.get(sig, 'sig-hold')
-    sa   = {'BUY': 'شراء 📈', 'SELL': 'بيع 📉', 'HOLD': 'انتظار ⏸'}.get(sig, 'انتظار')
+    sa   = {'BUY': t('sig_buy'), 'SELL': t('sig_sell'), 'HOLD': t('sig_hold')}.get(sig, t('sig_hold'))
     bbu  = data[f'BB_up_{k}'].iloc[-1]
     bbl  = data[f'BB_dn_{k}'].iloc[-1]
     lp   = data[f'Price_{k}'].iloc[-1]
-    bbp  = ("عند الحد الأعلى ⚠️" if lp > bbu * 0.98 else
-            "عند الحد الأدنى ✅" if lp < bbl * 1.02 else "داخل النطاق")
+    bbp  = (t('tech_bb_upper') if lp > bbu * 0.98 else
+            t('tech_bb_lower') if lp < bbl * 1.02 else t('tech_bb_within'))
+    _rsi_tag = (f"&nbsp;<span style='color:#EF476F;font-size:0.72rem'>{t('tech_overbought')}</span>" if rsi>70 else
+                f"&nbsp;<span style='color:#06D6A0;font-size:0.72rem'>{t('tech_oversold')}</span>" if rsi<30 else "")
     insight(f"""
     <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;direction:ltr;
                 justify-content:center;font-family:'DM Mono',monospace;font-size:0.82rem;">
-      <div><b style="color:#FFD700;font-family:Cairo">الإشارة ({k}):</b>&nbsp;<span class="{sc}">{sa}</span></div>
+      <div><b style="color:#FFD700;font-family:Cairo">{t('tech_signal_label', k=k)}</b>&nbsp;<span class="{sc}">{sa}</span></div>
       <div style="color:#1E3A5F">│</div>
-      <div><b style="color:#A855F7">RSI</b>&nbsp;{rsi:.1f}{"&nbsp;<span style='color:#EF476F;font-size:0.72rem'>تشبع شراء</span>" if rsi>70 else "&nbsp;<span style='color:#06D6A0;font-size:0.72rem'>تشبع بيع</span>" if rsi<30 else ""}</div>
+      <div><b style="color:#A855F7">RSI</b>&nbsp;{rsi:.1f}{_rsi_tag}</div>
       <div style="color:#1E3A5F">│</div>
       <div><b style="color:#4CC9F0">MACD</b>&nbsp;{macd:,.1f}</div>
       <div style="color:#1E3A5F">│</div>
@@ -2783,19 +3132,19 @@ elif page == "📡  المؤشرات التقنية":
 # PAGE 5: Advanced Forecasting - Tuned Prophet ML Suite + ROI Calculator
 # ═════════════════════════════════════════════════════════════════════════════
 
-elif page == "🔮  التوقعات":
+elif selected_key == "forecast":
 
-    section("🔮", f"توقعات الأسعار - {selected_karat}", "")
-    st.markdown("""
+    section("🔮", t('fc_title', k=selected_karat), "")
+    st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:rtl">نموذج التنبؤ مع متغيرات الدولار والنفط - استراتيجية الدمج التاريخي</div>
+    <div style="direction:{DIR}">{t('fc_sub')}</div>
     <div style="direction:ltr">Prophet Model · Regressors: USD + OIL · Historical Date Merge Strategy</div>
     </div>""", unsafe_allow_html=True)
 
-    st.markdown('<div class="fc-label">أفق التوقع (أيام)</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="fc-label">{t("fc_horizon_label")}</div>', unsafe_allow_html=True)
     forecast_days = st.slider("d", 30, 365, 180, 30, label_visibility="collapsed")
 
-    with st.spinner("⏳ جاري تدريب نموذج Prophet..."):
+    with st.spinner(t("fc_spinner_training")):
         try:
             from prophet import Prophet
 
@@ -2941,37 +3290,38 @@ elif page == "🔮  التوقعات":
             fc_out['yhat_lower'] = fc_out['yhat_lower'] + continuity_offset
 
             # ── Forecast chart ──
-            title_chart = f"توقعات ذهب \u2066{k}\u2069 · {forecast_days} يوم قادماً"
+            _egp_word = 'EGP' if LANG == 'en' else 'جنيه'
+            title_chart = t('fc_chart_title', k=k, days=forecast_days)
             fig_fc = go.Figure()
 
             # Weekly-downsampled actuals for cleaner display on long horizons
             hw = data[fv_col].resample('W').last()
-            fig_fc.add_trace(go.Scatter(x=hw.index, y=hw, name='السعر الفعلي',
+            fig_fc.add_trace(go.Scatter(x=hw.index, y=hw, name=t('lbl_actual_price'),
                 line=dict(color='#4A6A8A', width=1.5),
-                hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} جنيه<extra></extra>"))
+                hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} " + _egp_word + "<extra></extra>"))
 
             # 90% confidence band
             fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_upper'],
                 line=dict(width=0), showlegend=False))
             fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
                 fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
-                line=dict(width=0), name='‫نطاق الثقة 90%‬'))
+                line=dict(width=0), name=t('fc_confidence_band')))
 
             # Point forecast line
             fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
-                name='‫توقع Prophet‬', line=dict(color='#4CC9F0', width=2.5),
-                hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} جنيه</b><extra></extra>"))
+                name=t('fc_prophet_forecast'), line=dict(color='#4CC9F0', width=2.5),
+                hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} " + _egp_word + "</b><extra></extra>"))
 
             # Today marker
             fig_fc.add_vline(x=datetime.today().timestamp() * 1000,
                 line_dash='dash', line_color='#FFD700', opacity=0.5,
-                annotation_text='اليوم',
+                annotation_text=t('lbl_today'),
                 annotation_font=dict(color='#FFD700', size=9.5),
                 annotation_position="top right")
 
             if show_events: add_events(fig_fc, data)
 
-            lyt_fc = plot_layout(height=500, yaxis=dict(title_text="السعر (جنيه)"))
+            lyt_fc = plot_layout(height=500, yaxis=dict(title_text=t('axis_price_egp')))
             lyt_fc['title'] = dict(text=title_chart,
                 font=dict(size=13, color="#FFD700", family="Cairo"),
                 x=0.5, xanchor='center', y=0.97)
@@ -2984,40 +3334,26 @@ elif page == "🔮  التوقعات":
             cp  = (fe / la - 1) * 100
             cc  = '#06D6A0' if cp >= 0 else '#EF476F'
             cards_html = (
-                kpi_html(f"{la:,.0f}",    "السعر الحالي (جنيه)",        "#FFD700", "0.05s") +
-                kpi_html(f"{fe:,.0f}",    f"التوقع ({forecast_days}ي)",  "#4CC9F0", "0.10s") +
-                kpi_html(f"{cp:+.1f}%",   "التغيير المتوقع",              cc,        "0.15s") +
-                kpi_html(f"{rmse:,.0f}",  "RMSE النموذج",                "#A855F7", "0.20s")
+                kpi_html(f"{la:,.0f}",    t('kpi_current_price_egp'),             "#FFD700", "0.05s") +
+                kpi_html(f"{fe:,.0f}",    t('kpi_forecast_days', days=forecast_days), "#4CC9F0", "0.10s") +
+                kpi_html(f"{cp:+.1f}%",   t('kpi_expected_change'),                cc,        "0.15s") +
+                kpi_html(f"{rmse:,.0f}",  t('kpi_model_rmse'),                     "#A855F7", "0.20s")
             )
             st.markdown(f'<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">{cards_html}</div>',
                         unsafe_allow_html=True)
 
             spacer()
-            insight(f"""
-            🤖 <b>ملخص التوقع:</b> يتوقع نموذج Prophet أن يصل سعر جرام {k} إلى
-            <span class="{'num' if cp>=0 else 'num-red'}">{fe:,.0f} جنيه</span>
-            خلال {forecast_days} يوم القادمة - تغيير
-            <span class="{'num' if cp>=0 else 'num-red'}">{cp:+.1f}%</span> عن السعر الحالي.<br>
-            <span style="direction:rtl; display:block; margin-top:6px;">
-            دقة النموذج -
-            <span style="font-family:'DM Mono',monospace; direction:ltr; display:inline-block;">MAE = {mae:,.0f} جنيه</span>
-            &nbsp;|&nbsp;
-            <span style="font-family:'DM Mono',monospace; direction:ltr; display:inline-block;">RMSE = {rmse:,.0f} جنيه</span>
-            - كلما قل الرقم كلما كان النموذج أدق.
-            </span>
-            <span style="display:block;margin-top:6px;font-size:0.75rem;color:#3A4A65;">
-            * الاستراتيجية: دمج تاريخي (Historical Date Merge) - نماذج مستقلة للمتغيرات الخارجية
-            تمنع أخطاء عدم التوافق بين التقويم الرسمي وأيام التداول.
-            </span>""")
+            _cls = 'num' if cp>=0 else 'num-red'
+            insight(t('fc_insight_summary', k=k, cls=_cls, fe=fe, days=forecast_days, cp=cp, mae=mae, rmse=rmse))
 
             # ─────────────────────────────────────────────────────────────────
             # TASK 2 - INVESTMENT ROI FORECASTER (replaces component chart)
             # ─────────────────────────────────────────────────────────────────
             spacer(28)
-            section("💰", "حاسبة العائد على الاستثمار", "")
-            st.markdown("""
+            section("💰", t('roi_section_title'), "")
+            st.markdown(f"""
             <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="direction:rtl">أدخل مبلغ استثمارك واختر العيار والمدة - سنحسب العائد المتوقع بناءً على توقعات Prophet</div>
+            <div style="direction:{DIR}">{t('roi_sub')}</div>
             <div style="direction:ltr">Prophet-Powered ROI Forecaster</div>
             </div>""", unsafe_allow_html=True)
 
@@ -3026,25 +3362,25 @@ elif page == "🔮  التوقعات":
 
             with col_inv1:
                 invest_amount = st.number_input(
-                    "مبلغ الاستثمار (جنيه مصري)",
+                    t('roi_amount_label'),
                     min_value=1_000,
                     max_value=10_000_000,
                     value=100_000,
                     step=1_000,
                     format="%d",
-                    help="أدخل المبلغ الذي تريد استثماره بالجنيه المصري"
+                    help=t('roi_amount_help')
                 )
 
             with col_inv2:
                 roi_karat = st.selectbox(
-                    "العيار",
+                    t('roi_karat_label'),
                     options=["18K", "21K", "24K"],
                     index=1,
                     key="roi_karat_select"
                 )
 
             with col_inv3:
-                st.markdown('<div class="fc-label">المدة (أيام)</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="fc-label">{t("roi_duration_label")}</div>', unsafe_allow_html=True)
                 roi_days = st.slider(
                     "roi_duration",
                     min_value=30,
@@ -3052,7 +3388,7 @@ elif page == "🔮  التوقعات":
                     value=min(forecast_days, 365),
                     step=30,
                     label_visibility="collapsed",
-                    help="اختر عدد الأيام التي تنوي الاحتفاظ بالذهب خلالها"
+                    help=t('roi_duration_help')
                 )
 
             # ── ROI computation logic ──
@@ -3115,64 +3451,59 @@ elif page == "🔮  التوقعات":
                 spacer(8)
                 m1, m2, m3, m4 = st.columns(4)
 
+                _egp_sym = 'EGP' if LANG == 'en' else 'ج'
                 with m1:
                     st.metric(
-                        label="‫💰 القيمة المتوقعة‬",
-                        value=f"{exit_value_roi:,.0f} ج",
-                        delta=f"{net_profit_roi:+,.0f} ج",
+                        label=t('roi_metric_expected_value'),
+                        value=f"{exit_value_roi:,.0f} {_egp_sym}",
+                        delta=f"{net_profit_roi:+,.0f} {_egp_sym}",
                         delta_color="normal",
-                        help=f"القيمة الصافية بعد {roi_days_clipped} يوم بتاريخ {target_date_roi.strftime('%d %b %Y')}"
+                        help=t('roi_metric_expected_value_help', days=roi_days_clipped, date=target_date_roi.strftime('%d %b %Y'))
                     )
 
                 with m2:
                     st.metric(
-                        label=f"{roi_icon} العائد الصافي",
+                        label=t('roi_metric_net_return', icon=roi_icon),
                         value=f"{roi_pct:+.2f}%",
-                        delta=f"{annualised_roi:+.1f}% سنوياً",
+                        delta=t('roi_annualized', pct=f"{annualised_roi:+.1f}"),
                         delta_color="normal",
-                        help="العائد الإجمالي على رأس المال المستثمر، والعائد السنوي المُقنَّن"
+                        help=t('roi_net_return_help')
                     )
 
                 with m3:
                     st.metric(
-                        label="⚖️ الكمية المشتراة",
-                        value=f"{grams_roi:.2f} جم",
-                        delta=f"{roi_karat} · {entry_cost_per_g:,.0f} ج/جم",
+                        label=t('roi_metric_grams_bought'),
+                        value=t('roi_grams_value', grams=grams_roi),
+                        delta=t('roi_grams_delta', k=roi_karat, price=entry_cost_per_g),
                         delta_color="off",
-                        help="عدد الجرامات بعد خصم المصنعية من المبلغ الإجمالي"
+                        help=t('roi_grams_help')
                     )
 
                 with m4:
                     st.metric(
-                        label="🎯 سعر الهدف",
-                        value=f"{target_price_roi:,.0f} ج/جم",
-                        delta=f"{(target_price_roi/current_price_roi - 1)*100:+.1f}% عن الحالي",
+                        label=t('roi_metric_target_price'),
+                        value=t('roi_target_value', price=target_price_roi),
+                        delta=t('roi_vs_current', pct=(target_price_roi/current_price_roi - 1)*100),
                         delta_color="normal",
-                        help=f"سعر جرام {roi_karat} المتوقع في {target_date_roi.strftime('%d %b %Y')}"
+                        help=t('roi_target_help', k=roi_karat, date=target_date_roi.strftime('%d %b %Y'))
                     )
 
                 spacer(12)
                 # Detailed insight summary
-                insight(f"""
-                💡 <b>ملخص حاسبة العائد:</b>
-                استثمار <span class="num">{invest_amount:,.0f} جنيه</span> في ذهب <b>{roi_karat}</b>
-                اليوم بسعر <span class="num">{current_price_roi:,.0f} جنيه/جم</span> (شامل مصنعية <span class="num">{MAKING_CHARGES[roi_karat]:,} جنيه</span>)
-                يمنحك <span class="num">{grams_roi:.2f} جرام</span>. بناءً على توقعات Prophet خلال
-                <span class="num">{roi_days_clipped}</span> يوم، قد تبلغ قيمتها
-                <span class="{'num' if net_profit_roi >= 0 else 'num-red'}">{exit_value_roi:,.0f} جنيه</span>
-                - ربح <span class="{'num' if net_profit_roi >= 0 else 'num-red'}">{net_profit_roi:+,.0f} جنيه</span>
-                (<span class="{'num' if roi_pct >= 0 else 'num-red'}">{roi_pct:+.2f}%</span>).<br>
-                <span style="display:block;margin-top:6px;font-size:0.75rem;color:#3A4A65;">
-                * الحسابات تشمل المصنعية عند الشراء وفرق السعر ({SELL_SPREAD[roi_karat]*100:.1f}%) عند البيع.
-                التوقعات للأغراض التوجيهية فقط وليست نصيحة استثمارية.
-                </span>""")
+                _cls  = 'num' if net_profit_roi >= 0 else 'num-red'
+                _cls2 = 'num' if roi_pct >= 0 else 'num-red'
+                insight(t('roi_insight_summary',
+                          amt=invest_amount, k=roi_karat, price=current_price_roi,
+                          mc=MAKING_CHARGES[roi_karat], grams=grams_roi, days=roi_days_clipped,
+                          cls=_cls, cls2=_cls2, exit_val=exit_value_roi, profit=net_profit_roi,
+                          pct=roi_pct, spread=SELL_SPREAD[roi_karat]*100))
             else:
-                st.warning("⚠️ لا تتوفر بيانات توقع كافية للمدة المحددة. حاول تمديد أفق التوقع.")
+                st.warning(t('roi_insufficient_data'))
 
         except ImportError:
-            st.error("⚠️ مكتبة Prophet غير مثبتة - قم بتشغيل: pip install prophet")
+            st.error(t('fc_prophet_missing'))
         except Exception as e:
-            st.error(f"خطأ في نموذج التنبؤ: {e}")
+            st.error(t('fc_model_error', err=e))
 
 # ─────────────────────────────────────────────────────────────────────────────
 
