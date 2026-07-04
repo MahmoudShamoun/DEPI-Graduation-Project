@@ -1311,13 +1311,10 @@ def compute_signal_columns(data: pd.DataFrame, karats: list = None) -> pd.DataFr
             [direction == 1, direction == -1], ['BUY', 'SELL'], default='HOLD'
         )
 
-        votes = np.vstack([rsi_vote, macd_vote, bb_vote])
-        agree = np.where(
-            direction[None, :] != 0,
-            (votes == direction[None, :]).sum(axis=0),
-            0,
-        )
-        data[f'SignalAgreement_{k}'] = [f"{a}/3" for a in agree]
+        votes = np.vstack([rsi_vote, macd_vote, bb_vote])  # shape (3, n)
+        match_count = (votes == direction).sum(axis=0)     # shape (n,), broadcasts against direction (n,)
+        agree = np.where(direction != 0, match_count, 0)    # shape (n,)
+        data[f'SignalAgreement_{k}'] = [f"{int(a)}/3" for a in agree]
 
     return data
 
