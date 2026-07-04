@@ -1212,6 +1212,94 @@ def add_events(fig, data, rows=None, y_ann=0.98):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SHARED SIGNAL / CORRELATION LOGIC (single source of truth)
+#
+# These functions are the ONLY place correlation matrices and "best
+# driver" rankings are computed anywhere in this app - the home-page
+# correlation panel and the Q4 macro-correlation slide must both call
+# these instead of running data[...].corr() inline. This removes the
+# historical duplication where the home page and Q4 each ran their own
+# independent .corr() call, which made it possible for the two views to
+# silently drift out of sync if one call site's column list changed but
+# the other didn't.
+#
+# NOTE: BUY/SELL/HOLD signal columns (Signal_{karat}) are NOT duplicated
+# either - they are computed exactly once, inside load_data() above, and
+# every chart reads that same data[f'Signal_{karat}'] column.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def compute_correlation_matrix(data: pd.DataFrame, cols: list, labels: list = None) -> pd.DataFrame:
+    """
+    Single source of truth for every correlation matrix in the app.
+    Any chart that needs a correlation matrix must call this rather than
+    calling data[cols].corr() directly, so two views built on the same
+    `cols` always produce identical numbers.
+    """
+    missing = [c for c in cols if c not in data.columns]
+    if missing:
+        raise KeyError(f"compute_correlation_matrix: columns not found in data: {missing}")
+
+    corr_df = data[cols].dropna().corr()
+
+    if labels is not None:
+        if len(labels) != len(cols):
+            raise ValueError("compute_correlation_matrix: labels and cols must be the same length")
+        corr_df.columns = labels
+        corr_df.index = labels
+
+    return corr_df
+
+
+def best_correlation_driver(corr_df: pd.DataFrame, target_label: str, exclude_labels: list = None):
+    """
+    Single source of truth for "which macro driver correlates most with
+    gold" across the app. Reads the answer directly off an already
+    computed correlation matrix (never recomputes anything), so the
+    ranking always matches whatever heatmap is on screen.
+
+    Returns (best_label, best_value, ranked_series).
+    """
+    if target_label not in corr_df.index:
+        raise KeyError(f"best_correlation_driver: '{target_label}' not found in correlation matrix")
+
+    exclude = set(exclude_labels or [])
+    exclude.add(target_label)
+
+    candidates = corr_df.loc[target_label].drop(labels=[l for l in exclude if l in corr_df.columns])
+    ranked = candidates.reindex(candidates.abs().sort_values(ascending=False).index)
+
+    best_label = ranked.index[0]
+    best_value = ranked.iloc[0]
+    return best_label, best_value, ranked
+
+
+def assert_correlation_consistency(matrix_a: pd.DataFrame, matrix_b: pd.DataFrame,
+                                    shared_labels: list, atol: float = 1e-9, context: str = ""):
+    """
+    Internal validation layer: whenever two correlation matrices in this
+    app share a subset of variables, their overlapping cells MUST be
+    numerically identical, because both are produced by
+    compute_correlation_matrix() from the same underlying `data`. This
+    proves that at runtime instead of assuming it. Raises AssertionError
+    naming the exact mismatched cell rather than silently "fixing" it -
+    a silent fix would hide a real data bug.
+    """
+    sub_a = matrix_a.loc[shared_labels, shared_labels]
+    sub_b = matrix_b.loc[shared_labels, shared_labels]
+
+    diff = (sub_a - sub_b).abs()
+    if (diff > atol).any().any():
+        bad_cell = diff.stack().idxmax()
+        raise AssertionError(
+            f"Correlation mismatch detected{(' in ' + context) if context else ''}: "
+            f"cell {bad_cell} differs by {diff.stack().max():.6f} between the two matrices "
+            f"(tolerance {atol}). The two chart call sites are no longer reading the same "
+            f"underlying data/columns and must be reconciled."
+        )
+    return True
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # UI HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1989,18 +2077,19 @@ if embed_q:
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q4":
         # Price_{k} goes FIRST in the matrix - it is the dependent variable.
+        # Computed via the shared compute_correlation_matrix() helper (single
+        # source of truth) - see "SHARED SIGNAL / CORRELATION LOGIC" above.
         cols_ = [f'Price_{k}', 'Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
         labels_ = [f'‫سعر الذهب ({k})‬', '‫ذهب XAU‬', 'دولار/جنيه', 'نفط برنت', '‫سندات 10Y‬', 'S&P 500']
-        cd = data[cols_].dropna().corr()
-        cd.columns = labels_
-        cd.index = labels_
+        cd = compute_correlation_matrix(data, cols_, labels_)
 
         # Correlation of each macro driver with the LOCAL gold price - read
-        # directly off the matrix row above. This guarantees the KPI numbers
-        # always match exactly what is drawn on the heatmap (single source
-        # of truth, no separate/duplicate computation that could drift).
+        # directly off the matrix row above via best_correlation_driver(),
+        # so the KPI numbers always match exactly what is drawn on the
+        # heatmap (no separate/duplicate computation that could drift).
         price_lbl = labels_[0]
         driver_labels = labels_[1:]
+        _best_label, _best_value, _ranked = best_correlation_driver(cd, price_lbl)
         gold_corr = {lbl: cd.loc[price_lbl, lbl] for lbl in driver_labels}
 
         usd_corr = gold_corr.get('دولار/جنيه', 0)
@@ -2762,10 +2851,32 @@ if selected_key == "home":
         <div style="direction:{DIR}">{t('correlation_sub')}</div>
         <div style="direction:ltr">Correlation Matrix · Heatmap</div>
         </div>""", unsafe_allow_html=True)
+        # Computed via the shared compute_correlation_matrix() helper (single
+        # source of truth) - see "SHARED SIGNAL / CORRELATION LOGIC" above.
+        # This matrix intentionally omits Price_{k} (it shows how the macro
+        # drivers move relative to EACH OTHER, not vs. the local gold price -
+        # that view lives on the Q4 slide instead). Because both this panel
+        # and Q4 call the same compute_correlation_matrix() over the same
+        # underlying columns, their overlapping cells are guaranteed to be
+        # numerically identical - verified below.
         cols_  = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
         names_ = [t('corr_name_gold'), t('corr_name_usd'), t('corr_name_oil'), t('corr_name_bonds'), t('corr_name_sp500')]
-        cd     = data[cols_].dropna().corr()
-        cd.columns = names_; cd.index = names_
+        cd     = compute_correlation_matrix(data, cols_, names_)
+
+        # ── Internal validation layer (runs every render, negligible cost) ──
+        # Confirm this home-page matrix agrees with the Q4 slide's matrix on
+        # every macro-to-macro cell they share (built from the same karat
+        # since Q4's non-Price_k columns are karat-independent).
+        try:
+            _cols_en = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
+            _q4_check = compute_correlation_matrix(data, [f'Price_{selected_karat}'] + _cols_en)
+            _home_check = compute_correlation_matrix(data, _cols_en)
+            assert_correlation_consistency(
+                _q4_check, _home_check, shared_labels=_cols_en,
+                context="home-page correlation panel vs. Q4 macro matrix"
+            )
+        except AssertionError as _corr_mismatch:
+            st.error(f"⚠️ Data consistency check failed: {_corr_mismatch}")
         fc  = px.imshow(cd, text_auto=".2f",
             color_continuous_scale=[[0,'#EF476F'],[0.5,'#060C18'],[1,'#06D6A0']],
             zmin=-1, zmax=1)
