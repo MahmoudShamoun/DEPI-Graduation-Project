@@ -1106,88 +1106,6 @@ def plot_layout(height=440, show_legend=True, title_text="", **extra):
 # ─────────────────────────────────────────────────────────────────────────────
 
 @st.cache_data(ttl=60, show_spinner=False)
-def compute_signal_columns(data: pd.DataFrame, karat: str) -> None:
-    """
-    SINGLE SOURCE OF TRUTH for the composite technical trading signal.
-
-    Combines three indicators into one voting score:
-      - RSI-14   : oversold (<30) votes +1, overbought (>70) votes -1
-      - MACD     : MACD above its signal line votes +1, below votes -1
-      - Bollinger Bands : price below lower band votes +1, above upper band votes -1
-
-    Mutates `data` in place. Called once per karat from load_data(), so the
-    main app AND the presentation (Vercel iframe) charts both read the exact
-    same Signal_{karat} value for any given date - there is no separate
-    calculation path in the presentation layer.
-
-    Adds:
-        Signal_{karat}          : 'BUY' | 'SELL' | 'HOLD'
-        SignalScore_{karat}     : int, net vote in [-3, 3]
-        SignalAgreement_{karat} : int, how many of the 3 indicators agree
-                                   with the final call (0-3)
-    """
-    rsi   = data[f'RSI_{karat}']
-    macd  = data[f'MACD_{karat}']
-    sig   = data[f'MACDSig_{karat}']
-    price = data[f'Price_{karat}']
-    bb_up = data[f'BB_up_{karat}']
-    bb_dn = data[f'BB_dn_{karat}']
-
-    rsi_vote  = np.select([rsi < 30, rsi > 70], [1, -1], default=0)
-    macd_vote = np.select([macd > sig, macd < sig], [1, -1], default=0)
-    bb_vote   = np.select([price < bb_dn, price > bb_up], [1, -1], default=0)
-
-    score = rsi_vote + macd_vote + bb_vote
-    data[f'SignalScore_{karat}'] = score
-    data[f'Signal_{karat}'] = np.select(
-        [score >= 2, score <= -2], ['BUY', 'SELL'], default='HOLD'
-    )
-
-    direction = np.sign(score)
-    votes = np.vstack([rsi_vote, macd_vote, bb_vote])
-    data[f'SignalAgreement_{karat}'] = np.where(
-        direction != 0, (votes == direction).sum(axis=0), 0
-    )
-
-
-def compute_correlation_matrix(data: pd.DataFrame, karat: str, en_labels: bool = True) -> pd.DataFrame:
-    """
-    SINGLE SOURCE OF TRUTH for the macro-driver correlation matrix.
-
-    ALWAYS includes Price_{karat} - the actual local retail gold price, i.e.
-    the dependent variable the research question is about - as the first
-    row/column. This lets "which driver correlates most with the local gold
-    price" be read directly off the matrix, and guarantees the main app and
-    the presentation (Vercel iframe) render an identical matrix with
-    identical values.
-    """
-    cols = [f'Price_{karat}', 'Gold_USD_Ounce', 'USD_EGP_Official',
-            'Crude_Oil', 'US_10Y_Treasury', 'SP500']
-    labels = (
-        [f'Gold Price ({karat})', 'XAU/USD', 'USD/EGP', 'Brent Oil', 'US 10Y Treasury', 'S&P 500']
-        if en_labels else
-        [f'‫سعر الذهب ({karat})‬', '‫ذهب XAU‬', 'دولار/جنيه', 'نفط برنت', '‫سندات 10Y‬', 'S&P 500']
-    )
-    cd = data[cols].dropna().corr()
-    cd.columns = labels
-    cd.index = labels
-    return cd
-
-
-def best_correlation_driver(cd: pd.DataFrame):
-    """
-    Dynamically determines the single strongest driver of the local gold
-    price (first row of `cd`) - never hardcoded, so the "highest impact"
-    claim always matches whatever the live data currently shows.
-
-    Returns (driver_label: str, r_value: float).
-    """
-    price_lbl = cd.index[0]
-    driver_corr = cd.loc[price_lbl].drop(price_lbl)
-    best_lbl = driver_corr.abs().idxmax()
-    return best_lbl, float(driver_corr[best_lbl])
-
-
 def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
     data = pd.read_csv(csv_path, index_col="Date", parse_dates=True)
     data.ffill(inplace=True)
@@ -1237,11 +1155,17 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
         data[f'BB_up_{karat}']  = data[f'BB_mid_{karat}'] + 2 * bb_std
         data[f'BB_dn_{karat}']  = data[f'BB_mid_{karat}'] - 2 * bb_std
 
-        # ── Automated trading signal (single source of truth) ──
-        # Populates Signal_{karat}, SignalScore_{karat}, SignalAgreement_{karat}.
-        # Used identically by the main app AND the presentation (embed) charts -
-        # see compute_signal_columns() below.
-        compute_signal_columns(data, karat)
+        # ── Automated trading signals (collision-safe) ──
+        buy_raw  = (data[f'RSI_{karat}'] < 30) | (
+                        (data[f'MACD_{karat}'] > data[f'MACDSig_{karat}']) &
+                        (data[f'MACD_{karat}'].shift(1) <= data[f'MACDSig_{karat}'].shift(1)))
+        sell_raw = (data[f'RSI_{karat}'] > 70) | (
+                        (data[f'MACD_{karat}'] < data[f'MACDSig_{karat}']) &
+                        (data[f'MACD_{karat}'].shift(1) >= data[f'MACDSig_{karat}'].shift(1)))
+        conflict = buy_raw & sell_raw
+        buy  = buy_raw & ~conflict
+        sell = sell_raw & ~conflict
+        data[f'Signal_{karat}'] = np.select([buy, sell], ['BUY', 'SELL'], default='HOLD')
 
         # ── Realistic portfolio simulation ──
         # Entry cost: Price_{karat} already includes making charge (fabrication fee)
@@ -2064,30 +1988,39 @@ if embed_q:
     # the underlying data, however the data evolves.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q4":
-        # SINGLE SOURCE OF TRUTH: same function the main app's Home page uses.
-        # Presentation is English-only, so en_labels is always True here.
-        cd = compute_correlation_matrix(data, k, en_labels=True)
-        labels_ = list(cd.columns)
+        # Price_{k} goes FIRST in the matrix - it is the dependent variable.
+        cols_ = [f'Price_{k}', 'Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
+        labels_ = [f'‫سعر الذهب ({k})‬', '‫ذهب XAU‬', 'دولار/جنيه', 'نفط برنت', '‫سندات 10Y‬', 'S&P 500']
+        cd = data[cols_].dropna().corr()
+        cd.columns = labels_
+        cd.index = labels_
+
+        # Correlation of each macro driver with the LOCAL gold price - read
+        # directly off the matrix row above. This guarantees the KPI numbers
+        # always match exactly what is drawn on the heatmap (single source
+        # of truth, no separate/duplicate computation that could drift).
         price_lbl = labels_[0]
         driver_labels = labels_[1:]
         gold_corr = {lbl: cd.loc[price_lbl, lbl] for lbl in driver_labels}
 
-        usd_corr = gold_corr.get('USD/EGP', 0)
-        xau_corr = gold_corr.get('XAU/USD', 0)
-        oil_corr = gold_corr.get('Brent Oil', 0)
+        usd_corr = gold_corr.get('دولار/جنيه', 0)
+        xau_corr = gold_corr.get('‫ذهب XAU‬', 0)
+        oil_corr = gold_corr.get('نفط برنت', 0)
         sp_corr = gold_corr.get('S&P 500', 0)
 
-        # Dynamically determined highest-impact driver - precomputed by the
-        # shared function, never recomputed or hardcoded in the presentation.
-        best_driver_lbl, best_driver_val = best_correlation_driver(cd)
+        # ── Dynamically determine the TRUE highest-impact driver. No hardcoded
+        # assumption about which variable "wins" - it's whichever variable has
+        # the largest absolute correlation with Price_{k} in the actual data. ──
+        best_driver_lbl = max(gold_corr, key=lambda lbl: abs(gold_corr[lbl]))
+        best_driver_val = gold_corr[best_driver_lbl]
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{usd_corr:.3f}", "USD/EGP Correlation with Gold Price", "#06D6A0"),
-                _kpi_card(f"{xau_corr:.3f}", "XAU/USD Correlation with Gold Price", "#FFD700"),
-                _kpi_card(f"{oil_corr:.3f}", "Oil Correlation with Gold Price", "#FF9F43"),
-                _kpi_card(f"{sp_corr:.3f}", "S&amp;P 500 Correlation with Gold Price", "#4CC9F0"),
-                _kpi_card(best_driver_lbl, f"Highest Impact (r={best_driver_val:.3f})", "#D4AF37"),
+                _kpi_card(f"{usd_corr:.3f}", "‫ارتباط USD/EGP بسعر الذهب‬", "#06D6A0"),
+                _kpi_card(f"{xau_corr:.3f}", "‫ارتباط XAU/USD بسعر الذهب‬", "#FFD700"),
+                _kpi_card(f"{oil_corr:.3f}", "ارتباط النفط بسعر الذهب", "#FF9F43"),
+                _kpi_card(f"{sp_corr:.3f}", "‫ارتباط S&amp;P 500 بسعر الذهب‬", "#4CC9F0"),
+                _kpi_card(best_driver_lbl, f"‫الأعلى تأثيراً (r={best_driver_val:.3f}‬)", "#D4AF37"),
             ),
             unsafe_allow_html=True,
         )
@@ -2490,8 +2423,7 @@ if embed_q:
     # single indicators" claim.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q7":
-        last_row = data.dropna(subset=[f'RSI_{k}', f'MACD_{k}', f'BB_up_{k}',
-                                        f'Signal_{k}', f'SignalScore_{k}', f'SignalAgreement_{k}']).iloc[-1]
+        last_row = data.dropna(subset=[f'RSI_{k}', f'MACD_{k}', f'BB_up_{k}']).iloc[-1]
         rsi_val = last_row[f'RSI_{k}']
         macd_val = last_row[f'MACD_{k}']
         macd_sig = last_row[f'MACDSig_{k}']
@@ -2500,34 +2432,53 @@ if embed_q:
         bb_dn = last_row[f'BB_dn_{k}']
         bb_mid = last_row[f'BB_mid_{k}']
 
-        # SINGLE SOURCE OF TRUTH: Signal_{k}, SignalScore_{k}, and
-        # SignalAgreement_{k} are precomputed once by compute_signal_columns()
-        # inside load_data(). The presentation NEVER recomputes the signal -
-        # it only reads and formats these columns, so it is guaranteed to
-        # match the main app exactly.
-        signal_raw = last_row[f'Signal_{k}']
-        agree_count = int(last_row[f'SignalAgreement_{k}'])
+        # ── Composite signal scoring ──
+        score = 0
+        if rsi_val < 30:
+            score += 1
+        elif rsi_val > 70:
+            score -= 1
+        if macd_val > macd_sig:
+            score += 1
+        elif macd_val < macd_sig:
+            score -= 1
+        if price_val < bb_dn:
+            score += 1
+        elif price_val > bb_up:
+            score -= 1
 
-        comp_signal, sig_cls, sig_color = {
-            'BUY':  ("BUY \U0001F7E2", "buy", "#06D6A0"),
-            'SELL': ("SELL \U0001F534", "sell", "#EF476F"),
-            'HOLD': ("HOLD \U0001F7E1", "hold", "#4CC9F0"),
-        }[signal_raw]
+        if score >= 2:
+            comp_signal, sig_cls, sig_color = "BUY 🟢", "buy", "#06D6A0"
+        elif score <= -2:
+            comp_signal, sig_cls, sig_color = "SELL 🔴", "sell", "#EF476F"
+        else:
+            comp_signal, sig_cls, sig_color = "HOLD 🟡", "hold", "#4CC9F0"
 
-        rsi_status = "Oversold" if rsi_val < 30 else ("Overbought" if rsi_val > 70 else "Neutral")
-        macd_status = "Bullish \u25B2" if macd_val > macd_sig else "Bearish \u25BC"
-        bb_status = "At Lower Band" if price_val < bb_dn else ("At Upper Band" if price_val > bb_up else "Within Range")
+        # ── NEW: agreement count - how many of the 3 indicators individually
+        # point the same direction as the final composite call. Gives the
+        # jury a concrete "2 of 3 indicators agree" style number. ──
+        votes = [
+            1 if rsi_val < 30 else (-1 if rsi_val > 70 else 0),
+            1 if macd_val > macd_sig else -1,
+            1 if price_val < bb_dn else (-1 if price_val > bb_up else 0),
+        ]
+        comp_direction = 1 if score > 0 else (-1 if score < 0 else 0)
+        agree_count = sum(1 for v in votes if comp_direction != 0 and v == comp_direction)
+
+        rsi_status = "تشبع بيع" if rsi_val < 30 else ("تشبع شراء" if rsi_val > 70 else "محايد")
+        macd_status = "‫صاعد ▲‬" if macd_val > macd_sig else "‫هابط ▼‬"
+        bb_status = "عند الحد الأدنى" if price_val < bb_dn else ("عند الحد الأقصى" if price_val > bb_up else "في النطاق")
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{rsi_val:.1f}", f"RSI-14 ({rsi_status})",
+                _kpi_card(f"{rsi_val:.1f}", f"‫RSI-14 ({rsi_status})‬",
                           "#06D6A0" if rsi_val < 30 else ("#EF476F" if rsi_val > 70 else "#FFD700")),
                 _kpi_card(macd_status, "MACD Crossover",
                           "#06D6A0" if macd_val > macd_sig else "#EF476F"),
                 _kpi_card(bb_status, "Bollinger Bands",
                           "#06D6A0" if price_val < bb_dn else ("#EF476F" if price_val > bb_up else "#4CC9F0")),
-                _kpi_card(f"{price_val:,.0f} EGP", f"Current {k} Price", "#FFD700"),
-                _kpi_card(f"{agree_count}/3", "Indicators Agreeing With Composite Signal", sig_color),
+                _kpi_card(f"‫{price_val:,.0f} ج‬", f"‫سعر {k} الحالي‬", "#FFD700"),
+                _kpi_card(f"{agree_count}/3", "مؤشرات متفقة مع الإشارة المركبة", sig_color),
             ),
             unsafe_allow_html=True,
         )
@@ -2539,9 +2490,9 @@ if embed_q:
             row_heights=[0.55, 0.25, 0.20],
             vertical_spacing=0.06,
             subplot_titles=[
-                f"Price + Bollinger Bands ({k})",
-                "MACD - Trend Momentum",
-                "RSI-14 - Overbought/Oversold Level",
+                f"‫السعر + Bollinger Bands ({k})‬",
+                "‫MACD - زخم الاتجاه‬",
+                "‫RSI-14 - مستوى التشبع‬",
             ],
         )
         for anno in fig7['layout']['annotations']:
@@ -2662,20 +2613,23 @@ if embed_q:
         rgb_color = f"{int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}" 
         st.markdown(f"""
         <style>
-        .premium-signal-container {{ background: linear-gradient(135deg, rgba(10, 15, 30, 0.75) 0%, rgba(20, 30, 55, 0.55) 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid {sig_color}; border-radius: 12px; padding: 18px 22px; margin-top: 25px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); direction: ltr; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; }}
+        .premium-signal-container {{ background: linear-gradient(135deg, rgba(10, 15, 30, 0.75) 0%, rgba(20, 30, 55, 0.55) 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-right: 4px solid {sig_color}; border-radius: 12px; padding: 18px 22px; margin-top: 25px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); direction: rtl; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; }}
         .premium-info-block {{ flex: 1; min-width: 280px; }}
-        .premium-headline {{ font-family: 'DM Mono', monospace; color: #E2E8F0; font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }}
-        .premium-subtitle {{ font-family: 'DM Mono', monospace; color: #748BA7; font-size: 11px; font-weight: 400; text-align: left; width: 100%; margin-bottom: 10px; }}
+        .premium-headline {{ font-family: 'Cairo', sans-serif; color: #E2E8F0; font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }}
+        
+        /* التعديل هنا: إضافة text-align و width لضمان المحاذاة */
+        .premium-subtitle {{ font-family: 'Cairo', sans-serif; color: #748BA7; font-size: 11px; font-weight: 400; text-align: right; width: 100%; margin-bottom: 10px; }}
+        
         .premium-badge-block {{ display: flex; align-items: center; gap: 12px; }}
-        .premium-signal-badge {{ background: rgba({rgb_color}, 0.08); border: 1px solid rgba({rgb_color}, 0.45); color: {sig_color}; padding: 8px 22px; border-radius: 8px; font-family: 'DM Mono', monospace; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba({rgb_color}, 0.4); box-shadow: 0 0 15px rgba({rgb_color}, 0.1); display: inline-flex; align-items: center; }}
+        .premium-signal-badge {{ background: rgba({rgb_color}, 0.08); border: 1px solid rgba({rgb_color}, 0.45); color: {sig_color}; padding: 8px 22px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba({rgb_color}, 0.4); box-shadow: 0 0 15px rgba({rgb_color}, 0.1); display: inline-flex; align-items: center; }}
         .technical-pills-grid {{ display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; width: 100%; }}
-        .tech-pill {{ background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 5px 12px; font-family: 'DM Mono', monospace; font-size: 11.5px; color: #94A3B8; display: flex; align-items: center; gap: 5px; }}
+        .tech-pill {{ background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 6px; padding: 5px 12px; font-family: 'Cairo', sans-serif; font-size: 11.5px; color: #94A3B8; display: flex; align-items: center; gap: 5px; }}
         .tech-pill strong {{ color: #F8FAFC; }}
         </style>
         <div class="premium-signal-container">
             <div class="premium-info-block">
-                <div class="premium-headline"><span>Smart Composite Signal (RSI + MACD + BB)</span></div>
-                <div class="premium-subtitle">Live update: <bdi>{today_str}</bdi> · based on the latest market close</div>
+                <div class="premium-headline"><span>إشارة مركبة ذكية (RSI + MACD + BB)</span></div>
+                <div class="premium-subtitle">‫تحديث اللحظة: <bdi>{today_str}</bdi> · بناءً على الإغلاق الأخير للسوق‬</div>
                 <div class="technical-pills-grid">
                     <div class="tech-pill">RSI-14: <strong>{rsi_val:.1f} ({rsi_status})</strong></div>
                     <div class="tech-pill">MACD: <strong>{macd_status}</strong></div>
@@ -2684,7 +2638,7 @@ if embed_q:
             </div>
             <div class="premium-badge-block">
                 <div class="tech-pill" style="border-color: rgba(255,215,0,0.2); background: rgba(255,215,0,0.02);">
-                    Indicator Agreement: <strong style="color: #FFD700;">{agree_count}/3</strong>
+                    اتفاق المؤشرات: <strong style="color: #FFD700;">{agree_count}/3</strong>
                 </div>
                 <div class="premium-signal-badge">{comp_signal}</div>
             </div>
@@ -2808,8 +2762,10 @@ if selected_key == "home":
         <div style="direction:{DIR}">{t('correlation_sub')}</div>
         <div style="direction:ltr">Correlation Matrix · Heatmap</div>
         </div>""", unsafe_allow_html=True)
-        cd = compute_correlation_matrix(data, selected_karat, en_labels=(LANG == 'en'))
-        best_lbl, best_val = best_correlation_driver(cd)
+        cols_  = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
+        names_ = [t('corr_name_gold'), t('corr_name_usd'), t('corr_name_oil'), t('corr_name_bonds'), t('corr_name_sp500')]
+        cd     = data[cols_].dropna().corr()
+        cd.columns = names_; cd.index = names_
         fc  = px.imshow(cd, text_auto=".2f",
             color_continuous_scale=[[0,'#EF476F'],[0.5,'#060C18'],[1,'#06D6A0']],
             zmin=-1, zmax=1)
