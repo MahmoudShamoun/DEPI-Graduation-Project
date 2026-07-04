@@ -453,12 +453,12 @@
               <span class="q-tag">Question 1 · Answer</span>
               <p class="q-subtext">Stacked area decomposition across 24K, 21K, and 18K using a January 2020 fixed exchange rate baseline</p>
               <div class="q-insight">
-                📊 During crisis periods, <span class="highlight">60-70% of price movements are caused by Egyptian pound depreciation</span>, not by gold prices themselves. The March 2024 currency float produced the sharpest spike.
+                📊 During crisis periods, a <span class="highlight">large share of price movement comes from currency and demand premium expansion rather than the global gold value itself</span> — this premium mixes EGP depreciation with speculative/panic demand (see Q3 for the panic-premium breakdown). The March 2024 currency float produced the sharpest spike.
               </div>
               <div class="formula">Value-Driven Price = (Gold_USD ÷ 31.1035) × 15.70 &nbsp;|&nbsp; Premium = Actual − Value-Driven</div>
               <div class="q-kpi-bar">
                 <span class="q-kpi"><span class="q-kpi-val">15.7</span><span class="q-kpi-lbl">EGP/USD Baseline (Jan 2020)</span></span>
-                <span class="q-kpi"><span class="q-kpi-val">60-70%</span><span class="q-kpi-lbl">Crisis Moves from EGP Collapse</span></span>
+                <span class="q-kpi"><span class="q-kpi-val">Currency + Demand</span><span class="q-kpi-lbl">Premium Driver (see Q3)</span></span>
                 <span class="q-kpi"><span class="q-kpi-val">3</span><span class="q-kpi-lbl">Karats Analyzed</span></span>
                 <span class="q-kpi"><span class="q-kpi-val">Mar 2024</span><span class="q-kpi-lbl">Peak Devaluation Event</span></span>
               </div>
@@ -582,14 +582,15 @@
               <span class="q-tag">Question 4 · Answer</span>
               <p class="q-subtext">6×6 correlation matrix heatmap across gold price (24K/21K/18K), XAU/USD, USD/EGP, Brent oil, US 10Y yield, and S&amp;P 500</p>
               <div class="q-insight">
-                📊 <span class="highlight">USD/EGP exchange rate has the strongest correlation with Egyptian gold prices</span> - far exceeding gold's own USD price. Conclusion: Investing in Egyptian gold is primarily a bet on the Egyptian pound, not on gold itself.
+                📊 <span class="highlight">USD/EGP exchange rate typically shows the strongest correlation with Egyptian gold prices</span> - often exceeding gold's own USD price. The exact ranking is computed live from current data in the chart below (never hardcoded), so it always reflects the latest correlations. Conclusion: Investing in Egyptian gold is largely a bet on the Egyptian pound, not on gold alone.
               </div>
               <div class="q-kpi-bar">
-                <span class="q-kpi q-kpi-green"><span class="q-kpi-val">r ≈ 0.97</span><span class="q-kpi-lbl">USD/EGP Correlation</span></span>
-                <span class="q-kpi"><span class="q-kpi-val">r ≈ 0.78</span><span class="q-kpi-lbl">XAU/USD Correlation</span></span>
-                <span class="q-kpi"><span class="q-kpi-val">r ≈ 0.62</span><span class="q-kpi-lbl">Oil Correlation</span></span>
-                <span class="q-kpi"><span class="q-kpi-val">r ≈ 0.41</span><span class="q-kpi-lbl">S&amp;P 500 Correlation</span></span>
+                <span class="q-kpi q-kpi-green"><span class="q-kpi-val">USD/EGP</span><span class="q-kpi-lbl">Typically Highest Correlation*</span></span>
+                <span class="q-kpi"><span class="q-kpi-val">XAU/USD</span><span class="q-kpi-lbl">Global Gold Correlation*</span></span>
+                <span class="q-kpi"><span class="q-kpi-val">Brent Oil</span><span class="q-kpi-lbl">Secondary Driver*</span></span>
+                <span class="q-kpi"><span class="q-kpi-val">S&amp;P 500</span><span class="q-kpi-lbl">Weakest Driver*</span></span>
               </div>
+              <div class="q-subtext" style="margin-top:6px;font-size:0.75em;opacity:0.7">*Exact r-values are calculated live in the chart below and may shift as new data arrives.</div>
             </div>
             <div class="iframe-wrap flat iframe-q">
               <iframe data-src="https://gold-egypt-platform.streamlit.app/?embed=true&embed_options=disable_scrolling,hide_toolbar&q=q4" loading="lazy" title="Q4 - Correlation Matrix Heatmap"></iframe>
