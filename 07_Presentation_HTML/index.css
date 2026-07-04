@@ -1421,3 +1421,56 @@ em { font-style: italic; color: var(--gold-lt); }
 
   .av { width: 110px; height: 110px; }
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROJECTOR READABILITY PASS
+   Additive, non-destructive typography upgrade for committee/projector
+   viewing. Bumps base sizes, tightens hierarchy, widens line-height for
+   body copy without touching layout, color, or animation rules above.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+html, body { font-size: 16px; }
+
+/* Slide question/answer pages: the content the committee reads most */
+.q-tag            { font-size: 15px !important; letter-spacing: .04em; }
+.q-text           { font-size: clamp(26px, 3vw, 44px) !important; line-height: 1.32 !important; }
+.q-text-lg        { font-size: clamp(28px, 3.4vw, 48px) !important; line-height: 1.3 !important; }
+.q-page-hint      { font-size: 14px !important; opacity: .75; }
+.q-subtext        { font-size: 17px !important; line-height: 1.6 !important; }
+.q-insight        { font-size: 16px !important; line-height: 1.75 !important; }
+.formula          { font-size: 14px !important; line-height: 1.7 !important; }
+.q-kpi-val        { font-size: 18px !important; }
+.q-kpi-lbl        { font-size: 12.5px !important; }
+
+/* Section titles / subtitles across narrative slides */
+.st               { line-height: 1.22 !important; }
+.ss               { font-size: 17px !important; line-height: 1.6 !important; }
+.part-label       { font-size: 13px !important; letter-spacing: .08em; }
+
+/* Problem / stat / impact cards */
+.pcard h3         { font-size: 18px !important; }
+.pcard p          { font-size: 15px !important; line-height: 1.65 !important; }
+.stat-box .num    { font-size: 28px !important; }
+.stat-box .lbl    { font-size: 13px !important; }
+.impact-card h3   { font-size: 17px !important; }
+.impact-card p    { font-size: 15px !important; line-height: 1.7 !important; }
+
+/* Hero */
+.hero-subtitle    { font-size: clamp(19px, 2.2vw, 32px) !important; }
+.hero-tagline     { font-size: 14px !important; }
+.hero-badge       { font-size: 12.5px !important; }
+.hero-hint        { font-size: 13px !important; }
+
+/* Team names + general labels */
+.tm-name          { font-size: 15px !important; }
+
+/* Header */
+.hdr-name         { font-size: 16px !important; }
+#slideTitle       { font-size: 15px !important; }
+.hdr-tag          { font-size: 11.5px !important; }
+
+/* Generic spacing polish: give paragraphs breathing room without
+   disturbing the fixed-height slide layout */
+.sc p:not(.ss):not(.q-page-hint) { letter-spacing: .1px; }
+
+/* Slightly larger open-dashboard buttons for on-stage clicking */
+.open-btn         { font-size: 14px !important; padding-block: 2px; }
