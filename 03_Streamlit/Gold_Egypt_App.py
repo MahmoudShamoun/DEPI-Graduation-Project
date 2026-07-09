@@ -21,10 +21,10 @@ def get_img_as_base64(file_path):
     except Exception:
         return ""
 base_path = os.path.dirname(os.path.abspath(__file__))
-image_path = os.path.join(base_path, "logo.png")
-icon_img = Image.open(image_path)
-img_base64 = get_img_as_base64(image_path) 
-IMAGE_HTML_SRC = f"data:image/png;base64,{img_base64}"
+Image_path = os.path.join(base_path, "logo.png")
+icon_img = Image.open(Image_path)
+img_base64 = get_img_as_base64(Image_path) 
+Image_HTML_SRC = f"data:Image/png;base64,{img_base64}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # I18N / BILINGUAL SYSTEM (Arabic / English)
@@ -443,7 +443,7 @@ html, body, [class*="css"] {
   content: '';
   position: fixed;
   inset: 0;
-  background-image:
+  background-Image:
     radial-gradient(1px 1px at 20% 30%, rgba(255,215,0,0.12) 0%, transparent 100%),
     radial-gradient(1px 1px at 80% 10%, rgba(255,215,0,0.08) 0%, transparent 100%),
     radial-gradient(1px 1px at 60% 70%, rgba(255,215,0,0.06) 0%, transparent 100%),
@@ -1309,7 +1309,7 @@ with st.sidebar:
     st.markdown(f"""
     <div class="sb-logo">
       <div class="sb-logo-icon">
-        <img src="{IMAGE_HTML_SRC}" width="80" style="border-radius:8px;">
+        <img src="{Image_HTML_SRC}" width="80" style="border-radius:8px;">
       </div>
       <div class="sb-logo-text">GOLD EGYPT</div>
       <div class="sb-logo-sub">{t('app_tagline')}</div>
@@ -1614,13 +1614,13 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q1 - Price Decomposition
-    # Answer: What % of Egyptian gold price movement is global XAU value vs
-    #         currency/demand premium? (Note: this premium is NOT purely FX -
-    #         it overlaps with the panic premium quantified separately in Q3.
-    #         See the footnote below the KPI strip for the explicit handoff.)
+    # Answer: What % of the Egyptian gold price is the global XAU value vs.
+    #         the currency/demand premium? (Note: this premium is NOT purely
+    #         FX - it overlaps with the panic premium quantified in Q3. See
+    #         the footnote below the KPI strip for the explicit handoff.)
     # ─────────────────────────────────────────────────────────────────────────
     if embed_q == "q1":
-        # ── KPI: compute decomposition % for most recent data point ──
+        # ── KPI: compute decomposition % for the most recent data point ──
         latest = data.dropna(subset=[f'Price_{k}', f'ValueDriven_{k}', f'InflPrem_{k}']).iloc[-1]
         total = latest[f'Price_{k}']
         val_pct = (latest[f'ValueDriven_{k}'] / total * 100) if total else 0
@@ -1638,26 +1638,25 @@ if embed_q:
         else:
             mar24_val_s = mar24_prem_s = "N/A"
 
-        current_price = f"{total:,.0f} ج"
+        current_price = f"{total:,.0f} EGP"
 
-        # ── Cross-reference footnote: makes the Q1/Q3 shared-lineage explicit ──
         st.markdown(
-            '<div class="eq-q-header" style="direction:rtl; text-align:right;">س1 - تفكيك السعر: قيمة عالمية ثابتة مقابل علاوة العملة والطلب</div>',
+            '<div class="eq-q-header" style="direction:ltr; text-align:left;">Q1 - Price Decomposition: Fixed Global Value vs. Currency &amp; Demand Premium</div>',
             unsafe_allow_html=True,
         )
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(current_price, f"‫سعر {k} الحالي‬", "#FFD700"),
-                _kpi_card(f"{val_pct:.0f}%", "قيمة عالمية (الآن)", "#FFF9C4"),
-                _kpi_card(f"{prem_pct:.0f}%", "علاوة عملة + طلب (الآن)", "#EF476F"),
-                _kpi_card(mar24_prem_s, "علاوة مارس 2024 (ذروة)", "#FF6B6B"),
-                _kpi_card(mar24_val_s, "قيمة عالمية مارس 2024", "#FFD700"),
+                _kpi_card(current_price, f"Current {k} Price", "#FFD700"),
+                _kpi_card(f"{val_pct:.0f}%", "Global Value (Now)", "#FFF9C4"),
+                _kpi_card(f"{prem_pct:.0f}%", "Currency + Demand Premium (Now)", "#EF476F"),
+                _kpi_card(mar24_prem_s, "March 2024 Premium (Peak)", "#FF6B6B"),
+                _kpi_card(mar24_val_s, "March 2024 Global Value", "#FFD700"),
             ),
             unsafe_allow_html=True,
         )
         st.markdown(
-            '<div class="eq-footnote">⚠️ تشمل هذه العلاوة أثر عدم الاسقرار والمضاربة - لتفصيل عدم الاسقرار تحديداً راجع س3</div>',
+            '<div class="eq-footnote">⚠️ This premium includes speculation/panic effects - see Q3 for the volatility breakdown specifically</div>',
             unsafe_allow_html=True,
         )
 
@@ -1667,11 +1666,11 @@ if embed_q:
             shared_xaxes=True,
             row_heights=[0.34, 0.33, 0.33],
             vertical_spacing=0.08,
-            subplot_titles=["24 قيراط", "21 قيراط", "18 قيراط"],
+            subplot_titles=["24K", "21K", "18K"],
         )
         for anno in fig['layout']['annotations']:
-            if anno['text'] in ["24 قيراط", "21 قيراط", "18 قيراط"]:
-                anno['yshift'] = -15  
+            if anno['text'] in ["24K", "21K", "18K"]:
+                anno['yshift'] = -15
                 anno['font'] = dict(size=15, family='Cairo', color='#4A6A8A')
         KFILL = {
             '24K': 'rgba(255,249,196,0.70)',
@@ -1684,18 +1683,18 @@ if embed_q:
             row = KROW[karat]
             fig.add_trace(go.Scatter(
                 x=data.index, y=data[f'ValueDriven_{karat}'],
-                name='قيمة عالمية (سعر ثابت)', stackgroup=f'g{row}', mode='lines',
+                name='Global Value (Fixed Price)', stackgroup=f'g{row}', mode='lines',
                 line=dict(width=0), fillcolor=KFILL[karat],
                 showlegend=(row == 1), legendgroup='gv',
-                hovertemplate=f"{karat} قيمة: %{{y:,.0f}} ج<extra></extra>",
+                hovertemplate=f"{karat} Value: %{{y:,.0f}} EGP<extra></extra>",
             ), row=row, col=1)
 
             fig.add_trace(go.Scatter(
                 x=data.index, y=data[f'InflPrem_{karat}'],
-                name='علاوة العملة والطلب', stackgroup=f'g{row}', mode='lines',
+                name='Currency &amp; Demand Premium', stackgroup=f'g{row}', mode='lines',
                 line=dict(width=0), fillcolor='rgba(239,71,111,0.55)',
                 showlegend=(row == 1), legendgroup='gi',
-                hovertemplate=f"{karat} علاوة: %{{y:,.0f}} ج<extra></extra>",
+                hovertemplate=f"{karat} Premium: %{{y:,.0f}} EGP<extra></extra>",
             ), row=row, col=1)
 
         # ── March 2024 annotation box (major devaluation) ──
@@ -1705,34 +1704,30 @@ if embed_q:
                 fillcolor='rgba(239,71,111,0.12)', line_width=0,
                 layer='below', row=r, col=1,
             )
-        # FIX (audit Q1): softened causal claim - was an unverified "60-70% due
-        # to currency collapse"; InflPrem_{k} is a mixed residual (currency +
-        # demand/panic), so the annotation no longer asserts a precise % cause.
         fig.add_annotation(
             x='2024-03-15', y=1.04, yref='paper', xref='x',
-            text="🔓 تعويم مارس 2024 - قفزة في علاوة العملة والطلب (انظر س3 لتفصيل عدم الاسقرار)",
+            text="🔓 March 2024 EGP Float - Jump in Currency &amp; Demand Premium (see Q3 for volatility detail)",
             showarrow=False,
             font=dict(size=8.5, color='#EF476F', family='Cairo'),
             xanchor='center', bgcolor='rgba(3,6,15,0.75)', borderpad=3,
         )
         if show_events:
             add_events(fig, data, rows=[1, 2, 3])
-        l=plot_layout(height=520) if 'plot_layout' in locals() else dict(height=520)
         lyt = plot_layout(height=520)
         lyt['margin'] = dict(l=8, r=8, t=100, b=8)
         lyt['legend'] = dict(
-            orientation='h', 
-            y=1.15,            
-            x=0.5, 
+            orientation='h',
+            y=1.15,
+            x=0.5,
             xanchor='center',
-            yanchor='bottom',  
-            bgcolor='rgba(0,0,0,0)', 
+            yanchor='bottom',
+            bgcolor='rgba(0,0,0,0)',
             borderwidth=0,
             font=dict(size=10, family='Cairo'),
         )
         for r in [1, 2, 3]:
             fig.update_yaxes(
-                title_text='جنيه/جرام',
+                title_text='EGP / gram',
                 title_font=dict(size=8, color='#4A6A8A'),
                 tickfont=dict(family='Cairo', size=9, color='#4A6A8A'),
                 gridcolor='rgba(255,255,255,0.04)',
@@ -1746,8 +1741,7 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q2 - Fair Value Index (FVI)
-    # Answer: Is Egyptian gold overpriced or underpriced vs theoretical fair value?
-    # (Audit verdict: FULLY ALIGNED - no logic changes needed, kept as-is.)
+    # Answer: Is Egyptian gold overpriced or underpriced vs. theoretical fair value?
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q2":
         # Compute FVI inline: FVI = Actual Price / Theoretical Price
@@ -1765,15 +1759,15 @@ if embed_q:
         avg_fvi = fvi_data[f'FVI_{k}'].dropna().mean()
 
         if latest_fvi > 1.05:
-            fvi_status = "مُبالَغ فيه 🔴"
+            fvi_status = "Overvalued 🔴"
             fvi_color = "#EF476F"
             fvi_status_e = "Overvalued"
         elif latest_fvi < 0.97:
-            fvi_status = "مُقيَّم بأقل ✅"
+            fvi_status = "Undervalued ✅"
             fvi_color = "#06D6A0"
             fvi_status_e = "Undervalued"
         else:
-            fvi_status = "سعر عادل 🟡"
+            fvi_status = "Fair Value 🟡"
             fvi_color = "#FFD700"
             fvi_status_e = "Fair Value"
 
@@ -1781,11 +1775,11 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{latest_fvi:.3f}", f"‫مؤشر القيمة العادلة ({k})‬", fvi_color),
-                _kpi_card(fvi_status, "الحالة الراهنة", fvi_color),
-                _kpi_card(f"{dev_pct:+.1f}%", "الانحراف عن القيمة العادلة", fvi_color),
-                _kpi_card(f"{max_fvi:.3f}", "أعلى الفجوة السعرية مسجلة", "#EF476F"),
-                _kpi_card(f"{avg_fvi:.3f}", "متوسط الفترة", "#4CC9F0"),
+                _kpi_card(f"{latest_fvi:.3f}", f"Fair Value Index ({k})", fvi_color),
+                _kpi_card(fvi_status, "Current Status", fvi_color),
+                _kpi_card(f"{dev_pct:+.1f}%", "Deviation From Fair Value", fvi_color),
+                _kpi_card(f"{max_fvi:.3f}", "Highest Price Gap Recorded", "#EF476F"),
+                _kpi_card(f"{avg_fvi:.3f}", "Period Average", "#4CC9F0"),
             ),
             unsafe_allow_html=True,
         )
@@ -1822,7 +1816,7 @@ if embed_q:
         fig2.add_hline(
             y=1.0,
             line=dict(color='#FFD700', width=1.5, dash='dash'),
-            annotation_text='‫القيمة العادلة (FVI = 1.0)‬',
+            annotation_text='Fair Value (FVI = 1.0)',
             annotation_font=dict(size=9, color='#FFD700', family='Cairo'),
             annotation_position='top left',
         )
@@ -1832,19 +1826,19 @@ if embed_q:
         # ── Zone labels ──
         fig2.add_annotation(
             x=fvi_data.index[-1], y=1.20, xanchor='right',
-            text="🔴 مُبالَغ فيه - الفجوة السعرية مضاربة", showarrow=False,
+            text="🔴 Overvalued - price gap is speculative", showarrow=False,
             font=dict(size=8, color='#EF476F', family='Cairo'),
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
         fig2.add_annotation(
             x=fvi_data.index[-1], y=1.01, xanchor='right',
-            text="🟡 سعر عادل - فرصة دخول مثالية", showarrow=False,
+            text="🟡 Fair value - ideal entry point", showarrow=False,
             font=dict(size=8, color='#FFD700', family='Cairo'),
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
         fig2.add_annotation(
             x=fvi_data.index[-1], y=0.93, xanchor='right',
-            text="🟢 مُقيَّم بأقل - نافذة شراء نادرة", showarrow=False,
+            text="🟢 Undervalued - rare buying window", showarrow=False,
             font=dict(size=8, color='#06D6A0', family='Cairo'),
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
@@ -1853,7 +1847,7 @@ if embed_q:
         last_date = fvi_data[f'FVI_{k}'].dropna().index[-1]
         fig2.add_annotation(
             x=last_date, y=latest_fvi,
-            text=f"‫الآن: {latest_fvi:.3f} ({fvi_status_e})‬",
+            text=f"Now: {latest_fvi:.3f} ({fvi_status_e})",
             showarrow=True,
             arrowhead=2, arrowcolor=fvi_color, arrowsize=1.2, arrowwidth=1.5,
             ax=-60, ay=-30,
@@ -1864,7 +1858,7 @@ if embed_q:
         if show_events:
             add_events(fig2, data)
 
-        lyt2 = plot_layout(height=480, yaxis=dict(title_text='‫مؤشر القيمة العادلة (FVI)‬'))
+        lyt2 = plot_layout(height=480, yaxis=dict(title_text='Fair Value Index (FVI)'))
         lyt2['margin'] = dict(l=8, r=8, t=20, b=8)
         fig2.update_layout(**lyt2)
         fig2.update_yaxes(tickfont=dict(family='Cairo', size=10),
@@ -1877,9 +1871,6 @@ if embed_q:
     # ─────────────────────────────────────────────────────────────────────────
     # Q3 - Speculation / Panic Premium Bubbles
     # Answer: Do Egyptian gold prices show measurable panic spikes during crises?
-    # FIX (audit Q3): added a crisis-window vs baseline premium comparison KPI,
-    # turning the visual "spikes near crisis markers" impression into a single
-    # defensible statistic the jury can quote directly.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q3":
         # Latest premium stats
@@ -1894,7 +1885,7 @@ if embed_q:
         mar24_peak = data['2024-03-01':'2024-04-30'][f'PremPct_21K'].dropna()
         mar24_max = mar24_peak.max() if not mar24_peak.empty else 0
 
-        # ── NEW: Crisis-window vs baseline comparison - hard stat backing the
+        # ── Crisis-window vs baseline comparison - hard stat backing the
         # "measurable panic spikes" claim, computed directly from CRISIS_EVENTS
         # and the real PremPct_21K series (no hardcoded numbers). ──
         crisis_avg, baseline_avg = 0.0, 0.0
@@ -1918,22 +1909,22 @@ if embed_q:
 
         def _prem_status(pct):
             if pct > 15:
-                return ("🔴 الفجوة السعرية", "#EF476F")
+                return ("🔴 Price Gap", "#EF476F")
             if pct > 8:
-                return ("🟠 مرتفع", "#FF9F43")
+                return ("🟠 Elevated", "#FF9F43")
             if pct > 3:
-                return ("🟡 معتدل", "#FFD700")
-            return ("🟢 طبيعي", "#06D6A0")
+                return ("🟡 Moderate", "#FFD700")
+            return ("🟢 Normal", "#06D6A0")
 
         status_txt, status_clr = _prem_status(latest_prem['21K'])
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{latest_prem['21K']:.1f}%", "‫علاوة 21K الحالية‬", status_clr),
-                _kpi_card(status_txt, "مستوى الإشارة", status_clr),
-                _kpi_card(f"{crisis_avg:.1f}%", "متوسط العلاوة وقت الأزمات", "#EF476F"),
-                _kpi_card(f"{baseline_avg:.1f}%", "متوسط العلاوة بالأوقات العادية", "#06D6A0"),
-                _kpi_card(f"{(crisis_avg - baseline_avg):+.1f}pt", "فرق عدم الاسقرار (دليل قاطع)", "#FF9F43"),
+                _kpi_card(f"{latest_prem['21K']:.1f}%", "Current 21K Premium", status_clr),
+                _kpi_card(status_txt, "Signal Level", status_clr),
+                _kpi_card(f"{crisis_avg:.1f}%", "Avg. Premium During Crises", "#EF476F"),
+                _kpi_card(f"{baseline_avg:.1f}%", "Avg. Premium In Normal Times", "#06D6A0"),
+                _kpi_card(f"{(crisis_avg - baseline_avg):+.1f}pt", "Volatility Gap (Hard Evidence)", "#FF9F43"),
             ),
             unsafe_allow_html=True,
         )
@@ -1948,10 +1939,10 @@ if embed_q:
 
         # ── Zone boundary lines ──
         fig3.add_hline(y=15, line=dict(color='rgba(239,71,111,0.5)', width=1, dash='dot'),
-                        annotation_text='‫🔴 الفجوة السعرية (&gt;15%)‬', annotation_position='top left',
+                        annotation_text='🔴 Price Gap (&gt;15%)', annotation_position='top left',
                         annotation_font=dict(size=8, color='#EF476F', family='Cairo'))
         fig3.add_hline(y=8, line=dict(color='rgba(255,159,67,0.5)', width=1, dash='dot'),
-                        annotation_text='‫🟠 علاوة مرتفعة (&gt;8%)‬', annotation_position='top left',
+                        annotation_text='🟠 Elevated Premium (&gt;8%)', annotation_position='top left',
                         annotation_font=dict(size=8, color='#FF9F43', family='Cairo'))
         fig3.add_hline(y=0, line=dict(color='rgba(100,120,160,0.4)', width=1, dash='dot'))
 
@@ -1961,13 +1952,13 @@ if embed_q:
             fig3.add_trace(go.Scatter(
                 x=data.index, y=data[f'PremPct_{karat}'],
                 name=karat, line=dict(color=color, width=lw),
-                hovertemplate=f"علاوة {karat}: %{{y:.1f}}%<extra></extra>",
+                hovertemplate=f"{karat} Premium: %{{y:.1f}}%<extra></extra>",
             ))
 
         if show_events:
             add_events(fig3, data)
 
-        lyt3 = plot_layout(height=460, yaxis=dict(title_text='‫علاوة الطلب/عدم الاسقرار (%)‬'))
+        lyt3 = plot_layout(height=460, yaxis=dict(title_text='Demand / Volatility Premium (%)'))
         lyt3['margin'] = dict(l=8, r=8, t=20, b=8)
         fig3.update_layout(**lyt3)
         fig3.update_yaxes(tickfont=dict(family='Cairo', size=10),
@@ -1980,17 +1971,16 @@ if embed_q:
     # ─────────────────────────────────────────────────────────────────────────
     # Q4 - Macroeconomic Correlation Matrix
     # Answer: Which macro driver explains Egyptian gold price moves the most?
-    # FIX (audit Q4 - CRITICAL): Price_{k} (the actual local gold price, i.e.
-    # the dependent variable the question is about) is now INCLUDED in the
-    # correlation matrix itself. The "highest impact" highlight is computed
-    # dynamically from the real correlation values - never hardcoded to
-    # USD/EGP - so the visual highlight always matches the KPI numbers and
-    # the underlying data, however the data evolves.
+    # Price_{k} (the actual local gold price, i.e. the dependent variable the
+    # question is about) is INCLUDED in the correlation matrix itself. The
+    # "highest impact" highlight is computed dynamically from the real
+    # correlation values - never hardcoded - so the visual highlight always
+    # matches the KPI numbers and the underlying data, however it evolves.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q4":
         # Price_{k} goes FIRST in the matrix - it is the dependent variable.
         cols_ = [f'Price_{k}', 'Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
-        labels_ = [f'‫سعر الذهب ({k})‬', '‫ذهب XAU‬', 'دولار/جنيه', 'نفط برنت', '‫سندات 10Y‬', 'S&P 500']
+        labels_ = [f'Gold Price ({k})', 'XAU Gold', 'USD/EGP', 'Brent Oil', '10Y Treasury', 'S&P 500']
         cd = data[cols_].dropna().corr()
         cd.columns = labels_
         cd.index = labels_
@@ -2003,9 +1993,9 @@ if embed_q:
         driver_labels = labels_[1:]
         gold_corr = {lbl: cd.loc[price_lbl, lbl] for lbl in driver_labels}
 
-        usd_corr = gold_corr.get('دولار/جنيه', 0)
-        xau_corr = gold_corr.get('‫ذهب XAU‬', 0)
-        oil_corr = gold_corr.get('نفط برنت', 0)
+        usd_corr = gold_corr.get('USD/EGP', 0)
+        xau_corr = gold_corr.get('XAU Gold', 0)
+        oil_corr = gold_corr.get('Brent Oil', 0)
         sp_corr = gold_corr.get('S&P 500', 0)
 
         # ── Dynamically determine the TRUE highest-impact driver. No hardcoded
@@ -2016,11 +2006,11 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{usd_corr:.3f}", "‫ارتباط USD/EGP بسعر الذهب‬", "#06D6A0"),
-                _kpi_card(f"{xau_corr:.3f}", "‫ارتباط XAU/USD بسعر الذهب‬", "#FFD700"),
-                _kpi_card(f"{oil_corr:.3f}", "ارتباط النفط بسعر الذهب", "#FF9F43"),
-                _kpi_card(f"{sp_corr:.3f}", "‫ارتباط S&amp;P 500 بسعر الذهب‬", "#4CC9F0"),
-                _kpi_card(best_driver_lbl, f"‫الأعلى تأثيراً (r={best_driver_val:.3f}‬)", "#D4AF37"),
+                _kpi_card(f"{usd_corr:.3f}", "USD/EGP Correlation With Gold", "#06D6A0"),
+                _kpi_card(f"{xau_corr:.3f}", "XAU/USD Correlation With Gold", "#FFD700"),
+                _kpi_card(f"{oil_corr:.3f}", "Oil Correlation With Gold", "#FF9F43"),
+                _kpi_card(f"{sp_corr:.3f}", "S&amp;P 500 Correlation With Gold", "#4CC9F0"),
+                _kpi_card(best_driver_lbl, f"Highest Impact (r={best_driver_val:.3f})", "#D4AF37"),
             ),
             unsafe_allow_html=True,
         )
@@ -2059,7 +2049,7 @@ if embed_q:
         )
         fc4.add_annotation(
             x=best_idx, y=-0.75,
-            text=f"★ أعلى تأثير (r={best_driver_val:.2f})",
+            text=f"★ Highest Impact (r={best_driver_val:.2f})",
             showarrow=False,
             font=dict(size=9, color='#FFD700', family='Cairo'),
             bgcolor='rgba(3,6,15,0.75)', borderpad=2,
@@ -2088,16 +2078,24 @@ if embed_q:
     # Q5 - Net Return Comparison (Portfolio Simulation)
     # Answer: Which asset outperforms after real costs; did EGP cash lose
     #         purchasing power?
-    # FIX (audit Q5): added a real (inflation-adjusted) cash-return KPI, and
-    # surfaced the "best performer" label (was computed before but never
-    # displayed). Best-performer logic is now fully dynamic across all three
-    # karats rather than a hardcoded 21K/24K binary check.
+    # Karat portfolios (24K/21K/18K) now call compute_metrics() directly - the
+    # SAME function used by the main app pages - instead of a separately
+    # duplicated metrics helper, so Sharpe/return/drawdown can never drift
+    # between this embed and the main Investment page. USD and Cash still use
+    # a local helper because load_data() only computes DD_{karat} for actual
+    # karats, not for the USD/Cash benchmark series.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q5":
         INIT = 100_000
 
-        # ── Portfolio metrics ──
-        def _portfolio_metrics(series):
+        # ── Karat portfolio metrics: single source of truth via compute_metrics() ──
+        m24 = compute_metrics(data, '24K')
+        m21 = compute_metrics(data, '21K')
+        m18 = compute_metrics(data, '18K')
+
+        # ── USD / Cash benchmark metrics (no DD_{col} available for these in
+        # load_data(), so a local, logic-identical helper computes them) ──
+        def _benchmark_metrics(series):
             if series.dropna().empty:
                 return dict(ret=0, sharpe=0, maxdd=0)
             rets = series.dropna().pct_change().dropna()
@@ -2107,17 +2105,13 @@ if embed_q:
             dd = ((series.dropna() - roll) / roll).min() * 100
             return dict(ret=total, sharpe=sharpe, maxdd=dd)
 
-        m24 = _portfolio_metrics(data['Port_24K'].dropna())
-        m21 = _portfolio_metrics(data['Port_21K'].dropna())
-        m18 = _portfolio_metrics(data['Port_18K'].dropna())
-        musd = _portfolio_metrics(data['Port_USD'].dropna())
-        mcash = _portfolio_metrics(data['Port_Cash'].dropna())
+        musd = _benchmark_metrics(data['Port_USD'])
+        mcash = _benchmark_metrics(data['Port_Cash'])
 
         # ── Dynamic best-performer selection across all three karats ──
-        all_rets = {'24K': m24['ret'], '21K': m21['ret'], '18K': m18['ret']}
+        all_rets = {'24K': m24['total'], '21K': m21['total'], '18K': m18['total']}
         best_label = max(all_rets, key=all_rets.get)
         best_ret = all_rets[best_label]
-        best_metrics = {'24K': m24, '21K': m21, '18K': m18}[best_label]
 
         # ── Real (inflation-adjusted) cash loss. EST_CUM_INFLATION_PCT should
         # be replaced with the actual cumulative CPI figure for the analysis
@@ -2128,16 +2122,16 @@ if embed_q:
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{best_label}", "الأفضل أداءً (صافي)", "#FFD700"),
-                _kpi_card(f"{best_ret:+.0f}%", f"‫عائد {best_label} صافي (Jan 2020)‬", "#FFD700"),
-                _kpi_card(f"{musd['ret']:+.0f}%", "‫عائد الدولار‬", "#4CC9F0"),
-                _kpi_card(f"{mcash['ret']:+.0f}%", "‫عائد الكاش بالجنيه (اسمي)‬", "#6a7a99"),
-                _kpi_card(f"{cash_real_loss:+.0f}%", "‫عائد الكاش الحقيقي (بعد التضخم)‬", "#EF476F"),
+                _kpi_card(f"{best_label}", "Best Net Performer", "#FFD700"),
+                _kpi_card(f"{best_ret:+.0f}%", f"{best_label} Net Return (Jan 2020)", "#FFD700"),
+                _kpi_card(f"{musd['ret']:+.0f}%", "USD Return", "#4CC9F0"),
+                _kpi_card(f"{mcash['ret']:+.0f}%", "EGP Cash Return (Nominal)", "#6a7a99"),
+                _kpi_card(f"{cash_real_loss:+.0f}%", "Real Cash Return (After Inflation)", "#EF476F"),
             ),
             unsafe_allow_html=True,
         )
         st.markdown(
-            '<div class="eq-footnote">‫العائد الحقيقي للكاش يفترض تضخم تراكمي تقديري - يُستحسن استبداله برقم CAPMAS الفعلي قبل العرض‬</div>',
+            '<div class="eq-footnote">Real cash return assumes an estimated cumulative inflation figure - replace with the actual CAPMAS figure before presenting</div>',
             unsafe_allow_html=True,
         )
 
@@ -2151,29 +2145,29 @@ if embed_q:
         for karat, color, lw in karat_cfg:
             fig5.add_trace(go.Scatter(
                 x=data.index, y=data[f'Port_{karat}'],
-                name=f'‫{karat} (صافي)‬',
+                name=f'{karat} (Net)',
                 line=dict(color=color, width=lw),
-                hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} ج<extra></extra>",
+                hovertemplate=f"<b>{karat}</b>: %{{y:,.0f}} EGP<extra></extra>",
             ))
 
         fig5.add_trace(go.Scatter(
             x=data.index, y=data['Port_USD'],
-            name='دولار',
+            name='USD',
             line=dict(color='#4CC9F0', width=1.8, dash='dot'),
-            hovertemplate="دولار: %{y:,.0f} ج<extra></extra>",
+            hovertemplate="USD: %{y:,.0f} EGP<extra></extra>",
         ))
         fig5.add_trace(go.Scatter(
             x=data.index, y=data['Port_Cash'],
-            name='كاش بالجنيه',
+            name='EGP Cash',
             line=dict(color='rgba(100,120,160,0.5)', width=1.2, dash='dot'),
-            hovertemplate="كاش: %{y:,.0f} ج<extra></extra>",
+            hovertemplate="Cash: %{y:,.0f} EGP<extra></extra>",
         ))
 
         # ── Baseline 100K reference ──
         fig5.add_hline(
             y=INIT,
             line=dict(color='rgba(255,255,255,0.15)', width=1, dash='dot'),
-            annotation_text='رأس المال الأصلي: 100,000 ج',
+            annotation_text='Initial Capital: 100,000 EGP',
             annotation_font=dict(size=8, color='#6a7a99', family='Cairo'),
             annotation_position='bottom right',
         )
@@ -2192,7 +2186,7 @@ if embed_q:
         if show_events:
             add_events(fig5, data)
 
-        lyt5 = plot_layout(height=480, yaxis=dict(title_text='قيمة المحفظة (جنيه)'))
+        lyt5 = plot_layout(height=480, yaxis=dict(title_text='Portfolio Value (EGP)'))
         lyt5['margin'] = dict(l=8, r=8, t=20, b=8)
         fig5.update_layout(**lyt5)
         fig5.update_yaxes(tickfont=dict(family='DM Mono', size=10),
@@ -2206,24 +2200,24 @@ if embed_q:
     # Q6 - Prophet Multi-Stage Forecast
     # Answer: Can we forecast forward reliably, with the calendar/date-merge
     #         mismatch fixed?
-    # FIX (audit Q6): MAE/RMSE/MAPE are now computed on a genuine HELD-OUT
-    # backtest window (train/test split), not on in-sample fitted values.
-    # The production forecast itself still uses the FULL history (so the
-    # actual forward-looking forecast benefits from all available data) -
-    # only the *reported accuracy metrics* come from the backtest model.
+    # MAE/RMSE/MAPE are computed on a genuine HELD-OUT backtest window
+    # (train/test split), not on in-sample fitted values. The production
+    # forecast itself still uses the FULL history (so the actual
+    # forward-looking forecast benefits from all available data) - only the
+    # *reported accuracy metrics* come from the backtest model.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q6":
         st.markdown(
-            '<div style="direction:rtl; text-align:right; font-family:Cairo; font-size:14px; margin-bottom:-15px;">أفق التوقع (أيام)</div>', 
+            '<div style="direction:ltr; text-align:left; font-family:Cairo; font-size:14px; margin-bottom:-15px;">Forecast Horizon (Days)</div>',
             unsafe_allow_html=True
         )
         forecast_days = st.slider(
-            "أفق التوقع (أيام)", 30, 365, 180, 30,
+            "Forecast Horizon (Days)", 30, 365, 180, 30,
             key="embed_q6_slider",
-            label_visibility="collapsed" 
+            label_visibility="collapsed"
         )
 
-        with st.spinner("‫⏳ يتم تدريب نموذج Prophet …‬"):
+        with st.spinner("⏳ Training the Prophet model…"):
             try:
                 from prophet import Prophet
 
@@ -2305,9 +2299,9 @@ if embed_q:
                 fc_change = (fc_target - act_last) / act_last * 100
 
                 # ── BACKTEST MODEL - held-out test window for REPORTED ACCURACY.
-                # This model is trained on everything EXCEPT the last
-                # BACKTEST_DAYS, then evaluated on that held-out window. This
-                # is genuine out-of-sample error, not in-sample fit error. ──
+                # Trained on everything EXCEPT the last BACKTEST_DAYS, then
+                # evaluated on that held-out window. Genuine out-of-sample
+                # error, not in-sample fit error. ──
                 BACKTEST_DAYS = int(min(60, max(10, len(train) // 5)))
                 train_bt = train.iloc[:-BACKTEST_DAYS].copy()
                 test_bt = train.iloc[-BACKTEST_DAYS:].copy()
@@ -2347,18 +2341,18 @@ if embed_q:
 
                 st.markdown(
                     _kpi_strip(
-                        _kpi_card(f"{act_last:,.0f} ج", f"‫سعر {k} الحالي‬", "#FFD700"),
-                        _kpi_card(f"{fc_target:,.0f} ج", f"‫التوقع بعد {forecast_days} يوم‬", "#4CC9F0"),
-                        _kpi_card(f"{fc_change:+.1f}%", "‫التغير المتوقع‬",
+                        _kpi_card(f"{act_last:,.0f} EGP", f"Current {k} Price", "#FFD700"),
+                        _kpi_card(f"{fc_target:,.0f} EGP", f"Forecast in {forecast_days} Days", "#4CC9F0"),
+                        _kpi_card(f"{fc_change:+.1f}%", "Expected Change",
                                   "#06D6A0" if fc_change > 0 else "#EF476F"),
-                        _kpi_card(f"{mae_bt:,.0f} ج", f"MAE (Backtest {BACKTEST_DAYS} يوم)", "#FF9F43"),
-                        _kpi_card(f"{mape_bt:.1f}%", "‫MAPE (Backtest)‬", "#A855F7"),
+                        _kpi_card(f"{mae_bt:,.0f} EGP", f"MAE (Backtest {BACKTEST_DAYS}d)", "#FF9F43"),
+                        _kpi_card(f"{mape_bt:.1f}%", "MAPE (Backtest)", "#A855F7"),
                     ),
                     unsafe_allow_html=True,
                 )
                 st.markdown(
-                    f'<div class="eq-footnote">دقة النموذج محسوبة على بيانات لم يرها النموذج أثناء التدريب'
-                    f'‫(آخر {BACKTEST_DAYS} يوم) - RMSE: {rmse_bt:,.0f} ج‬</div>',
+                    f'<div class="eq-footnote">Model accuracy is computed on data the model never saw during training '
+                    f'(last {BACKTEST_DAYS} days) - RMSE: {rmse_bt:,.0f} EGP</div>',
                     unsafe_allow_html=True,
                 )
 
@@ -2366,9 +2360,9 @@ if embed_q:
 
                 hw6 = data[fv_col].resample('W').last()
                 fig6.add_trace(go.Scatter(
-                    x=hw6.index, y=hw6, name='السعر الفعلي',
+                    x=hw6.index, y=hw6, name='Actual Price',
                     line=dict(color='#4A6A8A', width=1.5),
-                    hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} ج<extra></extra>",
+                    hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} EGP<extra></extra>",
                 ))
 
                 # 90% CI band
@@ -2379,18 +2373,18 @@ if embed_q:
                 fig6.add_trace(go.Scatter(
                     x=fc_out6['ds'], y=fc_out6['yhat_lower'],
                     fill='tonexty', fillcolor='rgba(76,201,240,0.12)',
-                    line=dict(width=0), name='‫نطاق الثقة 90%‬',
+                    line=dict(width=0), name='90% Confidence Interval',
                 ))
                 fig6.add_trace(go.Scatter(
                     x=fc_out6['ds'], y=fc_out6['yhat'],
-                    name='‫توقع Prophet‬', line=dict(color='#4CC9F0', width=2.5),
-                    hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} ج</b><extra></extra>",
+                    name='Prophet Forecast', line=dict(color='#4CC9F0', width=2.5),
+                    hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} EGP</b><extra></extra>",
                 ))
 
                 fig6.add_vline(
                     x=datetime.today().timestamp() * 1000,
                     line_dash='dash', line_color='#FFD700', opacity=0.6,
-                    annotation_text='اليوم',
+                    annotation_text='Today',
                     annotation_font=dict(color='#FFD700', size=9, family='Cairo'),
                     annotation_position='top right',
                 )
@@ -2398,7 +2392,7 @@ if embed_q:
                 if show_events:
                     add_events(fig6, data)
 
-                lyt6 = plot_layout(height=460, yaxis=dict(title_text='السعر (جنيه/جرام)'))
+                lyt6 = plot_layout(height=460, yaxis=dict(title_text='Price (EGP/gram)'))
                 lyt6['margin'] = dict(l=8, r=8, t=20, b=8)
                 fig6.update_layout(**lyt6)
                 fig6.update_yaxes(tickfont=dict(family='DM Mono', size=10),
@@ -2409,18 +2403,17 @@ if embed_q:
                                  config=dict(displaylogo=False, responsive=True))
 
             except (ModuleNotFoundError, ImportError):
-                st.error("‫Prophet غير مثبت. يرجى تشغيل: pip install prophet‬")
+                st.error("Prophet is not installed. Please run: pip install prophet")
             except Exception as _exc:
-                st.error(f"‫خطأ في التنبؤ: {_exc}‬")
+                st.error(f"Forecasting error: {_exc}")
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q7 - Technical Signals (RSI + MACD + Bollinger Bands → BUY/HOLD/SELL)
     # Answer: A composite signal combining three indicators into one
     #         actionable call.
-    # FIX (audit Q7): added an explicit indicator-agreement count so the
-    # "composite" framing is backed by a visible number (how many of the 3
-    # indicators agree with the final call), rather than an unproven "beats
-    # single indicators" claim.
+    # An explicit indicator-agreement count backs the "composite" framing
+    # with a visible number (how many of the 3 indicators agree with the
+    # final call).
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q7":
         last_row = data.dropna(subset=[f'RSI_{k}', f'MACD_{k}', f'BB_up_{k}']).iloc[-1]
@@ -2454,9 +2447,9 @@ if embed_q:
         else:
             comp_signal, sig_cls, sig_color = "HOLD 🟡", "hold", "#4CC9F0"
 
-        # ── NEW: agreement count - how many of the 3 indicators individually
-        # point the same direction as the final composite call. Gives the
-        # jury a concrete "2 of 3 indicators agree" style number. ──
+        # ── Agreement count - how many of the 3 indicators individually point
+        # the same direction as the final composite call. Gives a concrete
+        # "2 of 3 indicators agree" style number. ──
         votes = [
             1 if rsi_val < 30 else (-1 if rsi_val > 70 else 0),
             1 if macd_val > macd_sig else -1,
@@ -2465,20 +2458,20 @@ if embed_q:
         comp_direction = 1 if score > 0 else (-1 if score < 0 else 0)
         agree_count = sum(1 for v in votes if comp_direction != 0 and v == comp_direction)
 
-        rsi_status = "تشبع بيع" if rsi_val < 30 else ("تشبع شراء" if rsi_val > 70 else "محايد")
-        macd_status = "‫صاعد ▲‬" if macd_val > macd_sig else "‫هابط ▼‬"
-        bb_status = "عند الحد الأدنى" if price_val < bb_dn else ("عند الحد الأقصى" if price_val > bb_up else "في النطاق")
+        rsi_status = "Oversold" if rsi_val < 30 else ("Overbought" if rsi_val > 70 else "Neutral")
+        macd_status = "Bullish ▲" if macd_val > macd_sig else "Bearish ▼"
+        bb_status = "At Lower Band" if price_val < bb_dn else ("At Upper Band" if price_val > bb_up else "In Range")
 
         st.markdown(
             _kpi_strip(
-                _kpi_card(f"{rsi_val:.1f}", f"‫RSI-14 ({rsi_status})‬",
+                _kpi_card(f"{rsi_val:.1f}", f"RSI-14 ({rsi_status})",
                           "#06D6A0" if rsi_val < 30 else ("#EF476F" if rsi_val > 70 else "#FFD700")),
                 _kpi_card(macd_status, "MACD Crossover",
                           "#06D6A0" if macd_val > macd_sig else "#EF476F"),
                 _kpi_card(bb_status, "Bollinger Bands",
                           "#06D6A0" if price_val < bb_dn else ("#EF476F" if price_val > bb_up else "#4CC9F0")),
-                _kpi_card(f"‫{price_val:,.0f} ج‬", f"‫سعر {k} الحالي‬", "#FFD700"),
-                _kpi_card(f"{agree_count}/3", "مؤشرات متفقة مع الإشارة المركبة", sig_color),
+                _kpi_card(f"{price_val:,.0f} EGP", f"Current {k} Price", "#FFD700"),
+                _kpi_card(f"{agree_count}/3", "Indicators Agreeing With Composite Signal", sig_color),
             ),
             unsafe_allow_html=True,
         )
@@ -2490,20 +2483,20 @@ if embed_q:
             row_heights=[0.55, 0.25, 0.20],
             vertical_spacing=0.06,
             subplot_titles=[
-                f"‫السعر + Bollinger Bands ({k})‬",
-                "‫MACD - زخم الاتجاه‬",
-                "‫RSI-14 - مستوى التشبع‬",
+                f"Price + Bollinger Bands ({k})",
+                "MACD - Trend Momentum",
+                "RSI-14 - Overbought/Oversold Level",
             ],
         )
         for anno in fig7['layout']['annotations']:
             anno['font'] = dict(size=15, family='Cairo', color='#4A6A8A')
-            
+
             if "RSI-14" in anno['text']:
-                anno['yshift'] = 12 
+                anno['yshift'] = 12
             elif "MACD" in anno['text']:
                 anno['yshift'] = -10
             else:
-                anno['yshift'] = -10 
+                anno['yshift'] = -10
 
         # ── Row 1: Price + Bollinger Bands ──
         fig7.add_trace(go.Scatter(
@@ -2524,8 +2517,8 @@ if embed_q:
         ), row=1, col=1)
         fig7.add_trace(go.Scatter(
             x=data.index, y=data[f'Price_{k}'],
-            name='السعر', line=dict(color='#D8E4F0', width=1.8),
-            hovertemplate="%{x|%d %b %Y} - %{y:,.0f} ج<extra></extra>",
+            name='Price', line=dict(color='#D8E4F0', width=1.8),
+            hovertemplate="%{x|%d %b %Y} - %{y:,.0f} EGP<extra></extra>",
         ), row=1, col=1)
         fig7.add_trace(go.Scatter(
             x=data.index, y=data[f'SMA50_{k}'],
@@ -2585,18 +2578,18 @@ if embed_q:
         lyt7 = plot_layout(height=580)
         lyt7['margin'] = dict(l=8, r=8, t=100, b=8)
         lyt7['legend'] = dict(
-            orientation='h', 
-            y=1.09,            
-            x=0.5, 
+            orientation='h',
+            y=1.09,
+            x=0.5,
             xanchor='center',
-            yanchor='bottom', 
-            bgcolor='rgba(0,0,0,0)', 
+            yanchor='bottom',
+            bgcolor='rgba(0,0,0,0)',
             borderwidth=0,
-            font=dict(size=9, family='Cairo'), 
+            font=dict(size=9, family='Cairo'),
             itemsizing='constant',
         )
         fig7.update_layout(**lyt7)
-        fig7.update_yaxes(title_text='السعر (ج)', title_font=dict(size=8), row=1, col=1,
+        fig7.update_yaxes(title_text='Price (EGP)', title_font=dict(size=8), row=1, col=1,
                            tickfont=dict(size=9), gridcolor='rgba(255,255,255,0.04)')
         fig7.update_yaxes(title_text='MACD', title_font=dict(size=8), row=2, col=1,
                            tickfont=dict(size=9), gridcolor='rgba(255,255,255,0.04)')
@@ -2610,16 +2603,13 @@ if embed_q:
         # ── Composite signal badge ──
         today_str = datetime.today().strftime('%d %b %Y')
         hex_color = sig_color.lstrip('#')
-        rgb_color = f"{int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}" 
+        rgb_color = f"{int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}"
         st.markdown(f"""
         <style>
-        .premium-signal-container {{ background: linear-gradient(135deg, rgba(10, 15, 30, 0.75) 0%, rgba(20, 30, 55, 0.55) 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-right: 4px solid {sig_color}; border-radius: 12px; padding: 18px 22px; margin-top: 25px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); direction: rtl; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; }}
+        .premium-signal-container {{ background: linear-gradient(135deg, rgba(10, 15, 30, 0.75) 0%, rgba(20, 30, 55, 0.55) 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-left: 4px solid {sig_color}; border-radius: 12px; padding: 18px 22px; margin-top: 25px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); direction: ltr; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px; }}
         .premium-info-block {{ flex: 1; min-width: 280px; }}
         .premium-headline {{ font-family: 'Cairo', sans-serif; color: #E2E8F0; font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }}
-        
-        /* التعديل هنا: إضافة text-align و width لضمان المحاذاة */
-        .premium-subtitle {{ font-family: 'Cairo', sans-serif; color: #748BA7; font-size: 11px; font-weight: 400; text-align: right; width: 100%; margin-bottom: 10px; }}
-        
+        .premium-subtitle {{ font-family: 'Cairo', sans-serif; color: #748BA7; font-size: 11px; font-weight: 400; text-align: left; width: 100%; margin-bottom: 10px; }}
         .premium-badge-block {{ display: flex; align-items: center; gap: 12px; }}
         .premium-signal-badge {{ background: rgba({rgb_color}, 0.08); border: 1px solid rgba({rgb_color}, 0.45); color: {sig_color}; padding: 8px 22px; border-radius: 8px; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba({rgb_color}, 0.4); box-shadow: 0 0 15px rgba({rgb_color}, 0.1); display: inline-flex; align-items: center; }}
         .technical-pills-grid {{ display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; width: 100%; }}
@@ -2628,8 +2618,8 @@ if embed_q:
         </style>
         <div class="premium-signal-container">
             <div class="premium-info-block">
-                <div class="premium-headline"><span>إشارة مركبة ذكية (RSI + MACD + BB)</span></div>
-                <div class="premium-subtitle">‫تحديث اللحظة: <bdi>{today_str}</bdi> · بناءً على الإغلاق الأخير للسوق‬</div>
+                <div class="premium-headline"><span>Smart Composite Signal (RSI + MACD + BB)</span></div>
+                <div class="premium-subtitle">Live update: <bdi>{today_str}</bdi> · based on the latest market close</div>
                 <div class="technical-pills-grid">
                     <div class="tech-pill">RSI-14: <strong>{rsi_val:.1f} ({rsi_status})</strong></div>
                     <div class="tech-pill">MACD: <strong>{macd_status}</strong></div>
@@ -2638,7 +2628,7 @@ if embed_q:
             </div>
             <div class="premium-badge-block">
                 <div class="tech-pill" style="border-color: rgba(255,215,0,0.2); background: rgba(255,215,0,0.02);">
-                    اتفاق المؤشرات: <strong style="color: #FFD700;">{agree_count}/3</strong>
+                    Indicator Agreement: <strong style="color: #FFD700;">{agree_count}/3</strong>
                 </div>
                 <div class="premium-signal-badge">{comp_signal}</div>
             </div>
@@ -2660,7 +2650,7 @@ if selected_key == "home":
     <div class="hero-wrap">
       <div class="hero-eyebrow">GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM</div>
       <div class="hero-title">
-        <img src="{IMAGE_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px; position: relative; top: -5px;"> {t('home_hero_title')}
+        <img src="{Image_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px; position: relative; top: -5px;"> {t('home_hero_title')}
       </div>
       <div class="hero-sub">
         {t('home_hero_sub')}
