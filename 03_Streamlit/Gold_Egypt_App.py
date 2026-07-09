@@ -2686,27 +2686,25 @@ if selected_key == "home":
 
     m = compute_metrics(data, selected_karat)
 
-    is_en = lang == "en"
-
-    direction = "ltr" if is_en else "rtl"
-    align = "left" if is_en else "right"
-    margin_img = "margin-right: 10px;" if is_en else "margin-left: 10px;"
-
     st.markdown(f"""
-
-    <div class="hero-wrap" style="direction: {direction}; text-align: {align};">
-
-    <div class="hero-eyebrow"> GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM </div>
-
-    <div class="hero-title"> <img src="{Image_HTML_SRC}" width="40" style="vertical-align: middle; {margin_img} position: relative; top: -5px;"> {t('home_hero_title')} </div>
-
-    <div class="hero-sub"> {t('home_hero_sub')} </div>
-
-    <div class="hero-date"> <span class="dot"></span> LIVE · Jan 2020 - {last_date_f} </div>
-
-    <div class="hero-badges"> <span class="hero-badge">DEPI 2026</span> <span class="hero-badge">{t('home_badge_grant')}</span> <span class="hero-badge">Mahmoud Shamoun</span> </div>
-
-    </div> """, unsafe_allow_html=True)
+    <div class="hero-wrap">
+      <div class="hero-eyebrow">GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM</div>
+      <div class="hero-title">
+        <img src="{Image_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px; position: relative; top: -5px;"> {t('home_hero_title')}
+      </div>
+      <div class="hero-sub">
+        {t('home_hero_sub')}
+      </div>
+      <div class="hero-date">
+        <span class="dot"></span>
+        LIVE · Jan 2020 - {last_date_f}
+      </div>
+      <div class="hero-badges">
+        <span class="hero-badge">DEPI 2026</span>
+        <span class="hero-badge">{t('home_badge_grant')}</span>
+        <span class="hero-badge">Mahmoud Shamoun</span>
+      </div>
+    </div>""", unsafe_allow_html=True)
 
     clr = '#06D6A0' if m['total'] > 0 else '#EF476F'
     cards_html = (
