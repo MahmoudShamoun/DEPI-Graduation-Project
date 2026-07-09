@@ -208,8 +208,8 @@ footer {
 
 .slide {
     position: absolute;
-    inset: 0;
-    padding: 40px 80px;
+    inset: 0; 
+    padding: 20px 40px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -219,8 +219,10 @@ footer {
     transform: scale(0.98) translateY(20px);
     transition: opacity 0.6s ease, transform 0.6s ease;
     text-align: center;
+    
+    /* 🌟 السطرين دول بيمنعوا المحتوى من إنه يكسر المسافات */
+    box-sizing: border-box; 
     overflow: hidden;
-    box-sizing: border-box;
 }
 
 .slide.active {
@@ -228,7 +230,15 @@ footer {
     pointer-events: auto;
     transform: scale(1) translateY(0);
 }
-
+main {
+    flex: 1;
+    position: relative; 
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 /* --- TYPOGRAPHY & ELEMENTS --- */
 h1 {
     font-size: 4rem;
