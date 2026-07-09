@@ -397,15 +397,16 @@ p {
 
 /* 2. الكارت نفسه: تكبير العرض والمساحة الداخلية ليناسب الفريم الجديد */
 .team-member {
+    display: flex !important;
+    flex-direction: row !important;      /* 🌟 ده التغيير الأساسي: خلاناهم جنب بعض */
+    align-items: center !important;      /* بتخلي الصورة والاسم في منتصف الارتفاع */
+    justify-content: flex-start !important; /* بتبدأ العناصر من بداية الكارت (اليسار) */
+    gap: 20px !important;                /* مسافة كافية بين الصورة والاسم */
     background: var(--glass-bg) !important;
     border: 1px solid var(--glass-border) !important;
-    padding: 25px 20px !important;     /* مساحات داخلية مريحة */
+    padding: 15px 20px !important;       /* قللنا الـ padding شوية عشان التناسق */
     border-radius: 18px !important;
-    width: 230px !important;           /* 🌟 تم تكبير عرض الكارت ليستوعب الفريم الكبير */
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
+    width: 280px !important;             /* زودنا العرض شوية عشان الاسم ياخد راحته */
     box-sizing: border-box !important;
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
 }
@@ -443,10 +444,10 @@ p {
 
 /* 5. تنسيق الأسماء أسفل الصور بعد التكبير */
 .team-member h3 {
-    font-size: 1.25rem !important;     /* تكبير حجم خط الاسم ليتناسق مع حجم الصورة الجديد */
-    font-weight: 600 !important;
+    margin: 0 !important;
+    text-align: left !important;
+    font-size: 1.2rem !important;        /* ممكن تتحكم في حجم الخط من هنا */
     color: #ffffff !important;
-    margin: 5px 0 0 0 !important;
 }
 
 /* Q-Blocks */
