@@ -23,19 +23,15 @@ def get_img_as_base64(file_path):
 base_path = os.path.dirname(os.path.abspath(__file__))
 Image_path = os.path.join(base_path, "logo.png")
 icon_img = Image.open(Image_path)
-img_base64 = get_img_as_base64(Image_path) 
+img_base64 = get_img_as_base64(Image_path)
 Image_HTML_SRC = f"data:Image/png;base64,{img_base64}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # I18N / BILINGUAL SYSTEM (Arabic / English)
-# Centralized TRANSLATIONS dict + t(key) helper. Default language = English.
-# Mixed Arabic-English financial/technical terms (Prophet, RSI, MACD, karat
-# labels like 18K/21K/24K, ticker symbols, etc.) are intentionally NOT
-# translated per project convention.
 # ─────────────────────────────────────────────────────────────────────────────
 
 if "lang" not in st.session_state:
-    st.session_state.lang = "en"   # default language MUST be English
+    st.session_state.lang = "en"
 
 def set_lang(lang_code: str):
     st.session_state.lang = lang_code
@@ -313,9 +309,6 @@ TRANSLATIONS = {
 }
 
 def t(key: str, **kwargs) -> str:
-    """Fetch a translated string for the current session language.
-    Falls back to the key itself if missing (never crashes).
-    Supports str.format(**kwargs) for dynamic values, e.g. t('kpi_egp_usd', k='21K')."""
     entry = TRANSLATIONS.get(key)
     raw = key if entry is None else entry.get(LANG, entry.get("en", key))
     if kwargs:
@@ -340,12 +333,9 @@ OUNCE_TO_GRAM   = 31.1035
 KARAT_FACTORS   = {'24K': 1.000, '21K': 0.875, '18K': 0.750}
 KARAT_COLORS    = {'24K': '#FFF9C4', '21K': '#FFD700', '18K': '#CD7F32'}
 
-# Making charges per gram in EGP (fabrication/workmanship fee)
 MAKING_CHARGES  = {'24K': 60, '21K': 150, '18K': 220}
-# Bid-ask spread applied at liquidation
 SELL_SPREAD     = {'24K': 0.005, '21K': 0.010, '18K': 0.015}
 
-# Baseline EGP/USD used for the value-driven component (pre-devaluation anchor: Jan 2020 ~15.7)
 VALUE_BASELINE_USD_EGP = 15.70
 
 CRISIS_EVENTS = {
@@ -364,16 +354,13 @@ CRISIS_EVENTS = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TASK 1 - SAFE AUTO-REFRESH (every 5 minutes during market hours UTC 13–21)
-# Falls back silently if streamlit-autorefresh is not installed. A 300-second
-# interval prevents aggressive polling that could trigger IP blocks or API
-# rate limits on gold/FX data providers.
+# TASK 1 - SAFE AUTO-REFRESH
 # ─────────────────────────────────────────────────────────────────────────────
 try:
     from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=300_000, key="market_refresh")   
+    st_autorefresh(interval=300_000, key="market_refresh")
 except ImportError:
-    pass   # streamlit-autorefresh not installed - app continues without auto-refresh
+    pass
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
@@ -385,13 +372,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Dynamic base direction for the whole app main-content area. This flips
-# automatically whenever LANG changes (Arabic → RTL, English → LTR). Element-
-# level RTL/LTR overrides for intentionally-mixed content stay as-is.
+# ── GLOBAL ALIGNMENT: single source of truth for direction + text-align ──
 st.markdown(f"""
 <style>
 .main .block-container {{ direction: {DIR}; text-align: {ALIGN}; }}
-[data-testid="stSidebar"] * {{ text-align: {ALIGN}; }}
+[data-testid="stSidebar"] * {{ direction: ltr; text-align: left; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -520,7 +505,7 @@ html, body, [class*="css"] {
 
 [data-testid="stSidebar"] .stSelectbox label,
 [data-testid="stSidebar"] .stToggle label {
-  direction: rtl !important; text-align: right !important;
+  direction: ltr !important; text-align: left !important;
   width: 100%; color: var(--text-muted) !important; font-size: 0.8rem !important;
 }
 
@@ -562,6 +547,7 @@ html, body, [class*="css"] {
   text-transform: uppercase;
   margin-bottom: 8px;
   direction: ltr;
+  text-align: left;
 }
 .hero-title {
   font-family: 'Cairo', sans-serif;
@@ -570,18 +556,12 @@ html, body, [class*="css"] {
   color: var(--gold);
   margin: 0 0 8px 0;
   line-height: 1.15;
-  direction: rtl;
-  text-align: right;
 }
 .hero-sub {
   font-size: clamp(0.78rem, 2vw, 0.88rem);
   color: #6B7A99;
   line-height: 1.7;
-  direction: rtl;
-  text-align: right;
   max-width: 700px;
-  margin-right: 0;
-  margin-left: auto;
 }
 .hero-date {
   font-family: 'DM Mono', monospace;
@@ -589,10 +569,10 @@ html, body, [class*="css"] {
   color: var(--emerald);
   margin-top: 12px;
   direction: ltr;
+  text-align: left;
   display: flex;
   align-items: center;
   gap: 6px;
-  justify-content: flex-end;
 }
 .hero-date .dot {
   width: 6px; height: 6px;
@@ -602,7 +582,7 @@ html, body, [class*="css"] {
 }
 .hero-badges {
   display: flex; gap: 8px; margin-top: 14px;
-  justify-content: flex-end; flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 .hero-badge {
   font-family: 'DM Mono', monospace;
@@ -656,7 +636,6 @@ html, body, [class*="css"] {
   font-size: 0.68rem;
   color: var(--text-faint);
   letter-spacing: 0.5px;
-  direction: rtl;
   text-transform: uppercase;
 }
 .kpi-card:nth-child(1) { animation-delay: 0.05s; }
@@ -668,28 +647,25 @@ html, body, [class*="css"] {
 /* ── SECTION HEADER ── */
 .section-wrap {
   margin: 32px 0 10px 0;
-  direction: rtl;
   animation: fadeSlide 0.4s both;
 }
 .section-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  justify-content: flex-end;
-  flex-direction: row-reverse;
 }
 .section-icon { font-size: 1rem; }
 .section-text {
   font-size: 1rem; font-weight: 700; color: var(--gold);
-  letter-spacing: -0.3px; direction: rtl; unicode-bidi: embed;
+  letter-spacing: -0.3px;
 }
 .section-line {
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--gold-dim) 30%, transparent 100%);
+  background: linear-gradient(90deg, var(--gold-dim) 0%, transparent 100%);
   margin: 8px 0 6px 0;
   opacity: 0.4;
 }
-.section-sub { font-size: 0.76rem; color: var(--text-faint); direction: rtl; text-align: right; margin: 0 0 12px 0; }
+.section-sub { font-size: 0.76rem; color: var(--text-faint); margin: 0 0 12px 0; }
 
 /* ── INSIGHT BOX ── */
 .insight-box {
@@ -702,16 +678,15 @@ html, body, [class*="css"] {
   font-size: 0.83rem;
   color: #A0AEBE;
   line-height: 1.8;
-  direction: rtl; text-align: right;
   overflow: hidden;
 }
 .insight-box::after {
   content: '';
   position: absolute;
-  top: 0; right: 0;
+  top: 0; left: 0;
   width: 3px; height: 100%;
   background: linear-gradient(180deg, var(--gold), var(--gold-dim));
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 .insight-box b { color: var(--gold); }
 .insight-box .num     { color: var(--emerald); font-weight: 700; font-family: 'DM Mono', monospace; direction: ltr; display: inline; }
@@ -736,7 +711,7 @@ html, body, [class*="css"] {
 }
 .metric-row {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; direction: rtl;
+  padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.8rem; direction: ltr;
 }
 .metric-row:last-child { border-bottom: none; }
 .metric-label { color: var(--text-faint); }
@@ -763,11 +738,11 @@ html, body, [class*="css"] {
   letter-spacing: 4px; color: var(--gold);
   font-size: 1.1rem; direction: ltr;
 }
-.sb-logo-sub { font-size: 0.62rem; color: var(--text-faint); direction: rtl; margin-top: 2px; letter-spacing: 0.5px; }
+.sb-logo-sub { font-size: 0.62rem; color: var(--text-faint); direction: ltr; margin-top: 2px; letter-spacing: 0.5px; }
 
 /* ── SIDEBAR SOURCE ── */
 .sb-src { padding: 4px 0; }
-.sb-src-head { color: var(--gold); font-size: 0.66rem; font-weight: 700; direction: rtl; text-align: right; margin-bottom: 3px; letter-spacing: 0.3px; }
+.sb-src-head { color: var(--gold); font-size: 0.66rem; font-weight: 700; direction: ltr; text-align: left; margin-bottom: 3px; letter-spacing: 0.3px; }
 .sb-src-val  { color: var(--text-faint); font-family: 'DM Mono', monospace; font-size: 0.6rem; direction: ltr; text-align: left; line-height: 1.9; }
 
 /* ── LIVE BADGE ── */
@@ -780,7 +755,7 @@ html, body, [class*="css"] {
 .live-dot { width: 5px; height: 5px; background: var(--emerald); border-radius: 50%; animation: blink 1.5s infinite; }
 
 /* ── FORECAST SLIDER ── */
-.fc-label { color: var(--text-muted); font-size: 0.8rem; direction: rtl; text-align: right; margin-bottom: 4px; }
+.fc-label { color: var(--text-muted); font-size: 0.8rem; margin-bottom: 4px; }
 
 /* ── ROI CALCULATOR CARD ── */
 .roi-card {
@@ -792,7 +767,7 @@ html, body, [class*="css"] {
 }
 .roi-card-title {
   font-size: 0.88rem; font-weight: 700; color: var(--gold);
-  text-align: right; direction: rtl; margin-bottom: 16px;
+  margin-bottom: 16px;
   letter-spacing: 0.3px;
 }
 
@@ -833,7 +808,7 @@ html, body, [class*="css"] {
   transition: border-color var(--transition);
 }
 [data-testid="stMetric"]:hover { border-color: rgba(255,215,0,0.25); }
-[data-testid="stMetricLabel"] { font-size: 0.72rem !important; color: var(--text-faint) !important; direction: rtl; }
+[data-testid="stMetricLabel"] { font-size: 0.72rem !important; color: var(--text-faint) !important; }
 [data-testid="stMetricValue"] { font-family: 'Bebas Neue', 'DM Mono', monospace !important; font-size: 1.6rem !important; }
 [data-testid="stMetricDelta"] { font-family: 'DM Mono', monospace !important; font-size: 0.8rem !important; }
 
@@ -889,7 +864,6 @@ div[data-testid="stAppViewContainer"] > section > div:first-child { padding-top:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _scrape_gold_usd():
-    """Fetch live gold spot price (USD/oz) from goldprice.org data feed."""
     try:
         r = requests.get("https://data-asg.goldprice.org/dbXRates/USD",
                          headers=_HEADERS, timeout=10)
@@ -898,7 +872,6 @@ def _scrape_gold_usd():
         return None
 
 def _scrape_gold_usd_yf():
-    """Fallback: fetch gold price from Yahoo Finance (XAUUSD=X or GC=F)."""
     for ticker in ("XAUUSD=X", "GC=F"):
         try:
             df = yf.download(ticker, period="5d", progress=False, auto_adjust=False)
@@ -913,7 +886,6 @@ def _scrape_gold_usd_yf():
     return None
 
 def _scrape_usd_egp():
-    """Fetch USD/EGP exchange rate from exchangerate-api (primary)."""
     try:
         r = requests.get("https://api.exchangerate-api.com/v4/latest/USD",
                          headers=_HEADERS, timeout=10)
@@ -922,7 +894,6 @@ def _scrape_usd_egp():
         return None
 
 def _scrape_usd_egp_backup():
-    """Fallback: fetch USD/EGP from frankfurter.app."""
     try:
         r = requests.get("https://api.frankfurter.app/latest?from=USD&to=EGP",
                          headers=_HEADERS, timeout=10)
@@ -931,7 +902,6 @@ def _scrape_usd_egp_backup():
         return None
 
 def _scrape_usd_egp_yf():
-    """Second fallback: fetch USD/EGP from Yahoo Finance (EGP=X ticker)."""
     try:
         df = yf.download("EGP=X", period="5d", progress=False, auto_adjust=False)
         if df.empty: return None
@@ -942,7 +912,6 @@ def _scrape_usd_egp_yf():
         return None
 
 def _scrape_others():
-    """Fetch auxiliary market data: crude oil, 10Y treasury, and S&P 500."""
     result = {}
     for name, ticker in [("Crude_Oil","CL=F"),("US_10Y_Treasury","^TNX"),("SP500","^GSPC")]:
         try:
@@ -957,7 +926,7 @@ def _scrape_others():
 
 def _load_historical(start="2020-01-01"):
     TICKER_CANDIDATES = {
-        "Gold_USD_Ounce":   ["XAUUSD=X", "GC=F"],   # spot first, futures fallback
+        "Gold_USD_Ounce":   ["XAUUSD=X", "GC=F"],
         "USD_EGP_Official": ["EGP=X"],
         "Crude_Oil":        ["CL=F"],
         "US_10Y_Treasury":  ["^TNX"],
@@ -984,7 +953,7 @@ def _load_historical(start="2020-01-01"):
                     if attempt < 2:
                         time.sleep(2)
             if fetched:
-                break   # this column is satisfied, no need to try next candidate ticker
+                break
     if not frames:
         return pd.DataFrame()
     data = pd.concat(frames, axis=1, sort=True)
@@ -994,7 +963,6 @@ def _load_historical(start="2020-01-01"):
     return data
 
 def run_scraper():
-    """Fetch live data, append to historical CSV, handle overlapping dates."""
     gold_usd = _scrape_gold_usd() or _scrape_gold_usd_yf()
     usd_egp  = _scrape_usd_egp() or _scrape_usd_egp_backup() or _scrape_usd_egp_yf()
     others   = _scrape_others()
@@ -1020,7 +988,6 @@ def run_scraper():
             "SP500":            others.get("SP500",             float("nan")),
         }
         today_df = pd.DataFrame([row], index=[today])
-        # Remove any existing row for today before appending to avoid duplicates
         hist = hist[hist.index.date != today.date()]
         hist = pd.concat([hist, today_df], sort=False)
 
@@ -1111,27 +1078,17 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
     data.ffill(inplace=True)
     data.dropna(inplace=True)
 
-    # Core spot price: convert global gold (USD/oz) to EGP/gram using live FX rate
     data['Theoretical_24K'] = (data['Gold_USD_Ounce'] / OUNCE_TO_GRAM) * data['USD_EGP_Official']
 
     for karat, factor in KARAT_FACTORS.items():
-        # p = pure spot price (USD/oz → EGP/gram at live FX, no retail fees)
-        # Used for all technical indicators & value decomposition to avoid distorting signals
         p = data['Theoretical_24K'] * factor
 
-        # Price_{karat} = retail BUY price a customer actually pays in the Egyptian market
-        # = spot price + making charge (fabrication/workmanship fee per gram)
-        # For 24K: Price_24K > Theoretical_24K by exactly MAKING_CHARGES['24K'] = 60 EGP
         data[f'Price_{karat}'] = p + MAKING_CHARGES[karat]
 
-        # Value-driven component: gram price at a stable pre-devaluation EGP/USD rate
-        # (VALUE_BASELINE_USD_EGP = 15.70, Jan 2020 anchor - reflects intrinsic gold value)
         data[f'ValueDriven_{karat}'] = (data['Gold_USD_Ounce'] / OUNCE_TO_GRAM) * factor * VALUE_BASELINE_USD_EGP
-        # Inflation & currency premium: residual reflecting local EGP weakness relative to baseline
         data[f'InflPrem_{karat}']    = p - data[f'ValueDriven_{karat}']
         data[f'PremPct_{karat}']     = (data[f'InflPrem_{karat}'] / p) * 100
 
-        # ── Technical indicators ──
         data[f'SMA50_{karat}']       = p.rolling(50,  min_periods=1).mean()
         data[f'SMA200_{karat}']      = p.rolling(200, min_periods=1).mean()
 
@@ -1141,7 +1098,6 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
         data[f'MACDSig_{karat}']     = data[f'MACD_{karat}'].ewm(span=9, adjust=False).mean()
         data[f'MACDHist_{karat}']    = data[f'MACD_{karat}'] - data[f'MACDSig_{karat}']
 
-        # ── Technical indicators ──
         delta    = p.diff()
         gain     = delta.where(delta > 0, 0.0)
         loss     = (-delta.where(delta < 0, 0.0))
@@ -1149,13 +1105,12 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
         avg_loss = loss.ewm(span=14, adjust=False).mean()
         rs       = avg_gain / avg_loss.replace(0, np.nan)
         data[f'RSI_{karat}'] = 100 - (100 / (1 + rs))
-        
+
         data[f'BB_mid_{karat}'] = p.rolling(20, min_periods=1).mean()
         bb_std = p.rolling(20, min_periods=1).std()
         data[f'BB_up_{karat}']  = data[f'BB_mid_{karat}'] + 2 * bb_std
         data[f'BB_dn_{karat}']  = data[f'BB_mid_{karat}'] - 2 * bb_std
 
-        # ── Automated trading signals (collision-safe) ──
         buy_raw  = (data[f'RSI_{karat}'] < 30) | (
                         (data[f'MACD_{karat}'] > data[f'MACDSig_{karat}']) &
                         (data[f'MACD_{karat}'].shift(1) <= data[f'MACDSig_{karat}'].shift(1)))
@@ -1167,18 +1122,14 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
         sell = sell_raw & ~conflict
         data[f'Signal_{karat}'] = np.select([buy, sell], ['BUY', 'SELL'], default='HOLD')
 
-        # ── Realistic portfolio simulation ──
-        # Entry cost: Price_{karat} already includes making charge (fabrication fee)
         entry_price  = data[f'Price_{karat}'].iloc[0]
         grams_bought = 100_000 / entry_price
-        # Net liquidation value: sell at spot price less bid-ask spread (no making charge on exit)
         net_series   = (p * grams_bought) * (1 - SELL_SPREAD[karat])
         data[f'Port_{karat}'] = net_series
         rm = data[f'Port_{karat}'].cummax()
         data[f'DD_{karat}']   = (data[f'Port_{karat}'] / rm - 1) * 100
         data[f'Norm_{karat}'] = data[f'Port_{karat}'] / 100_000 * 100
 
-    # ── USD and Cash benchmarks ──
     usd0 = data['USD_EGP_Official'].iloc[0]
     data['Port_USD']  = (100_000 / usd0) * data['USD_EGP_Official']
     data['Port_Cash'] = 100_000.0
@@ -1188,7 +1139,6 @@ def load_data(csv_path: str, mtime: float) -> pd.DataFrame:
 
 
 def add_events(fig, data, rows=None, y_ann=0.98):
-    """Add crisis event vertical bands and annotations to a Plotly figure."""
     for date_str, (label, color, fill) in sorted(CRISIS_EVENTS.items()):
         dt = pd.to_datetime(date_str)
         if dt < data.index[0]: continue
@@ -1220,7 +1170,7 @@ def section(icon, title, sub=""):
     safe_title = re.sub(r'(\d+K)', r'<bdi>\1</bdi>', title)
     if isinstance(sub, list):
         sub_html = "".join(
-            f'<div style="direction:{DIR};text-align:{ALIGN};'
+            f'<div style="direction:{d};text-align:{"right" if d=="rtl" else "left"};'
             f'font-size:0.76rem;color:var(--text-faint);margin:0 0 2px 0;">{t}</div>'
             for t, d in sub)
     elif sub:
@@ -1228,7 +1178,7 @@ def section(icon, title, sub=""):
     else:
         sub_html = ""
     st.markdown(f"""
-    <div class="section-wrap" style="animation-delay:0.1s">
+    <div class="section-wrap" style="direction:{DIR};text-align:{ALIGN};animation-delay:0.1s">
       <div class="section-title">
         <span class="section-icon">{icon}</span>
         <span class="section-text">{safe_title}</span>
@@ -1247,10 +1197,9 @@ def kpi_html(value, label, color, delay="0s"):
     </div>"""
 
 def insight(html):
-    st.markdown(f'<div class="insight-box">{html}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="insight-box" style="direction:{DIR};text-align:{ALIGN};">{html}</div>', unsafe_allow_html=True)
 
 def compute_metrics(data, karat):
-    """Compute investment performance metrics using net (realistic) portfolio values."""
     col = f'Port_{karat}'
     ret    = data[col].pct_change().dropna()
     total  = (data[col].iloc[-1] / 100_000 - 1) * 100
@@ -1264,7 +1213,7 @@ def compute_metrics(data, karat):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# BOOT: auto-scrape if CSV is missing or stale (> 6 hours old)
+# BOOT: auto-scrape if CSV is missing or stale (> 5 minutes old)
 # ─────────────────────────────────────────────────────────────────────────────
 
 _need_scrape = False
@@ -1316,7 +1265,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Language toggle (AR / EN) — default is English ──
     _lang_cols = st.columns(2)
     with _lang_cols[0]:
         if st.button("EN", use_container_width=True,
@@ -1354,7 +1302,7 @@ with st.sidebar:
 
     st.markdown('<div class="gold-divider"></div>', unsafe_allow_html=True)
 
-    st.markdown(f'<div style="color:#8D99AE;font-size:0.78rem;direction:{DIR};text-align:{ALIGN};margin-bottom:4px;">{t("main_karat_label")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="color:#8D99AE;font-size:0.78rem;direction:ltr;text-align:left;margin-bottom:4px;">{t("main_karat_label")}</div>', unsafe_allow_html=True)
     selected_karat = st.selectbox("k", ["18K", "21K", "24K"], index=1, label_visibility="collapsed")
 
     spacer(6)
@@ -1362,7 +1310,7 @@ with st.sidebar:
 
     if show_events:
         st.markdown(f"""
-        <div style="font-size:0.6rem;color:#3A4A65;direction:{DIR};text-align:{ALIGN};
+        <div style="font-size:0.6rem;color:#3A4A65;direction:ltr;text-align:left;
                     line-height:2;padding:4px 0;margin-top:2px;">
           {t("crisis_legend")}
         </div>""", unsafe_allow_html=True)
@@ -1418,7 +1366,7 @@ with st.sidebar:
       <div style="color:#8D99AE;font-size:0.6rem;text-align:center;
                   font-family:'DM Mono',monospace;direction:ltr;">{t('analyst_name')}</div>
       <div style="color:#3A4A65;font-size:0.58rem;text-align:center;margin-top:4px;
-                  direction:{DIR};line-height:1.7;">
+                  direction:ltr;line-height:1.7;">
         {t('analyst_desc')}
       </div>
     </div>""", unsafe_allow_html=True)
@@ -1439,9 +1387,6 @@ with st.spinner(""):
 if data.empty:
     st.error(t("data_read_fail")); st.stop()
 
-# Export the fully processed DataFrame (all engineered columns) to CSV.
-# Includes fair values, technical indicators, signals, and portfolio metrics
-# for all three karats. Non-fatal: UI continues even if export fails.
 try:
     data.to_csv(CSV_PROCESSED_PATH, index=True, index_label="Date")
 except Exception:
@@ -1563,7 +1508,7 @@ body, .stApp {
     opacity: 0.85;
 }
 
-/* ── FOOTNOTE (cross-reference notes between questions) ── */
+/* ── FOOTNOTE ── */
 .eq-footnote {
     padding: 4px 14px 0 14px;
     font-family: 'Cairo', sans-serif;
@@ -1577,7 +1522,6 @@ body, .stApp {
 
 
 def _kpi_card(val: str, label: str, color: str = "#FFD700") -> str:
-    """Return one KPI card HTML snippet."""
     return (
         f'<div class="eq-kpi">'
         f'<span class="eq-kpi-val" style="color:{color}">{val}</span>'
@@ -1606,16 +1550,11 @@ if embed_q:
 
     st.markdown(_EMBED_CSS, unsafe_allow_html=True)
 
-    k = selected_karat  # e.g. '21K'
+    k = selected_karat
 
-    # ── DEBUG / VALIDATION CONFIG ───────────────────────────────────────────
     debug_mode = True
 
     def _validate_series_match(metric_name, embed_series, main_series, debug_mode=False):
-        """Strict validation that embed_q outputs match the main pipeline
-        (main_df = output of compute_metrics()) for the selected karat `k`.
-        Raises AssertionError with a clear message on mismatch. Does not
-        alter any existing logic - purely an additive check."""
         embed_aligned, main_aligned = embed_series.align(main_series, join='inner')
         embed_vals = embed_aligned.dropna().values
         main_vals = main_aligned.reindex(embed_aligned.dropna().index).values
@@ -1634,33 +1573,25 @@ if embed_q:
                 f"Values are not numerically identical within rtol=1e-5, atol=1e-8."
             )
 
-    # ── KARAT PURITY FACTORS ────────────────────────────────────────────────
     KARAT_FACTOR = {'24K': 1.0, '21K': 21 / 24, '18K': 18 / 24}
     OUNCE_TO_GRAM = 31.1035
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q1 - Price Decomposition
-    # Answer: What % of the Egyptian gold price is the global XAU value vs.
-    #         the currency/demand premium? (Note: this premium is NOT purely
-    #         FX - it overlaps with the panic premium quantified in Q3. See
-    #         the footnote below the KPI strip for the explicit handoff.)
     # ─────────────────────────────────────────────────────────────────────────
     if embed_q == "q1":
-        # ── VALIDATION: embed_df values vs. main_df (compute_metrics) ──────
         try:
             _validate_series_match(f'Price_{k}', data[f'Price_{k}'], main_df[f'Price_{k}'], debug_mode)
             _validate_series_match(f'ValueDriven_{k}', data[f'ValueDriven_{k}'], main_df[f'ValueDriven_{k}'], debug_mode)
             _validate_series_match(f'InflPrem_{k}', data[f'InflPrem_{k}'], main_df[f'InflPrem_{k}'], debug_mode)
         except NameError:
-            pass  # main_df not available in this scope - validation skipped, not raised silently as a false pass in production wiring
+            pass
 
-        # ── KPI: compute decomposition % for the most recent data point ──
         latest = data.dropna(subset=[f'Price_{k}', f'ValueDriven_{k}', f'InflPrem_{k}']).iloc[-1]
         total = latest[f'Price_{k}']
         val_pct = (latest[f'ValueDriven_{k}'] / total * 100) if total else 0
         prem_pct = (latest[f'InflPrem_{k}'] / total * 100) if total else 0
 
-        # Also compute at March 2024 (peak devaluation event)
         mar24 = data['2024-03-01':'2024-03-31'].dropna(subset=[f'Price_{k}', f'ValueDriven_{k}'])
         if not mar24.empty:
             mar24_row = mar24.iloc[-1]
@@ -1694,7 +1625,6 @@ if embed_q:
             unsafe_allow_html=True,
         )
 
-        # ── Stacked Area - 3-panel (24K / 21K / 18K) ──
         fig = make_subplots(
             rows=3, cols=1,
             shared_xaxes=True,
@@ -1731,7 +1661,6 @@ if embed_q:
                 hovertemplate=f"{karat} Premium: %{{y:,.0f}} EGP<extra></extra>",
             ), row=row, col=1)
 
-        # ── March 2024 annotation box (major devaluation) ──
         for r in [1, 2, 3]:
             fig.add_vrect(
                 x0='2024-03-01', x1='2024-03-31',
@@ -1775,11 +1704,8 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q2 - Fair Value Index (FVI)
-    # Answer: Is Egyptian gold overpriced or underpriced vs. theoretical fair value?
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q2":
-        # Compute FVI inline: FVI = Actual Price / Theoretical Price
-        # Theoretical_K = (Gold_USD_Ounce / 31.1035) * KARAT_FACTOR[K] * USD_EGP_Official
         fvi_data = data.copy()
         for karat, factor in KARAT_FACTOR.items():
             theoretical = (
@@ -1787,11 +1713,10 @@ if embed_q:
             ) * factor * fvi_data['USD_EGP_Official']
             fvi_data[f'FVI_{karat}'] = fvi_data[f'Price_{karat}'] / theoretical
 
-        # ── VALIDATION: FVI_k embed_df values vs. main_df (compute_metrics) ──
         try:
             _validate_series_match(f'FVI_{k}', fvi_data[f'FVI_{k}'], main_df[f'FVI_{k}'], debug_mode)
         except NameError:
-            pass  # main_df not available in this scope - validation skipped
+            pass
 
         latest_fvi = fvi_data[f'FVI_{k}'].dropna().iloc[-1]
         max_fvi = fvi_data[f'FVI_{k}'].dropna().max()
@@ -1826,20 +1751,15 @@ if embed_q:
 
         fig2 = go.Figure()
 
-        # ── colored zone fills ──
         xmin, xmax = fvi_data.index[0], fvi_data.index[-1]
 
-        # Overvalued zone (FVI > 1.05): red
         fig2.add_hrect(y0=1.05, y1=2.5,
                         fillcolor='rgba(239,71,111,0.07)', line_width=0)
-        # Fair zone (0.97–1.05): gold
         fig2.add_hrect(y0=0.97, y1=1.05,
                         fillcolor='rgba(255,215,0,0.06)', line_width=0)
-        # Undervalued zone (< 0.97): green
         fig2.add_hrect(y0=0.0, y1=0.97,
                         fillcolor='rgba(6,214,160,0.06)', line_width=0)
 
-        # ── FVI lines for all karats ──
         fvi_colors = {'24K': '#FFF9C4', '21K': '#FFD700', '18K': '#CD7F32'}
         for karat in ['24K', '21K', '18K']:
             lw = 2.4 if karat == k else 1.0
@@ -1852,7 +1772,6 @@ if embed_q:
                 hovertemplate=f"FVI {karat}: %{{y:.3f}}<extra></extra>",
             ))
 
-        # ── FVI = 1.0 baseline ──
         fig2.add_hline(
             y=1.0,
             line=dict(color='#FFD700', width=1.5, dash='dash'),
@@ -1863,7 +1782,6 @@ if embed_q:
         fig2.add_hline(y=1.05, line=dict(color='rgba(239,71,111,0.4)', width=0.8, dash='dot'))
         fig2.add_hline(y=0.97, line=dict(color='rgba(6,214,160,0.4)', width=0.8, dash='dot'))
 
-        # ── Zone labels ──
         fig2.add_annotation(
             x=fvi_data.index[-1], y=1.20, xanchor='right',
             text="🔴 Overvalued - price gap is speculative", showarrow=False,
@@ -1883,7 +1801,6 @@ if embed_q:
             bgcolor='rgba(3,6,15,0.65)', borderpad=2,
         )
 
-        # ── Current FVI callout arrow ──
         last_date = fvi_data[f'FVI_{k}'].dropna().index[-1]
         fig2.add_annotation(
             x=last_date, y=latest_fvi,
@@ -1910,10 +1827,8 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q3 - Speculation / Panic Premium Bubbles
-    # Answer: Do Egyptian gold prices show measurable panic spikes during crises?
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q3":
-        # Latest premium stats
         latest_prem = {karat: data[f'PremPct_{karat}'].dropna().iloc[-1]
                         for karat in ['24K', '21K', '18K']}
         peak_prem = {karat: data[f'PremPct_{karat}'].dropna().max()
@@ -1921,13 +1836,9 @@ if embed_q:
         max_k = max(latest_prem, key=latest_prem.get)
         peak_k = max(peak_prem, key=peak_prem.get)
 
-        # Peak around March 2024
         mar24_peak = data['2024-03-01':'2024-04-30'][f'PremPct_21K'].dropna()
         mar24_max = mar24_peak.max() if not mar24_peak.empty else 0
 
-        # ── Crisis-window vs baseline comparison - hard stat backing the
-        # "measurable panic spikes" claim, computed directly from CRISIS_EVENTS
-        # and the real PremPct_21K series (no hardcoded numbers). ──
         crisis_avg, baseline_avg = 0.0, 0.0
         try:
             if CRISIS_EVENTS:
@@ -1943,8 +1854,6 @@ if embed_q:
                 if (~crisis_mask).any():
                     baseline_avg = prem_series[~crisis_mask].mean()
         except (NameError, TypeError):
-            # CRISIS_EVENTS not available in this scope - comparison stays at 0
-            # rather than breaking the page.
             pass
 
         def _prem_status(pct):
@@ -1971,13 +1880,11 @@ if embed_q:
 
         fig3 = go.Figure()
 
-        # ── Color zones for premium levels ──
-        fig3.add_hrect(y0=15, y1=60, fillcolor='rgba(239,71,111,0.10)', line_width=0)  # Bubble
-        fig3.add_hrect(y0=8, y1=15, fillcolor='rgba(255,159,67,0.08)', line_width=0)  # Elevated
-        fig3.add_hrect(y0=3, y1=8, fillcolor='rgba(255,215,0,0.05)', line_width=0)  # Moderate
-        fig3.add_hrect(y0=-5, y1=3, fillcolor='rgba(6,214,160,0.04)', line_width=0)  # Normal
+        fig3.add_hrect(y0=15, y1=60, fillcolor='rgba(239,71,111,0.10)', line_width=0)
+        fig3.add_hrect(y0=8, y1=15, fillcolor='rgba(255,159,67,0.08)', line_width=0)
+        fig3.add_hrect(y0=3, y1=8, fillcolor='rgba(255,215,0,0.05)', line_width=0)
+        fig3.add_hrect(y0=-5, y1=3, fillcolor='rgba(6,214,160,0.04)', line_width=0)
 
-        # ── Zone boundary lines ──
         fig3.add_hline(y=15, line=dict(color='rgba(239,71,111,0.5)', width=1, dash='dot'),
                         annotation_text='🔴 Price Gap (&gt;15%)', annotation_position='top left',
                         annotation_font=dict(size=8, color='#EF476F', family='Cairo'))
@@ -1986,7 +1893,6 @@ if embed_q:
                         annotation_font=dict(size=8, color='#FF9F43', family='Cairo'))
         fig3.add_hline(y=0, line=dict(color='rgba(100,120,160,0.4)', width=1, dash='dot'))
 
-        # ── PremPct lines per karat ──
         for karat, color in KARAT_COLORS.items():
             lw = 2.2 if karat == k else 1.3
             fig3.add_trace(go.Scatter(
@@ -2010,25 +1916,14 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q4 - Macroeconomic Correlation Matrix
-    # Answer: Which macro driver explains Egyptian gold price moves the most?
-    # Price_{k} (the actual local gold price, i.e. the dependent variable the
-    # question is about) is INCLUDED in the correlation matrix itself. The
-    # "highest impact" highlight is computed dynamically from the real
-    # correlation values - never hardcoded - so the visual highlight always
-    # matches the KPI numbers and the underlying data, however it evolves.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q4":
-        # Price_{k} goes FIRST in the matrix - it is the dependent variable.
         cols_ = [f'Price_{k}', 'Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
         labels_ = [f'Gold Price ({k})', 'XAU Gold', 'USD/EGP', 'Brent Oil', '10Y Treasury', 'S&P 500']
         cd = data[cols_].dropna().corr()
         cd.columns = labels_
         cd.index = labels_
 
-        # Correlation of each macro driver with the LOCAL gold price - read
-        # directly off the matrix row above. This guarantees the KPI numbers
-        # always match exactly what is drawn on the heatmap (single source
-        # of truth, no separate/duplicate computation that could drift).
         price_lbl = labels_[0]
         driver_labels = labels_[1:]
         gold_corr = {lbl: cd.loc[price_lbl, lbl] for lbl in driver_labels}
@@ -2038,9 +1933,6 @@ if embed_q:
         oil_corr = gold_corr.get('Brent Oil', 0)
         sp_corr = gold_corr.get('S&P 500', 0)
 
-        # ── Dynamically determine the TRUE highest-impact driver. No hardcoded
-        # assumption about which variable "wins" - it's whichever variable has
-        # the largest absolute correlation with Price_{k} in the actual data. ──
         best_driver_lbl = max(gold_corr, key=lambda lbl: abs(gold_corr[lbl]))
         best_driver_val = gold_corr[best_driver_lbl]
 
@@ -2067,9 +1959,6 @@ if embed_q:
             title=None,
         )
 
-        # ── Highlight the dynamically-determined best driver (always matches
-        # the KPI strip above, since both are derived from the same `cd` /
-        # `gold_corr` source). ──
         best_idx = labels_.index(best_driver_lbl)
         fc4.add_shape(
             type='rect',
@@ -2094,8 +1983,6 @@ if embed_q:
             font=dict(size=9, color='#FFD700', family='Cairo'),
             bgcolor='rgba(3,6,15,0.75)', borderpad=2,
         )
-        # ── Also outline the Price_{k} row/column itself so the jury can see
-        # exactly where the dependent variable sits in the matrix. ──
         fc4.add_shape(
             type='rect',
             x0=-0.5, x1=len(labels_) - 0.5,
@@ -2116,25 +2003,14 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q5 - Net Return Comparison (Portfolio Simulation)
-    # Answer: Which asset outperforms after real costs; did EGP cash lose
-    #         purchasing power?
-    # Karat portfolios (24K/21K/18K) now call compute_metrics() directly - the
-    # SAME function used by the main app pages - instead of a separately
-    # duplicated metrics helper, so Sharpe/return/drawdown can never drift
-    # between this embed and the main Investment page. USD and Cash still use
-    # a local helper because load_data() only computes DD_{karat} for actual
-    # karats, not for the USD/Cash benchmark series.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q5":
         INIT = 100_000
 
-        # ── Karat portfolio metrics: single source of truth via compute_metrics() ──
         m24 = compute_metrics(data, '24K')
         m21 = compute_metrics(data, '21K')
         m18 = compute_metrics(data, '18K')
 
-        # ── USD / Cash benchmark metrics (no DD_{col} available for these in
-        # load_data(), so a local, logic-identical helper computes them) ──
         def _benchmark_metrics(series):
             if series.dropna().empty:
                 return dict(ret=0, sharpe=0, maxdd=0)
@@ -2148,16 +2024,11 @@ if embed_q:
         musd = _benchmark_metrics(data['Port_USD'])
         mcash = _benchmark_metrics(data['Port_Cash'])
 
-        # ── Dynamic best-performer selection across all three karats ──
         all_rets = {'24K': m24['total'], '21K': m21['total'], '18K': m18['total']}
         best_label = max(all_rets, key=all_rets.get)
         best_ret = all_rets[best_label]
 
-        # ── Real (inflation-adjusted) cash loss. EST_CUM_INFLATION_PCT should
-        # be replaced with the actual cumulative CPI figure for the analysis
-        # window (e.g. from CAPMAS data) before presenting - flagged clearly
-        # so it is never silently left as a guess. ──
-        EST_CUM_INFLATION_PCT = 180  # TODO: replace with real cumulative CPI % for the period
+        EST_CUM_INFLATION_PCT = 180
         cash_real_loss = mcash['ret'] - EST_CUM_INFLATION_PCT
 
         st.markdown(
@@ -2203,7 +2074,6 @@ if embed_q:
             hovertemplate="Cash: %{y:,.0f} EGP<extra></extra>",
         ))
 
-        # ── Baseline 100K reference ──
         fig5.add_hline(
             y=INIT,
             line=dict(color='rgba(255,255,255,0.15)', width=1, dash='dot'),
@@ -2212,7 +2082,6 @@ if embed_q:
             annotation_position='bottom right',
         )
 
-        # ── End-of-line value labels ──
         for karat, color, _ in karat_cfg:
             last_val = data[f'Port_{karat}'].dropna().iloc[-1]
             last_dt = data[f'Port_{karat}'].dropna().index[-1]
@@ -2238,13 +2107,6 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q6 - Prophet Multi-Stage Forecast
-    # Answer: Can we forecast forward reliably, with the calendar/date-merge
-    #         mismatch fixed?
-    # MAE/RMSE/MAPE are computed on a genuine HELD-OUT backtest window
-    # (train/test split), not on in-sample fitted values. The production
-    # forecast itself still uses the FULL history (so the actual
-    # forward-looking forecast benefits from all available data) - only the
-    # *reported accuracy metrics* come from the backtest model.
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q6":
         st.markdown(
@@ -2270,9 +2132,6 @@ if embed_q:
                 train = train.dropna(subset=['y'])
 
                 def _forecast_regressor(col_name, n_days, hist_df=None):
-                    """Forecast a regressor (USD or OIL) forward using its own
-                    Prophet model. hist_df lets the backtest reuse a truncated
-                    history so the test window never leaks into training."""
                     if hist_df is None:
                         df_r = data.reset_index()[['Date', col_name]].copy()
                     else:
@@ -2290,8 +2149,6 @@ if embed_q:
                     fc_r = mr.predict(fut)[['ds', 'yhat']]
                     return fc_r[fc_r['ds'] > df_r['ds'].max()].reset_index(drop=True)
 
-                # ── PRODUCTION MODEL - uses FULL history, this is the actual
-                # forward-looking forecast shown to the jury. ──
                 usd_fc = _forecast_regressor('USD_EGP_Official', forecast_days)
                 oil_fc = _forecast_regressor('Crude_Oil', forecast_days)
 
@@ -2338,17 +2195,10 @@ if embed_q:
                 fc_target = fc_out6['yhat'].iloc[-1]
                 fc_change = (fc_target - act_last) / act_last * 100
 
-                # ── BACKTEST MODEL - held-out test window for REPORTED ACCURACY.
-                # Trained on everything EXCEPT the last BACKTEST_DAYS, then
-                # evaluated on that held-out window. Genuine out-of-sample
-                # error, not in-sample fit error. ──
                 BACKTEST_DAYS = int(min(60, max(10, len(train) // 5)))
                 train_bt = train.iloc[:-BACKTEST_DAYS].copy()
                 test_bt = train.iloc[-BACKTEST_DAYS:].copy()
 
-                # Regressors for the backtest must also be forecast using ONLY
-                # the truncated training history, to avoid leaking future
-                # USD/OIL values into the backtest's "unseen" window.
                 hist_df_bt = data.reset_index()[['Date', 'USD_EGP_Official', 'Crude_Oil']].copy()
                 hist_df_bt = hist_df_bt[hist_df_bt['Date'] <= train_bt['ds'].max()]
                 usd_fc_bt = _forecast_regressor('USD_EGP_Official', BACKTEST_DAYS, hist_df=hist_df_bt)
@@ -2405,7 +2255,6 @@ if embed_q:
                     hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} EGP<extra></extra>",
                 ))
 
-                # 90% CI band
                 fig6.add_trace(go.Scatter(
                     x=fc_out6['ds'], y=fc_out6['yhat_upper'],
                     line=dict(width=0), showlegend=False,
@@ -2449,11 +2298,6 @@ if embed_q:
 
     # ─────────────────────────────────────────────────────────────────────────
     # Q7 - Technical Signals (RSI + MACD + Bollinger Bands → BUY/HOLD/SELL)
-    # Answer: A composite signal combining three indicators into one
-    #         actionable call.
-    # An explicit indicator-agreement count backs the "composite" framing
-    # with a visible number (how many of the 3 indicators agree with the
-    # final call).
     # ─────────────────────────────────────────────────────────────────────────
     elif embed_q == "q7":
         last_row = data.dropna(subset=[f'RSI_{k}', f'MACD_{k}', f'BB_up_{k}']).iloc[-1]
@@ -2465,7 +2309,6 @@ if embed_q:
         bb_dn = last_row[f'BB_dn_{k}']
         bb_mid = last_row[f'BB_mid_{k}']
 
-        # ── Composite signal scoring ──
         score = 0
         if rsi_val < 30:
             score += 1
@@ -2487,9 +2330,6 @@ if embed_q:
         else:
             comp_signal, sig_cls, sig_color = "HOLD 🟡", "hold", "#4CC9F0"
 
-        # ── Agreement count - how many of the 3 indicators individually point
-        # the same direction as the final composite call. Gives a concrete
-        # "2 of 3 indicators agree" style number. ──
         votes = [
             1 if rsi_val < 30 else (-1 if rsi_val > 70 else 0),
             1 if macd_val > macd_sig else -1,
@@ -2516,7 +2356,6 @@ if embed_q:
             unsafe_allow_html=True,
         )
 
-        # ── 3-panel technical chart ──
         fig7 = make_subplots(
             rows=3, cols=1,
             shared_xaxes=True,
@@ -2538,7 +2377,6 @@ if embed_q:
             else:
                 anno['yshift'] = -10
 
-        # ── Row 1: Price + Bollinger Bands ──
         fig7.add_trace(go.Scatter(
             x=data.index, y=data[f'BB_up_{k}'],
             line=dict(color='rgba(180,180,255,0.4)', width=1, dash='dot'),
@@ -2584,7 +2422,6 @@ if embed_q:
                         line=dict(width=1, color='white')),
         ), row=1, col=1)
 
-        # ── Row 2: MACD ──
         hc7 = ['#06D6A0' if v >= 0 else '#EF476F' for v in data[f'MACDHist_{k}']]
         fig7.add_trace(go.Bar(
             x=data.index, y=data[f'MACDHist_{k}'],
@@ -2600,7 +2437,6 @@ if embed_q:
         ), row=2, col=1)
         fig7.add_hline(y=0, line=dict(color='rgba(255,255,255,0.12)', width=0.8), row=2, col=1)
 
-        # ── Row 3: RSI ──
         fig7.add_trace(go.Scatter(
             x=data.index, y=data[f'RSI_{k}'],
             name='RSI-14', line=dict(color='#A855F7', width=1.7),
@@ -2627,6 +2463,7 @@ if embed_q:
             borderwidth=0,
             font=dict(size=9, family='Cairo'),
             itemsizing='constant',
+            tracegroupgap=3,
         )
         fig7.update_layout(**lyt7)
         fig7.update_yaxes(title_text='Price (EGP)', title_font=dict(size=8), row=1, col=1,
@@ -2640,7 +2477,6 @@ if embed_q:
         st.plotly_chart(fig7, use_container_width=True,
                          config=dict(displaylogo=False, responsive=True))
 
-        # ── Composite signal badge ──
         today_str = datetime.today().strftime('%d %b %Y')
         hex_color = sig_color.lstrip('#')
         rgb_color = f"{int(hex_color[0:2], 16)}, {int(hex_color[2:4], 16)}, {int(hex_color[4:6], 16)}"
@@ -2675,7 +2511,6 @@ if embed_q:
         </div>
         """, unsafe_allow_html=True)
 
-    # ── EXIT - stop rendering the rest of the app ──────────────────────────
     st.stop()
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -2687,7 +2522,7 @@ if selected_key == "home":
     m = compute_metrics(data, selected_karat)
 
     st.markdown(f"""
-    <div class="hero-wrap">
+    <div class="hero-wrap" style="direction:{DIR};text-align:{ALIGN};">
       <div class="hero-eyebrow">GOLD EGYPT · FINANCIAL INTELLIGENCE PLATFORM</div>
       <div class="hero-title">
         <img src="{Image_HTML_SRC}" width="40" style="vertical-align: middle; margin-left: 10px; position: relative; top: -5px;"> {t('home_hero_title')}
@@ -2720,8 +2555,8 @@ if selected_key == "home":
     section("📈", t('sec_price_path'), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:{DIR}">{t('price_per_gram_sub', k=selected_karat)}</div>
-    <div style="direction:ltr">Jan 2020 - {last_date_f}</div>
+    <div style="direction:{DIR};text-align:{ALIGN};">{t('price_per_gram_sub', k=selected_karat)}</div>
+    <div style="direction:ltr;text-align:left;">Jan 2020 - {last_date_f}</div>
     </div>""", unsafe_allow_html=True)
 
     pc   = f'Price_{selected_karat}'
@@ -2774,13 +2609,14 @@ if selected_key == "home":
             st.markdown(f"""
             <div style="background:linear-gradient(145deg,#0A1525,#0D1E36);
                         border:1px solid #132238;border-radius:12px;padding:14px;
-                        margin-bottom:10px;border-top:2px solid {color};">
+                        margin-bottom:10px;border-top:2px solid {color};
+                        direction:{DIR};text-align:{ALIGN};">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
                 <span style="font-size:1.3rem">{icon}</span>
                 <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:#3A4A65">{date_lbl}</span>
               </div>
-              <div style="color:{color};font-weight:700;font-size:0.82rem;direction:{DIR};margin-bottom:4px">{title_ev}</div>
-              <div style="color:#6B7A99;font-size:0.72rem;direction:{DIR};line-height:1.6">{desc}</div>
+              <div style="color:{color};font-weight:700;font-size:0.82rem;margin-bottom:4px">{title_ev}</div>
+              <div style="color:#6B7A99;font-size:0.72rem;line-height:1.6">{desc}</div>
             </div>""", unsafe_allow_html=True)
 
     spacer(24)
@@ -2789,8 +2625,8 @@ if selected_key == "home":
         section("🔗", t('sec_correlation'), "")
         st.markdown(f"""
         <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="direction:{DIR}">{t('correlation_sub')}</div>
-        <div style="direction:ltr">Correlation Matrix · Heatmap</div>
+        <div style="direction:{DIR};text-align:{ALIGN};">{t('correlation_sub')}</div>
+        <div style="direction:ltr;text-align:left;">Correlation Matrix · Heatmap</div>
         </div>""", unsafe_allow_html=True)
         cols_  = ['Gold_USD_Ounce', 'USD_EGP_Official', 'Crude_Oil', 'US_10Y_Treasury', 'SP500']
         names_ = [t('corr_name_gold'), t('corr_name_usd'), t('corr_name_oil'), t('corr_name_bonds'), t('corr_name_sp500')]
@@ -2810,8 +2646,8 @@ if selected_key == "home":
         section("💱", t('sec_usd_path'), "")
         st.markdown(f"""
         <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="direction:{DIR}">{t('usd_path_sub')}</div>
-        <div style="direction:ltr">USD / EGP</div>
+        <div style="direction:{DIR};text-align:{ALIGN};">{t('usd_path_sub')}</div>
+        <div style="direction:ltr;text-align:left;">USD / EGP</div>
         </div>""", unsafe_allow_html=True)
         fu = go.Figure()
         fu.add_trace(go.Scatter(x=data.index, y=data['USD_EGP_Official'],
@@ -2832,8 +2668,8 @@ elif selected_key == "analysis":
     section("📊", t('sec_price_anatomy'), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:{DIR}">{t('price_anatomy_sub')}</div>
-    <div style="direction:ltr">Stacked Area · 24K · 21K · 18K</div>
+    <div style="direction:{DIR};text-align:{ALIGN};">{t('price_anatomy_sub')}</div>
+    <div style="direction:ltr;text-align:left;">Stacked Area · 24K · 21K · 18K</div>
     </div>""", unsafe_allow_html=True)
 
     fig = make_subplots(rows=3, cols=1, shared_xaxes=True,
@@ -2884,8 +2720,8 @@ elif selected_key == "analysis":
     section("📐", t('sec_inflation_pct'), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:{DIR}">{t('inflation_pct_sub')}</div>
-    <div style="direction:ltr">Inflation Premium %</div>
+    <div style="direction:{DIR};text-align:{ALIGN};">{t('inflation_pct_sub')}</div>
+    <div style="direction:ltr;text-align:left;">Inflation Premium %</div>
     </div>""", unsafe_allow_html=True)
 
     fig2 = go.Figure()
@@ -2919,13 +2755,13 @@ elif selected_key == "investment":
     section("💼", t('inv_section_title'), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:{DIR}">
+    <div style="direction:{DIR};text-align:{ALIGN};">
       {t('inv_sub_p1')}
       <span style="font-family:'DM Mono';direction:ltr;display:inline;">(24K +{MAKING_CHARGES['24K']}{_cur} · 21K +{MAKING_CHARGES['21K']}{_cur} · 18K +{MAKING_CHARGES['18K']}{_cur})</span>
       {t('inv_sub_p2')}
       <span style="font-family:'DM Mono';direction:ltr;display:inline;">(24K {SELL_SPREAD['24K']*100:.1f}% · 21K {SELL_SPREAD['21K']*100:.1f}% · 18K {SELL_SPREAD['18K']*100:.1f}%)</span>
     </div>
-    <div style="direction:ltr">Net Portfolio Simulation · 100,000 EGP Start</div>
+    <div style="direction:ltr;text-align:left;">Net Portfolio Simulation · 100,000 EGP Start</div>
     </div>""", unsafe_allow_html=True)
 
     _egp_word = 'EGP' if LANG == 'en' else 'جنيه'
@@ -2976,7 +2812,6 @@ elif selected_key == "investment":
                 <span class="metric-val" style="color:#FF9F43">{m['var95']:.2f}%</span></div>
             </div>""", unsafe_allow_html=True)
 
-    # USD benchmark card
     usd0        = data['USD_EGP_Official'].iloc[0]
     usd_bought  = 100_000 / usd0
     usd_final   = data['Port_USD'].iloc[-1]
@@ -3011,8 +2846,8 @@ elif selected_key == "investment":
     section("📉", "Max Drawdown", "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:{DIR}">{t('dd_sub')}</div>
-    <div style="direction:ltr">Peak-to-Trough Drawdown %</div>
+    <div style="direction:{DIR};text-align:{ALIGN};">{t('dd_sub')}</div>
+    <div style="direction:ltr;text-align:left;">Peak-to-Trough Drawdown %</div>
     </div>""", unsafe_allow_html=True)
 
     fdd = go.Figure()
@@ -3053,8 +2888,8 @@ elif selected_key == "technical":
     section("📡", t('tech_title', k=k), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:{DIR}">{t('tech_sub')}</div>
-    <div style="direction:ltr">Bollinger Bands · RSI-14 · MACD</div>
+    <div style="direction:{DIR};text-align:{ALIGN};">{t('tech_sub')}</div>
+    <div style="direction:ltr;text-align:left;">Bollinger Bands · RSI-14 · MACD</div>
     </div>""", unsafe_allow_html=True)
 
     _egp_word = 'EGP' if LANG == 'en' else 'جنيه'
@@ -3066,7 +2901,6 @@ elif selected_key == "technical":
             t('tech_subplot_rsi')
         ])
 
-    # Bollinger Bands
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'BB_up_{k}'],
         line=dict(width=0), showlegend=False), row=1, col=1)
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'BB_dn_{k}'],
@@ -3080,7 +2914,6 @@ elif selected_key == "technical":
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'SMA200_{k}'],
         name='SMA 200', line=dict(color='#A855F7', width=1.1, dash='dot')), row=1, col=1)
 
-    # BUY / SELL signal markers overlaid on price chart
     buys  = data[data[f'Signal_{k}'] == 'BUY']
     sells = data[data[f'Signal_{k}'] == 'SELL']
     fig_tech.add_trace(go.Scatter(x=buys.index, y=buys[f'Price_{k}'], mode='markers',
@@ -3090,7 +2923,6 @@ elif selected_key == "technical":
         name='SELL ▼', marker=dict(symbol='triangle-down', color='#EF476F', size=7,
                                     line=dict(width=1, color='white'))), row=1, col=1)
 
-    # MACD histogram and signal line
     hc = ['#06D6A0' if v >= 0 else '#EF476F' for v in data[f'MACDHist_{k}']]
     fig_tech.add_trace(go.Bar(x=data.index, y=data[f'MACDHist_{k}'],
         name='Histogram', marker_color=hc, opacity=0.7), row=2, col=1)
@@ -3099,7 +2931,6 @@ elif selected_key == "technical":
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'MACDSig_{k}'],
         name='Signal Line', line=dict(color='#FF9F43', width=1.5)), row=2, col=1)
 
-    # RSI-14 with overbought/oversold reference bands
     fig_tech.add_trace(go.Scatter(x=data.index, y=data[f'RSI_{k}'],
         name='RSI-14', line=dict(color='#A855F7', width=1.7)), row=3, col=1)
     fig_tech.add_hline(y=70, line_dash='dot', line_color='#EF476F', opacity=0.4, row=3, col=1)
@@ -3167,8 +2998,8 @@ elif selected_key == "forecast":
     section("🔮", t('fc_title', k=selected_karat), "")
     st.markdown(f"""
     <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div style="direction:{DIR}">{t('fc_sub')}</div>
-    <div style="direction:ltr">Prophet Model · Regressors: USD + OIL · Historical Date Merge Strategy</div>
+    <div style="direction:{DIR};text-align:{ALIGN};">{t('fc_sub')}</div>
+    <div style="direction:ltr;text-align:left;">Prophet Model · Regressors: USD + OIL · Historical Date Merge Strategy</div>
     </div>""", unsafe_allow_html=True)
 
     st.markdown(f'<div class="fc-label">{t("fc_horizon_label")}</div>', unsafe_allow_html=True)
@@ -3181,101 +3012,69 @@ elif selected_key == "forecast":
             k      = selected_karat
             fv_col = f'Price_{k}'
 
-            # ── Step 1: Prepare main training frame ──
             train = data.reset_index()[['Date', fv_col, 'USD_EGP_Official', 'Crude_Oil']].copy()
             train.columns = ['ds', 'y', 'USD', 'OIL']
-            train['ds'] = pd.to_datetime(train['ds'])            
-            # Forward fill and backward fill regressors so we don't lose rows
+            train['ds'] = pd.to_datetime(train['ds'])
             train['USD'] = train['USD'].ffill().bfill()
             train['OIL'] = train['OIL'].ffill().bfill()
-            
-            # Drop rows ONLY where the target 'y' (Gold Price) is missing
             train = train.dropna(subset=['y'])
 
-            # ── Step 2: Train independent regressor models and project N days forward ──
             def forecast_regressor(col_name: str, n_days: int) -> pd.DataFrame:
-                """
-                Train a lightweight Prophet model on a single regressor series and
-                return a future DataFrame [ds, yhat] covering the next n_days.
-                Changepoint scale is conservative (0.05) to avoid overfitting.
-                """
                 df_reg = data.reset_index()[['Date', col_name]].copy()
                 df_reg.columns = ['ds', 'y']
                 df_reg['ds'] = pd.to_datetime(df_reg['ds'])
-                
-                # Explicitly drop missing values in the target 'y' before fitting
                 df_reg = df_reg.dropna(subset=['y'])
                 mr = Prophet(
                     yearly_seasonality=True,
-                    weekly_seasonality=False,    # FX and oil have no intra-week cycle
+                    weekly_seasonality=False,
                     daily_seasonality=False,
-                    changepoint_prior_scale=0.05, # conservative - macro series trend slowly
+                    changepoint_prior_scale=0.05,
                     interval_width=0.80
                 )
                 mr.fit(df_reg)
                 fut   = mr.make_future_dataframe(periods=n_days, freq='D')
                 fc_r  = mr.predict(fut)[['ds', 'yhat']]
-                # Return only the future (post-training) slice
                 last_hist_date = df_reg['ds'].max()
                 return fc_r[fc_r['ds'] > last_hist_date].reset_index(drop=True)
 
             usd_future_df = forecast_regressor('USD_EGP_Official', forecast_days)
             oil_future_df = forecast_regressor('Crude_Oil',         forecast_days)
 
-            # ── Step 3: Fit the main gold Prophet model with tuned parameters ──
-            # TASK 3 - Financial time-series best practices applied:
-            #   • changepoint_prior_scale=0.10  - moderate flexibility; prevents overfitting to
-            #     short-term spikes while still capturing structural breaks (devaluations).
-            #   • yearly_seasonality=True        - gold has an annual demand cycle (festive seasons).
-            #   • weekly_seasonality=False       - gold markets are 5-day (Mon–Fri) without a
-            #     meaningful intra-week price pattern in EGP terms.
-            #   • interval_width=0.90            - wider confidence band acknowledges high gold
-            #     price volatility; 95% was too wide and obscured the point forecast visually.
-            #   • n_changepoints=30 (default 25) - slightly more change-points for a 5-year series
-            #     that has experienced multiple structural regime shifts.
             pm = Prophet(
                 yearly_seasonality=True,
                 weekly_seasonality=False,
                 daily_seasonality=False,
-                changepoint_prior_scale=0.10,   # tuned: less aggressive than 0.15 to avoid overfitting
-                seasonality_prior_scale=10.0,   # allow seasonal components to fit gold's amplitude
-                interval_width=0.90,            # 90% CI - realistic for commodity price volatility
-                n_changepoints=30,              # extra change-points for a regime-heavy series
+                changepoint_prior_scale=0.10,
+                seasonality_prior_scale=10.0,
+                interval_width=0.90,
+                n_changepoints=30,
             )
-            pm.add_regressor('USD', standardize=True)  # standardize regressors for numerical stability
+            pm.add_regressor('USD', standardize=True)
             pm.add_regressor('OIL', standardize=True)
             pm.fit(train)
 
-            # ── Step 4: Build future dataframe using HISTORICAL DATE MERGE STRATEGY ──
-            # make_future_dataframe adds rows into the future (calendar days).
             future_raw = pm.make_future_dataframe(periods=forecast_days, freq='D')
             future_raw['ds'] = pd.to_datetime(future_raw['ds'])
 
-            # 4a. Attach historical regressors via left-join on ds
             hist_regs = train[['ds', 'USD', 'OIL']].copy()
             future_merged = future_raw.merge(hist_regs, on='ds', how='left')
 
-            # 4b. For days beyond historical range, merge forecasted regressor values
             usd_future_df.columns = ['ds', 'USD_fc']
             oil_future_df.columns = ['ds', 'OIL_fc']
             future_merged = future_merged.merge(usd_future_df, on='ds', how='left')
             future_merged = future_merged.merge(oil_future_df, on='ds', how='left')
 
-            # 4c. Fill missing historical USD/OIL with forecasted values (weekend/holiday gaps)
             future_merged['USD'] = future_merged['USD'].fillna(future_merged['USD_fc'])
             future_merged['OIL'] = future_merged['OIL'].fillna(future_merged['OIL_fc'])
             future_merged.drop(columns=['USD_fc', 'OIL_fc'], inplace=True)
 
-            # 4d. Safety: forward-fill then back-fill any remaining NaNs
             future_merged['USD'] = future_merged['USD'].ffill().bfill()
             future_merged['OIL'] = future_merged['OIL'].ffill().bfill()
 
             future_final = future_merged[['ds', 'USD', 'OIL']].copy()
 
-            # ── Step 5: Generate predictions ──
             fc = pm.predict(future_final)
 
-            # ── Step 6: In-sample evaluation on historical training data ──
             from prophet.diagnostics import cross_validation, performance_metrics
 
             total_days = (train['ds'].max() - train['ds'].min()).days
@@ -3284,7 +3083,7 @@ elif selected_key == "forecast":
 
             cv_initial_days = int(max(total_days * 0.5,
                                        total_days - 6 * cv_horizon_days))
-            cv_period_days  = cv_horizon_days  # non-overlapping folds → faster, independent cutoffs
+            cv_period_days  = cv_horizon_days
 
             try:
                 df_cv = cross_validation(
@@ -3304,11 +3103,10 @@ elif selected_key == "forecast":
                 mae  = np.abs(y_true_oos - y_pred_oos).mean()
                 rmse = np.sqrt(((y_true_oos - y_pred_oos) ** 2).mean())
 
-            # ── Step 7: Extract the forward forecast horizon ──
             last_hist = train['ds'].max()
             fc_out    = fc[fc['ds'] > last_hist].head(forecast_days).copy()
             actual_last_price = train['y'].iloc[-1]
-            n = len(train)   # row count used as the in-sample slice fallback below
+            n = len(train)
             predicted_last_price = (
                 fc[fc['ds'] == last_hist]['yhat'].values[0]
                 if len(fc[fc['ds'] == last_hist]) > 0
@@ -3319,30 +3117,25 @@ elif selected_key == "forecast":
             fc_out['yhat_upper'] = fc_out['yhat_upper'] + continuity_offset
             fc_out['yhat_lower'] = fc_out['yhat_lower'] + continuity_offset
 
-            # ── Forecast chart ──
             _egp_word = 'EGP' if LANG == 'en' else 'جنيه'
             title_chart = t('fc_chart_title', k=k, days=forecast_days)
             fig_fc = go.Figure()
 
-            # Weekly-downsampled actuals for cleaner display on long horizons
             hw = data[fv_col].resample('W').last()
             fig_fc.add_trace(go.Scatter(x=hw.index, y=hw, name=t('lbl_actual_price'),
                 line=dict(color='#4A6A8A', width=1.5),
                 hovertemplate="%{x|%d %b %Y}<br>%{y:,.0f} " + _egp_word + "<extra></extra>"))
 
-            # 90% confidence band
             fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_upper'],
                 line=dict(width=0), showlegend=False))
             fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat_lower'],
                 fill='tonexty', fillcolor='rgba(76,201,240,0.10)',
                 line=dict(width=0), name=t('fc_confidence_band')))
 
-            # Point forecast line
             fig_fc.add_trace(go.Scatter(x=fc_out['ds'], y=fc_out['yhat'],
                 name=t('fc_prophet_forecast'), line=dict(color='#4CC9F0', width=2.5),
                 hovertemplate="%{x|%d %b %Y}<br><b>%{y:,.0f} " + _egp_word + "</b><extra></extra>"))
 
-            # Today marker
             fig_fc.add_vline(x=datetime.today().timestamp() * 1000,
                 line_dash='dash', line_color='#FFD700', opacity=0.5,
                 annotation_text=t('lbl_today'),
@@ -3376,18 +3169,14 @@ elif selected_key == "forecast":
             _cls = 'num' if cp>=0 else 'num-red'
             insight(t('fc_insight_summary', k=k, cls=_cls, fe=fe, days=forecast_days, cp=cp, mae=mae, rmse=rmse))
 
-            # ─────────────────────────────────────────────────────────────────
-            # TASK 2 - INVESTMENT ROI FORECASTER (replaces component chart)
-            # ─────────────────────────────────────────────────────────────────
             spacer(28)
             section("💰", t('roi_section_title'), "")
             st.markdown(f"""
             <div class="section-sub" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="direction:{DIR}">{t('roi_sub')}</div>
-            <div style="direction:ltr">Prophet-Powered ROI Forecaster</div>
+            <div style="direction:{DIR};text-align:{ALIGN};">{t('roi_sub')}</div>
+            <div style="direction:ltr;text-align:left;">Prophet-Powered ROI Forecaster</div>
             </div>""", unsafe_allow_html=True)
 
-            # ── ROI calculator inputs ──
             col_inv1, col_inv2, col_inv3 = st.columns([2, 1, 2])
 
             with col_inv1:
@@ -3421,25 +3210,7 @@ elif selected_key == "forecast":
                     help=t('roi_duration_help')
                 )
 
-            # ── ROI computation logic ──
-            # Current (entry) price for the chosen karat
             current_price_roi = data[f'Price_{roi_karat}'].iloc[-1]
-            # forecasted yhat by a simple purity ratio
-            # (KARAT_FACTORS[roi_karat] / KARAT_FACTORS[k]). This is NOT
-            # algebraically exact, because:
-            #     Price_{karat} = Theoretical_24K * KaratFactor_{karat} + MakingCharge_{karat}
-            #
-            # MakingCharge is an ADDITIVE constant that differs per karat
-            # (60 / 150 / 220 EGP) - it does not scale with the karat
-            # factor, so multiplying the whole yhat (which already bakes
-            # in the model karat's making charge) by a purity ratio
-            # distorts the result.
-            #
-            # The correct approach: invert the model's forecast back to
-            # the pure Theoretical_24K series (removing the MODEL karat's
-            # making charge and purity factor), then rebuild the exact
-            # retail price for whichever karat the user picked in the ROI
-            # calculator, using THAT karat's own making charge.
             theoretical_24k_fc       = (fc_out['yhat']       - MAKING_CHARGES[k]) / KARAT_FACTORS[k]
             theoretical_24k_fc_upper = (fc_out['yhat_upper'] - MAKING_CHARGES[k]) / KARAT_FACTORS[k]
             theoretical_24k_fc_lower = (fc_out['yhat_lower'] - MAKING_CHARGES[k]) / KARAT_FACTORS[k]
@@ -3455,29 +3226,24 @@ elif selected_key == "forecast":
                 theoretical_24k_fc_lower * KARAT_FACTORS[roi_karat] + MAKING_CHARGES[roi_karat]
             )
 
-            # Clip roi_days to available forecast rows to prevent index errors
             roi_days_clipped = min(roi_days, len(roi_fc_series))
 
             if roi_days_clipped > 0:
                 forecast_row      = roi_fc_series.iloc[roi_days_clipped - 1]
-                target_price_roi  = max(forecast_row['yhat'], 0.01)   # guard against negative yhat
+                target_price_roi  = max(forecast_row['yhat'], 0.01)
                 target_date_roi   = forecast_row['ds']
 
-                # Entry: invest amount buys N grams at current retail price (already includes making charge)
                 entry_cost_per_g  = current_price_roi
                 grams_roi         = invest_amount / entry_cost_per_g
 
-                # Exit: sell at forecasted price less bid-ask spread
                 exit_value_roi    = grams_roi * target_price_roi * (1 - SELL_SPREAD[roi_karat])
                 net_profit_roi    = exit_value_roi - invest_amount
                 roi_pct           = (net_profit_roi / invest_amount) * 100
                 annualised_roi    = roi_pct * (365 / roi_days_clipped)
 
-                # Color coding: green for gain, red for loss
                 profit_color      = "#06D6A0" if net_profit_roi >= 0 else "#EF476F"
                 roi_icon          = "📈" if net_profit_roi >= 0 else "📉"
 
-                # ── Display ROI metric cards using st.metric ──
                 spacer(8)
                 m1, m2, m3, m4 = st.columns(4)
 
@@ -3519,7 +3285,6 @@ elif selected_key == "forecast":
                     )
 
                 spacer(12)
-                # Detailed insight summary
                 _cls  = 'num' if net_profit_roi >= 0 else 'num-red'
                 _cls2 = 'num' if roi_pct >= 0 else 'num-red'
                 insight(t('roi_insight_summary',
@@ -3558,7 +3323,7 @@ if __name__ == "__main__":
                 print("✅ Both Gold_Egypt.csv & Processed.csv updated!")
             except Exception as e:
                 print(f"⚠️ Processed generation failed: {e}")
-                sys.exit(1) 
+                sys.exit(1)
         else:
             print("❌ Failed to update spot/fx data")
             sys.exit(1)
