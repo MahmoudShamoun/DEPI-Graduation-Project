@@ -1220,7 +1220,7 @@ def section(icon, title, sub=""):
     safe_title = re.sub(r'(\d+K)', r'<bdi>\1</bdi>', title)
     if isinstance(sub, list):
         sub_html = "".join(
-            f'<div style="direction:{d};text-align:{"right" if d=="rtl" else "left"};'
+            f'<div style="direction:{DIR};text-align:{ALIGN};'
             f'font-size:0.76rem;color:var(--text-faint);margin:0 0 2px 0;">{t}</div>'
             for t, d in sub)
     elif sub:
@@ -1230,8 +1230,8 @@ def section(icon, title, sub=""):
     st.markdown(f"""
     <div class="section-wrap" style="animation-delay:0.1s">
       <div class="section-title">
-        <span class="section-text">{safe_title}</span>
         <span class="section-icon">{icon}</span>
+        <span class="section-text">{safe_title}</span>
       </div>
       <div class="section-line"></div>
       {sub_html}
