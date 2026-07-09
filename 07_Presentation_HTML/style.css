@@ -419,8 +419,8 @@ p {
 
 /* 3. 🌟 الفريم الأصفر (الذهبي): تكبيره وزيادة وضوحه */
 .avatar {
-    width: 140px !important;           /* 🌟 تكبير قطر الفريم الأصفر من 100px إلى 140px ليكون واضح جداً */
-    height: 140px !important;          /* نفس الارتفاع لضمان دائرية مثالية */
+    width: 180px !important;           /* 🌟 تكبير قطر الفريم الأصفر من 100px إلى 180px ليكون واضح جداً */
+    height: 180px !important;          /* نفس الارتفاع لضمان دائرية مثالية */
     border-radius: 50% !important;
     background: #111116 !important;    /* خلفية داكنة خلف الصورة للحماية */
     overflow: hidden !important;       /* إخفاء أي حواف خارجة عن الدائرة */
