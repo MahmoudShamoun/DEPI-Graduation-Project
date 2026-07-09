@@ -401,7 +401,7 @@ p {
     border: 1px solid var(--glass-border) !important;
     padding: 25px 20px !important;     /* مساحات داخلية مريحة */
     border-radius: 18px !important;
-    width: 230px !important;      
+    width: 250px !important;      
     gap: 20px !important;                /* مسافة بين الدائرة والاسم */
     display: flex !important;
     flex-direction: column !important;
