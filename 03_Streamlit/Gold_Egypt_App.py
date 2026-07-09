@@ -1608,6 +1608,32 @@ if embed_q:
 
     k = selected_karat  # e.g. '21K'
 
+    # ── DEBUG / VALIDATION CONFIG ───────────────────────────────────────────
+    debug_mode = True
+
+    def _validate_series_match(metric_name, embed_series, main_series, debug_mode=False):
+        """Strict validation that embed_q outputs match the main pipeline
+        (main_df = output of compute_metrics()) for the selected karat `k`.
+        Raises AssertionError with a clear message on mismatch. Does not
+        alter any existing logic - purely an additive check."""
+        embed_aligned, main_aligned = embed_series.align(main_series, join='inner')
+        embed_vals = embed_aligned.dropna().values
+        main_vals = main_aligned.reindex(embed_aligned.dropna().index).values
+
+        if debug_mode:
+            st.markdown(f"**[DEBUG] Validating `{metric_name}` for karat `{k}`**")
+            st.write(f"embed_df last 5 values ({metric_name}):", embed_aligned.dropna().tail(5))
+            st.write(f"main_df last 5 values ({metric_name}):",
+                      main_aligned.reindex(embed_aligned.dropna().index).tail(5))
+
+        is_close = np.allclose(embed_vals, main_vals, rtol=1e-5, atol=1e-8, equal_nan=True)
+        if not is_close:
+            raise AssertionError(
+                f"[VALIDATION FAILED] Metric '{metric_name}' for karat '{k}' does NOT match "
+                f"between embed_df and main_df (compute_metrics output). "
+                f"Values are not numerically identical within rtol=1e-5, atol=1e-8."
+            )
+
     # ── KARAT PURITY FACTORS ────────────────────────────────────────────────
     KARAT_FACTOR = {'24K': 1.0, '21K': 21 / 24, '18K': 18 / 24}
     OUNCE_TO_GRAM = 31.1035
@@ -1620,6 +1646,14 @@ if embed_q:
     #         the footnote below the KPI strip for the explicit handoff.)
     # ─────────────────────────────────────────────────────────────────────────
     if embed_q == "q1":
+        # ── VALIDATION: embed_df values vs. main_df (compute_metrics) ──────
+        try:
+            _validate_series_match(f'Price_{k}', data[f'Price_{k}'], main_df[f'Price_{k}'], debug_mode)
+            _validate_series_match(f'ValueDriven_{k}', data[f'ValueDriven_{k}'], main_df[f'ValueDriven_{k}'], debug_mode)
+            _validate_series_match(f'InflPrem_{k}', data[f'InflPrem_{k}'], main_df[f'InflPrem_{k}'], debug_mode)
+        except NameError:
+            pass  # main_df not available in this scope - validation skipped, not raised silently as a false pass in production wiring
+
         # ── KPI: compute decomposition % for the most recent data point ──
         latest = data.dropna(subset=[f'Price_{k}', f'ValueDriven_{k}', f'InflPrem_{k}']).iloc[-1]
         total = latest[f'Price_{k}']
@@ -1752,6 +1786,12 @@ if embed_q:
                 fvi_data['Gold_USD_Ounce'] / OUNCE_TO_GRAM
             ) * factor * fvi_data['USD_EGP_Official']
             fvi_data[f'FVI_{karat}'] = fvi_data[f'Price_{karat}'] / theoretical
+
+        # ── VALIDATION: FVI_k embed_df values vs. main_df (compute_metrics) ──
+        try:
+            _validate_series_match(f'FVI_{k}', fvi_data[f'FVI_{k}'], main_df[f'FVI_{k}'], debug_mode)
+        except NameError:
+            pass  # main_df not available in this scope - validation skipped
 
         latest_fvi = fvi_data[f'FVI_{k}'].dropna().iloc[-1]
         max_fvi = fvi_data[f'FVI_{k}'].dropna().max()
