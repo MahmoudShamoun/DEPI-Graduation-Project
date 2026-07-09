@@ -397,19 +397,18 @@ p {
 
 /* 2. الكارت نفسه: تكبير العرض والمساحة الداخلية ليناسب الفريم الجديد */
 .team-member {
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    padding: 25px 20px !important;     /* مساحات داخلية مريحة */
+    border-radius: 18px !important;
+    width: 230px !important;      
+    gap: 20px !important;                /* مسافة بين الدائرة والاسم */
     display: flex !important;
-    flex-direction: row !important;      /* 🌟 ده اللي بيجبرهم يكونوا جنب بعض */
-    align-items: center !important;      /* بيخلي الصورة والاسم في نفس المستوى الأفقي */
-    justify-content: flex-start !important; /* بيخليهم يبدأوا من بداية الكارت ناحية الشمال */
-    gap: 20px !important;                /* مسافة محترمة بين الدائرة والاسم */
-    
-    /* تنسيقات الشكل */
-    background: transparent !important;  /* أو var(--glass-bg) لو عايز خلفية */
-    border: none !important;
-    padding: 10px !important;
-    width: 100% !important;              /* عشان الكارت ياخد عرض مناسب */
-    max-width: 300px !important;         /* عشان مياخدش عرض الشاشة كلها */
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
     box-sizing: border-box !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 /* تأثير تفاعلي فخم عند تمرير الماوس فوق كارت العضو */
@@ -447,12 +446,8 @@ p {
 .team-member h3 {
     margin: 0 !important;
     text-align: left !important;
-    font-size: 1.2rem !important;
+    font-size: 1.2rem !important;        /* ممكن تتحكم في حجم الخط من هنا */
     color: #ffffff !important;
-    flex: 1;                             /* بيخلي الاسم ياخد المساحة المتبقية */
-}
-.team-member .avatar {
-    flex-shrink: 0 !important;           /* بيمنع الصورة إنها تصغر أو تنضغط */
 }
 
 /* Q-Blocks */
